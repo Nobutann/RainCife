@@ -34,7 +34,7 @@ int main(void)
         {
             currentScreen = RunStart();
         }
-        
+
         if (currentScreen == SCREEN_OPTIONS)
         {
             currentScreen = RunOptions(&config);
@@ -52,6 +52,6 @@ int main(void)
     }
 
     CloseWindow();
-    
+
     return 0;
 }
