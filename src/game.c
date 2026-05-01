@@ -9,6 +9,7 @@ GameScreen RunGame(Config *config) {
     static Inimigo bike = { 0 };
     static Inimigo madeira = { 0 };
     static Inimigo caboclo = { 0 };
+    static Inimigo peixe = { 0 };
 
     while (!WindowShouldClose()) {
         if (IsKeyPressed(KEY_ESCAPE)) return SCREEN_START;
@@ -21,6 +22,7 @@ GameScreen RunGame(Config *config) {
         bool sinalBike = IsKeyPressed(KEY_B);
         bool sinalMadeira = IsKeyPressed(KEY_M);
         bool sinalCaboclo = IsKeyPressed(KEY_C);
+        bool sinalPeixe = IsKeyPressed(KEY_P);
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
@@ -30,10 +32,11 @@ GameScreen RunGame(Config *config) {
             AtualizarDesenharBike(&bike, currentWidth, currentHeight, sinalBike, 0);
             AtualizarDesenharMadeira(&madeira, currentWidth, currentHeight, sinalMadeira, 0);
             AtualizarDesenharCaboclo(&caboclo, currentWidth, currentHeight, sinalCaboclo, 0);
+            AtualizarDesenharPeixe(&peixe, currentWidth, currentHeight, sinalPeixe, 0);
 
             const char* help = config->idioma ? 
-                "ESC: Back | P1: ESP | P2: ENT | B: Bike | M: Wood | C: Dash" : 
-                "ESC: Voltar | P1: ESP | P2: ENT | B: Bike | M: Madeira | C: Caboclo";
+                "ESC: Back | P1: ESP | P2: ENT | B: Bike | M: Wood | C: Dash | P: Fish" : 
+                "ESC: Voltar | P1: ESP | P2: ENT | B: Bike | M: Madeira | C: Caboclo | P: Peixe";
             
             DrawText(help, 20, 20, 20, GRAY);
         EndDrawing();

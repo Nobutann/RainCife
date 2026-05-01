@@ -4,12 +4,22 @@
 
 int main(void)
 {
+    Config config = CarregarConfig();
+    
+    config.telaCheia = 1;
+    
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "RatTsunami");
-    SetWindowState(FLAG_WINDOW_RESIZABLE);
+    
+    if (config.telaCheia)
+    {
+        int monitor = GetCurrentMonitor();
+        SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
+        ToggleFullscreen();
+    }
+
     SetTargetFPS(60);
     SetExitKey(KEY_DELETE);
-
-    Config config = CarregarConfig();
 
     GameScreen currentScreen = SCREEN_START;
 

@@ -20,19 +20,19 @@ GameScreen RunStart()
         "Exit"
     };
 
-    int currentWidth = GetScreenWidth();
-    int currentHeight = GetScreenHeight();
-
-    int startY = currentHeight / 2.5;
-    int menuFontSize = currentHeight / 20;
-    int spacing = menuFontSize + 20;
-
-    int optionsCount = sizeof(optionsPT) / sizeof(optionsPT[0]);
-    Rectangle optionsRects[optionsCount];
-    BuildOptionRects(optionsRects, optionsPT, optionsCount, menuFontSize, currentWidth / 2, startY, spacing);
-
     while (!WindowShouldClose())
     {
+        int currentWidth = GetScreenWidth();
+        int currentHeight = GetScreenHeight();
+
+        int startY = currentHeight / 2.5;
+        int menuFontSize = currentHeight / 20;
+        int spacing = menuFontSize + 20;
+
+        int optionsCount = sizeof(optionsPT) / sizeof(optionsPT[0]);
+        Rectangle optionsRects[optionsCount];
+        BuildOptionRects(optionsRects, optionsPT, optionsCount, menuFontSize, currentWidth / 2, startY, spacing);
+
         int clicked = GetClickedOption(optionsRects, optionsCount);
         if (clicked >= 0)
         {
@@ -65,17 +65,7 @@ GameScreen RunStart()
             for (int i = 0; i < optionsCount; i++)
             {
                 bool hover = CheckCollisionPointRec(mouse, optionsRects[i]);
-                Color color;
-                if (hover)
-                {
-                    color = YELLOW;
-                    DrawRectangleLinesEx(optionsRects[i], 2, GREEN);
-                }
-                else
-                {
-                    color = DARKGRAY;
-                }
-
+                Color color = hover ? YELLOW : DARKGRAY;
                 DrawText(optionsPT[i], optionsRects[i].x, optionsRects[i].y, menuFontSize, color);
             }
         EndDrawing();

@@ -22,7 +22,6 @@ int VerificarCliqueMenu(int currentWidth, int currentHeight, int idioma) {
         };
 
         if (CheckCollisionPointRec(mousePos, hitbox)) {
-            DrawRectangleLinesEx(hitbox, 2, GREEN);
             if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) return i;
         }
     }

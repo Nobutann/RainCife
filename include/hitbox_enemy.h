@@ -5,6 +5,7 @@
 
 typedef struct {
   Vector2 posicao;
+  float velocidadeX;
   float velocidadeY;
   bool ativo;
   int estado;
@@ -16,5 +17,6 @@ void AtualizarDesenharPassaro2(Inimigo *passaro, int currentWidth, int currentHe
 void AtualizarDesenharBike(Inimigo *bike, int currentWidth, int currentHeight, bool sinalAtivar, int velocidadeBase);
 void AtualizarDesenharMadeira(Inimigo *madeira, int currentWidth, int currentHeight, bool sinalAtivar, int velocidadeBase);
 void AtualizarDesenharCaboclo(Inimigo *caboclo, int currentWidth, int currentHeight, bool sinalAtivar, int velocidadeBase);
+void AtualizarDesenharPeixe(Inimigo *peixe, int currentWidth, int currentHeight, bool sinalAtivar, int velocidadeBase);
 
 #endif

@@ -3,12 +3,11 @@
 
 GameScreen RunCredits()
 {
-    int currentHeight = GetScreenHeight();
-    int currentWidth = GetScreenWidth();
-
-
     while (!WindowShouldClose())
     {
+        int currentHeight = GetScreenHeight();
+        int currentWidth = GetScreenWidth();
+
         if (IsKeyPressed(KEY_ESCAPE))
         {
             return SCREEN_START;
