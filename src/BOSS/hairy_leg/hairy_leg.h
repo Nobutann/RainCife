@@ -25,6 +25,9 @@ typedef struct {
     int health;
     Shockwave waveLeft;
     Shockwave waveRight;
+    Rectangle kickHitbox;
+    bool isKickActive;
+    int direction;
 } HairyLeg;
 
 void InitHairyLeg(HairyLeg *leg, Vector2 startPosition);

@@ -8,6 +8,7 @@ void InitHairyLeg(HairyLeg *leg, Vector2 startPosition) {
     leg->waveLeft.active = false;
     leg->waveRight.active = false;
     leg->isKickActive = false;
+    leg->direction = -1;
 }
 
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime) {
@@ -16,6 +17,11 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime) {
 
     switch (leg->state) {
         case HL_IDLE:
+        if (playerRect.x > leg->rect.x) {
+            leg->direction = 1;  // rato ta na direita fi
+        } else {
+            leg->direction = -1; // rato ta na esquerda
+        }
             leg->timer += deltaTime;
             if (leg->timer > 3.0f) {
                 leg->state = HL_JUMPING_UP;
@@ -54,10 +60,50 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime) {
             break;
 
         case HL_SWEEPING:
-            break;
+        leg->timer += deltaTime;
+
+        if (leg->timer < 0.5f) {
+            if (leg->rect.y < 500 - leg->rect.height) {
+                leg->rect.y += 400 * deltaTime;
+            }
+            leg->rect.x -= 100 * leg->direction * deltaTime;
+        }
+        else if (leg->timer < 1.2f) {
+            leg->rect.x += 1000 * leg->direction * deltaTime;
+        }
+        else {
+            leg->state = HL_VULNERABLE;
+            leg->timer = 0.0f;
+        }
+        break;
 
         case HL_KICKING:
-            break;
+            leg->timer += deltaTime;
+
+            if (leg->timer < 0.4f) {
+                leg->rect.x -= 80 * leg->direction * deltaTime;
+                leg->isKickActive = false;
+            }
+            else if (leg->timer < 0.7f) {
+                float hitboxX;
+                if (leg->direction == 1) {
+                    hitboxX = leg->rect.x + leg->rect.width;
+                } else {
+                    hitboxX = leg->rect.x - 80;
+                }
+
+                leg->kickHitbox = (Rectangle){ hitboxX, leg->rect.y + 100, 80, 50 };
+                leg->isKickActive = true;
+            }
+            else if (leg->timer < 1.2f) {
+                leg->isKickActive = false;
+                leg->rect.x -= 20 * leg->direction * deltaTime;
+            }
+            else {
+                leg->state = HL_VULNERABLE;
+                leg->timer = 0.0f;
+            }
+        break;
     }
 }
 
@@ -67,4 +113,7 @@ void DrawHairyLeg(HairyLeg *leg) {
 
     if (leg->waveLeft.active) DrawRectangleRec(leg->waveLeft.rect, RED);
     if (leg->waveRight.active) DrawRectangleRec(leg->waveRight.rect, RED);
+    if (leg->isKickActive) {
+        DrawRectangleRec(leg->kickHitbox, ORANGE);
+    }
 }
