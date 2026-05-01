@@ -2,6 +2,7 @@
 #define SCREENS_H
 
 #include <raylib.h>
+#include "config_manager.h"
 
 typedef enum
 {
@@ -13,5 +14,6 @@ typedef enum
 } GameScreen;
 
 GameScreen RunStart();
+GameScreen RunOptions(Config *config);
 
 #endif

@@ -35,3 +35,22 @@ void BuildOptionRects(Rectangle* rects, const char** options, int count, int fon
         };
     }
 }
+
+void DrawSlider(Rectangle bounds, float value)
+{
+    Rectangle fill = { bounds.x, bounds.y, bounds.width * value, bounds.height };
+    DrawRectangleRec(bounds, LIGHTGRAY);
+    DrawRectangleRec(fill, BLUE);
+}
+
+float UpdateSlider(Rectangle bounds, float value)
+{
+    Vector2 mouse = GetMousePosition();
+    if (CheckCollisionPointRec(mouse, bounds) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+    {
+        value = (mouse.x - bounds.x) / bounds.width;
+        if (value < 0.0f) value = 0.0f;
+        if (value > 1.0f) value = 1.0f;
+    }
+    return value;
+}

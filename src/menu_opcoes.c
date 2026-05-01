@@ -1,6 +1,6 @@
 #include <raylib.h>
 #include "menu_opcoes.h"
-
+/*
 void DesenharMenuOpcoes(int currentWidth, int currentHeight, Config *config) {
     ClearBackground(RAYWHITE);
     Vector2 mouse = GetMousePosition();
@@ -43,3 +43,4 @@ void DesenharMenuOpcoes(int currentWidth, int currentHeight, Config *config) {
     }
     DrawText(TextFormat("%d%%", (int)(config->volume * 100 + 0.5f)), (int)barraTotal.x + (int)barraTotal.width + 15, (int)barraTotal.y + 2, 20, DARKGRAY);
 }
+*/
