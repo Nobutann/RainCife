@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include "screens.h"
 #include "config_manager.h"
+#include "player.h"
 
 int main(void)
 {
@@ -33,6 +34,33 @@ int main(void)
         if (currentScreen == SCREEN_CREDITS)
         {
             currentScreen = RunCredits();
+        }
+
+        if (currentScreen == SCREEN_GAME)
+        {
+            Player player;
+             
+            Vector2 startPos = {100, GROUND};
+            
+            InitPlayer(&player, startPos, SPEED);
+
+            while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
+            {
+                if (IsKeyPressed(KEY_ESCAPE))
+                {
+                    currentScreen = SCREEN_START;
+                }
+
+                float dt = GetFrameTime();
+                UpdatePlayer(&player, dt);
+
+                BeginDrawing();
+                    ClearBackground(RAYWHITE);
+                    DrawPlayer(&player);
+                EndDrawing();
+            }
+
+            UnloadPlayer(&player);
         }
     }
 
