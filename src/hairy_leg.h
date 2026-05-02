@@ -2,6 +2,7 @@
 #define HAIRY_LEG_H
 
 #include "raylib.h"
+#include "sprites.h"
 
 typedef enum {
     HL_IDLE,
@@ -28,10 +29,13 @@ typedef struct {
     Rectangle kickHitbox;
     bool isKickActive;
     int direction;
+    HairyLegSprites sprites;
+    Animation *currentAnim;
 } HairyLeg;
 
 void InitHairyLeg(HairyLeg *leg, Vector2 startPosition);
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime);
 void DrawHairyLeg(HairyLeg *leg);
+void UnloadHairyLeg(HairyLeg *leg);
 
 #endif

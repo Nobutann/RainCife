@@ -2,16 +2,17 @@
 #include "screens.h"
 #include "config_manager.h"
 #include "player.h"
+#include "hairy_leg.h"
 
 int main(void)
 {
     Config config = CarregarConfig();
-    
+
     config.telaCheia = 1;
-    
+
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "RatTsunami");
-    
+
     if (config.telaCheia)
     {
         int monitor = GetCurrentMonitor();
@@ -49,10 +50,13 @@ int main(void)
         if (currentScreen == SCREEN_GAME)
         {
             Player player;
-             
+
             Vector2 startPos = {100, GROUND};
-            
+
             InitPlayer(&player, startPos, SPEED);
+
+            HairyLeg pernaCabeluda;
+            InitHairyLeg(&pernaCabeluda, (Vector2){ 600, GROUND - 200 });
 
             while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
             {
@@ -62,11 +66,20 @@ int main(void)
                 }
 
                 float dt = GetFrameTime();
+
                 UpdatePlayer(&player, dt);
+                Rectangle playerHitbox = { player.position.x, player.position.y, 50, 50 };
+
+                UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt);
 
                 BeginDrawing();
                     ClearBackground(RAYWHITE);
+
+
                     DrawPlayer(&player);
+
+                    DrawHairyLeg(&pernaCabeluda);
+
                 EndDrawing();
             }
 
