@@ -2,7 +2,7 @@
 #define SCREENS_H
 
 #include <raylib.h>
-#include "config_manager.h"
+#include "core/config_manager.h"
 
 typedef enum
 {

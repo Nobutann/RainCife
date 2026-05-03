@@ -1,5 +1,5 @@
 #include <stdlib.h>
-#include "sprites.h"
+#include "graphics/sprites.h"
 
 #define FRAME_TIME 0.08f
 

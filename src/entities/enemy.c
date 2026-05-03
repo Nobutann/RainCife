@@ -1,5 +1,5 @@
 #include <raylib.h>
-#include "enemy.h"
+#include "entities/enemy.h"
 
 void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed)
 {

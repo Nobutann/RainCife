@@ -1,5 +1,5 @@
-#include "hairy_leg.h"
-#include "player.h"
+#include "entities/hairy_leg.h"
+#include "entities/player.h"
 
 void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale) {
     LoadHairyLegSprites(&leg->sprites);

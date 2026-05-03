@@ -2,8 +2,8 @@
 #define PLAYER_H
 
 #include <raylib.h>
-#include "sprites.h"
-#include "weapon.h"
+#include "graphics/sprites.h"
+#include "gameplay/weapon.h"
 
 #define GRAVITY 800.0f
 #define JUMP_FORCE -400.0f

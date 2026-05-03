@@ -1,10 +1,10 @@
 #include <raylib.h>
-#include "screens.h"
-#include "config_manager.h"
-#include "player.h"
-#include "hairy_leg.h"
-#include "enemy.h"
-#include "background.h"
+#include "core/screens.h"
+#include "core/config_manager.h"
+#include "entities/player.h"
+#include "entities/hairy_leg.h"
+#include "entities/enemy.h"
+#include "graphics/background.h"
 
 #define MAX_ACTIVE_ENEMIES 12
 

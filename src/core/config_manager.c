@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "config_manager.h"
+#include "core/config_manager.h"
 
 void SalvarConfig(Config config) {
     FILE *arquivo = fopen("config.bin", "wb");

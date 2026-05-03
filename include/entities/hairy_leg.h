@@ -2,7 +2,7 @@
 #define HAIRY_LEG_H
 
 #include "raylib.h"
-#include "sprites.h"
+#include "graphics/sprites.h"
 
 typedef enum {
     HL_IDLE,

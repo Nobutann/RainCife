@@ -1,7 +1,8 @@
+/*
 #include <raylib.h>
 #include "screens.h"
 #include "game.h"
-/*
+
 GameScreen RunGame(Config *config) {
     static Inimigo passaro1[MAX_ENEMIES] = { 0 };
     static Inimigo passaro2[MAX_ENEMIES] = { 0 };

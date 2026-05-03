@@ -1,7 +1,7 @@
 #include <raylib.h>
-#include "weapon.h"
-#include "player.h"
-#include "sprites.h"
+#include "gameplay/weapon.h"
+#include "entities/player.h"
+#include "graphics/sprites.h"
 
 void UseBat(Player *player)
 {

@@ -2,7 +2,7 @@
 #define ENEMY_H
 
 #include <raylib.h>
-#include "sprites.h"
+#include "graphics/sprites.h"
 
 typedef enum
 {

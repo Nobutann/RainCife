@@ -1,6 +1,6 @@
 #include <raylib.h>
-#include "player.h"
-#include "weapon.h"
+#include "entities/player.h"
+#include "gameplay/weapon.h"
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {

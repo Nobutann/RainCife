@@ -26,4 +26,9 @@ clean:
 dirs:
 	-mkdir bin 2>nul
 	-mkdir obj 2>nul
+	-mkdir obj\core 2>nul
+	-mkdir obj\entities 2>nul
+	-mkdir obj\graphics 2>nul
+	-mkdir obj\gameplay 2>nul
+
 .PHONY: all run clean dirs
