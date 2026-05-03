@@ -129,11 +129,25 @@ int main(void)
                         AtualizarDesenharMadeira(&madeira[i], currentWidth, currentHeight, triggerM, 0, texMadeira);
                         AtualizarDesenharCaboclo(&caboclo[i], currentWidth, currentHeight, triggerC, 0, texCaboclo);
                         AtualizarDesenharPeixe(&peixe[i], currentWidth, currentHeight, triggerPx, 0, texPeixe);
+
+                        // Verificação de colisão com inimigos comuns
+                        if (passaro1[i].ativo && CheckCollisionRecs(playerHitbox, (Rectangle){passaro1[i].posicao.x, passaro1[i].posicao.y, passaro1[i].tamanho.x, passaro1[i].tamanho.y})) currentScreen = SCREEN_START;
+                        if (passaro2[i].ativo && CheckCollisionRecs(playerHitbox, (Rectangle){passaro2[i].posicao.x, passaro2[i].posicao.y, passaro2[i].tamanho.x, passaro2[i].tamanho.y})) currentScreen = SCREEN_START;
+                        if (bike[i].ativo && CheckCollisionRecs(playerHitbox, (Rectangle){bike[i].posicao.x, bike[i].posicao.y, bike[i].tamanho.x, bike[i].tamanho.y})) currentScreen = SCREEN_START;
+                        if (madeira[i].ativo && CheckCollisionRecs(playerHitbox, (Rectangle){madeira[i].posicao.x, madeira[i].posicao.y, madeira[i].tamanho.x, madeira[i].tamanho.y})) currentScreen = SCREEN_START;
+                        if (caboclo[i].ativo && CheckCollisionRecs(playerHitbox, (Rectangle){caboclo[i].posicao.x, caboclo[i].posicao.y, caboclo[i].tamanho.x, caboclo[i].tamanho.y})) currentScreen = SCREEN_START;
+                        if (peixe[i].ativo && CheckCollisionRecs(playerHitbox, (Rectangle){peixe[i].posicao.x, peixe[i].posicao.y, peixe[i].tamanho.x, peixe[i].tamanho.y})) currentScreen = SCREEN_START;
                     }
 
                     DrawPlayer(&player, playerScale);
 
                     DrawHairyLeg(&pernaCabeluda, bossScale);
+
+                    // Verificação de colisão com o Boss (Perna Cabeluda) e seus ataques
+                    if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect)) currentScreen = SCREEN_START;
+                    if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.kickHitbox)) currentScreen = SCREEN_START;
+                    if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect)) currentScreen = SCREEN_START;
+                    if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect)) currentScreen = SCREEN_START;
 
                     DrawText("1: P1 | 2: P2 | B: Bike | M: Madeira | C: Caboclo | P: Peixe", 20, 20, 20, GRAY);
 
