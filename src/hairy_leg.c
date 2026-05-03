@@ -19,7 +19,12 @@ void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float sca
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale) {
     leg->groundY = groundY;
     float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
+    float oldHeight = leg->rect.height;
     leg->rect.height = currentSpriteH;
+    
+    if (leg->state != HL_JUMPING_UP && leg->state != HL_FALLING) {
+        leg->rect.y = leg->groundY - currentSpriteH;
+    }
 
     if (leg->state == HL_IDLE || leg->state == HL_VULNERABLE) {
         float centroRato = playerRect.x + (playerRect.width / 2.0f);
@@ -153,7 +158,7 @@ void DrawHairyLeg(HairyLeg *leg, float scale) {
     float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
     float offsetY = 0.0f;
 
-    Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->groundY - currentSpriteH + offsetY };
+    Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->rect.y + offsetY };
     DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
 }
 
