@@ -97,6 +97,7 @@ void UpdateAnimation(Animation *animation, float dt)
     {
         animation->timer = 0.0f;
         animation->currentFrame++;
+
         if (animation->currentFrame >= animation->frameCount)
         {
             animation->currentFrame = 0;
@@ -110,7 +111,7 @@ void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, boo
     {
         float fw = animation->frameWidth;
 
-        Rectangle source = 
+        Rectangle source =
         {
             animation->currentFrame * fw + (flipX ? fw : 0),
             0,
@@ -118,7 +119,7 @@ void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, boo
             animation->sheet.height
         };
 
-        Rectangle dest = 
+        Rectangle dest =
         {
             position.x,
             position.y,
@@ -128,4 +129,28 @@ void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, boo
 
         DrawTexturePro(animation->sheet, source, dest, (Vector2){0, 0}, 0.0f, tint);
     }
+}
+void LoadHairyLegSprites(HairyLegSprites *sprites)
+{
+    sprites->idle = LoadAnimation("assets/sprites/Boss/Perna_idle-Sheet.png", 7, FRAME_TIME);
+    sprites->jump = LoadAnimation("assets/sprites/Boss/Perna_jump-Sheet.png", 4, FRAME_TIME);
+    sprites->fall = LoadAnimation("assets/sprites/Boss/Perna_fall-Sheet.png", 2, FRAME_TIME);
+    sprites->kick = LoadAnimation("assets/sprites/Boss/Perna_kick-Sheet.png", 4, FRAME_TIME);
+    sprites->rasteira = LoadAnimation("assets/sprites/Boss/Perna_rasteira-Sheet.png", 4, FRAME_TIME);
+    sprites->death = LoadAnimation("assets/sprites/Boss/Perna_death.png", 1, FRAME_TIME);
+}
+
+void UnloadHairyLegSprites(HairyLegSprites *sprites)
+{
+    UnloadAnimation(&sprites->idle);
+    UnloadAnimation(&sprites->jump);
+    UnloadAnimation(&sprites->fall);
+    UnloadAnimation(&sprites->kick);
+    UnloadAnimation(&sprites->rasteira);
+    UnloadAnimation(&sprites->death);
+}
+
+void ResetAnimation(Animation *animation) {
+    animation->currentFrame = 0;
+    animation->timer = 0.0f;
 }

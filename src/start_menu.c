@@ -42,7 +42,7 @@ GameScreen RunStart()
             }
             if (clicked == 1)
             {
-                return SCREEN_OPTIONS;  
+                return SCREEN_OPTIONS; 
             }
             if (clicked == 2)
             {

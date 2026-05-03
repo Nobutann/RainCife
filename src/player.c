@@ -17,8 +17,11 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->weapon.cooldownTimer = player->weapon.cooldown;
 }
 
-void UpdatePlayer(Player *player, float dt)
+void UpdatePlayer(Player *player, float dt, float groundY, float scale)
 {
+    float spriteH = player->sprites.walkFront.layers[0].sheet.height * scale;
+    float feetOffset = spriteH * 1.0f;
+
     if (IsKeyDown(KEY_D))
     {
         player->velocity.x = player->speed;
@@ -97,9 +100,9 @@ void UpdatePlayer(Player *player, float dt)
     player->position.x += player->velocity.x * dt;
     player->position.y += player->velocity.y * dt;
 
-    if (player->position.y >= GROUND)
+    if (player->position.y + feetOffset >= groundY)
     {
-        player->position.y = GROUND;
+        player->position.y = groundY - feetOffset;
         player->velocity.y = 0;
         player->onGround = true;
     }
@@ -117,9 +120,34 @@ void UpdatePlayer(Player *player, float dt)
     UpdateLayeredAnimation(player->currentAnim, dt);
 }
 
-void DrawPlayer(Player *player)
+Rectangle GetPlayerHitbox(Player *player, float scale)
 {
-    DrawLayeredAnimation(player->currentAnim, player->position, 2.0f, !player->facingRight, WHITE);
+    if (player->currentAnim && player->currentAnim->layerCount > 0)
+    {
+        Animation *baseLayer = &player->currentAnim->layers[0];
+        float frameRenderWidth = baseLayer->frameWidth * scale;
+        float frameRenderHeight = baseLayer->sheet.height * scale;
+
+        float offsetX = frameRenderWidth * 0.35f;
+        float offsetY = frameRenderHeight * 0.30f;
+        float hitboxW = frameRenderWidth * 0.35f;
+        float hitboxH = frameRenderHeight * 0.50f;
+
+        return (Rectangle){
+            player->position.x + offsetX,
+            player->position.y + offsetY,
+            hitboxW,
+            hitboxH
+        };
+    }
+    return (Rectangle){ player->position.x, player->position.y, 50, 50 };
+}
+
+void DrawPlayer(Player *player, float scale)
+{
+    DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
+    Rectangle hitbox = GetPlayerHitbox(player, scale);
+    DrawRectangleLines((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height, GREEN);
 }
 
 void UnloadPlayer(Player *player)
