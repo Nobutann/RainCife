@@ -3,6 +3,7 @@
 
 #include <raylib.h>
 #include "sprites.h"
+#include "weapon.h"
 
 #define GRAVITY 800.0f
 #define JUMP_FORCE -400.0f
@@ -10,7 +11,7 @@
 #define GROUND_RATIO 0.82f
 #define SIDEWALK_THICKNESS_RATIO 0.08f
 
-typedef struct
+typedef struct Player
 {
     Vector2 position;
     Vector2 velocity;
@@ -20,6 +21,7 @@ typedef struct
     LayeredAnimation *currentAnim;
     bool facingRight;
     bool isBossFighting;
+    Weapon weapon;
 } Player;
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed);

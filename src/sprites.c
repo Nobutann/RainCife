@@ -21,10 +21,9 @@ void UnloadAnimation(Animation *animation)
 
 void UpdateLayeredAnimation(LayeredAnimation *layredAnimation, float dt)
 {
-    UpdateAnimation(&layredAnimation->layers[0], dt);
-    for (int i = 1; i < layredAnimation->layerCount; i++)
+    for (int i = 0; i < layredAnimation->layerCount; i++)
     {
-        layredAnimation->layers[i].currentFrame = layredAnimation->layers[0].currentFrame;
+        UpdateAnimation(&layredAnimation->layers[i], dt);
     }
 }
 
@@ -66,6 +65,20 @@ void LoadPlayerSprites(PlayerSprites *playerSprites)
     playerSprites->idle.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_complete-Sheet.png", 6, FRAME_TIME);
 }
 
+float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime)
+{
+    playerSprites->attack.layerCount = 3;
+    playerSprites->attack.layers[0] = LoadAnimation("assets/sprites/Player/walkFront/Running_legs_forward-Sheet.png", 8, frameTime);
+    playerSprites->attack.layers[1] = LoadAnimation(path, frameCount, frameTime);
+    playerSprites->attack.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, frameTime);
+    return frameCount * frameTime;
+}
+
+void UnloadAttackAnimation(PlayerSprites *playerSprites)
+{
+    UnloadLayeredAnimation(&playerSprites->attack);
+}
+
 void UnloadPlayerSprites(PlayerSprites *playerSprites)
 {
     UnloadLayeredAnimation(&playerSprites->walkFront);
@@ -73,6 +86,7 @@ void UnloadPlayerSprites(PlayerSprites *playerSprites)
     UnloadLayeredAnimation(&playerSprites->jumpUp);
     UnloadLayeredAnimation(&playerSprites->jumpDown);
     UnloadLayeredAnimation(&playerSprites->walkBackwards);
+    UnloadLayeredAnimation(&playerSprites->attack);
 }
 
 void UpdateAnimation(Animation *animation, float dt)

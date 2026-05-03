@@ -28,6 +28,7 @@ typedef struct
     LayeredAnimation walkBackwards;
     LayeredAnimation jumpUp;
     LayeredAnimation jumpDown;
+    LayeredAnimation attack;
 } PlayerSprites;
 
 typedef struct {
@@ -46,6 +47,8 @@ void DrawLayeredAnimation(LayeredAnimation *layeredAnimation, Vector2 position, 
 void UnloadLayeredAnimation(LayeredAnimation *layeredAnimation);
 void LoadPlayerSprites(PlayerSprites *playerSprites);
 void UnloadPlayerSprites(PlayerSprites *playerSprites);
+float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime);
+void UnloadAttackAnimation(PlayerSprites *playerSprites);
 void UpdateAnimation(Animation *animation, float dt);
 void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, bool flipX, Color tint);
 void LoadHairyLegSprites(HairyLegSprites *sprites);
