@@ -77,8 +77,8 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             leg->rect.y += 2000 * deltaTime;
             if (leg->rect.y >= leg->groundY - currentSpriteH) {
                 leg->rect.y = leg->groundY - currentSpriteH;
-                leg->waveLeft = (Shockwave){ {leg->rect.x, leg->groundY - 50, 50, 70}, {1000, 0}, true };
-                leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, leg->groundY - 50, 50, 70}, {1000, 0}, true };
+                leg->waveLeft = (Shockwave){ {leg->rect.x, leg->rect.y + currentSpriteH * 0.75f, 50, 70}, {600, 0}, true };
+                leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, leg->rect.y + currentSpriteH * 0.75f, 50, 70}, {600, 0}, true };
 
                 leg->state = HL_VULNERABLE;
                 leg->sprites.idle.currentFrame = 0;
@@ -120,7 +120,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             else if (leg->timer < 0.7f) {
                 float larguraHitbox = 160;
                 float hitboxX = (leg->direction == 1) ? (leg->rect.x + leg->rect.width) : (leg->rect.x - larguraHitbox);
-                leg->kickHitbox = (Rectangle){ hitboxX, leg->rect.y + 420, larguraHitbox, 80 };
+                leg->kickHitbox = (Rectangle){ hitboxX, leg->rect.y + currentSpriteH * 0.7f, larguraHitbox, 80 };
                 leg->isKickActive = true;
             }
             else if (leg->timer < 1.2f) {
@@ -160,6 +160,20 @@ void DrawHairyLeg(HairyLeg *leg, float scale) {
 
     Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->rect.y + offsetY };
     DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
+
+    // Linhas de debug para hitboxes
+    DrawRectangleLinesEx(leg->rect, 2.0f, RED); // Hitbox principal
+    
+    if (leg->isKickActive) {
+        DrawRectangleLinesEx(leg->kickHitbox, 2.0f, ORANGE); // Hitbox do chute
+    }
+
+    if (leg->waveLeft.active) {
+        DrawRectangleLinesEx(leg->waveLeft.rect, 2.0f, BLUE); // Onda de choque esquerda
+    }
+    if (leg->waveRight.active) {
+        DrawRectangleLinesEx(leg->waveRight.rect, 2.0f, BLUE); // Onda de choque direita
+    }
 }
 
 void UnloadHairyLeg(HairyLeg *leg) {

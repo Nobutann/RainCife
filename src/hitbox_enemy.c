@@ -26,18 +26,18 @@ void AtualizarDesenharPassaro2(Inimigo *passaro, int currentWidth, int currentHe
     passaro->posicao.x = (float)currentWidth;
     passaro->posicao.y = currentHeight * 0.55f;
     passaro->tamanho = (Vector2){50, 50};
-    passaro->velocidadeY = 3.0f;
+    passaro->velocidadeY = 7.0f;
     passaro->ativo = true;
   }
 
   if (passaro->ativo) {
-    passaro->posicao.x -= (10 + velocidadeBase);
+    passaro->posicao.x -= (8 + velocidadeBase);
     passaro->posicao.y += passaro->velocidadeY;
 
     if (passaro->posicao.y < currentHeight * 0.20f) {
-      passaro->velocidadeY = 3.0f;
+      passaro->velocidadeY = 7.0f;
     } else if (passaro->posicao.y > currentHeight * 0.70f) {
-      passaro->velocidadeY = -3.0f;
+      passaro->velocidadeY = -7.0f;
     }
 
     if (passaro->posicao.x < -50) passaro->ativo = false;
@@ -53,14 +53,14 @@ void AtualizarDesenharPassaro2(Inimigo *passaro, int currentWidth, int currentHe
 void AtualizarDesenharBike(Inimigo *bike, int currentWidth, int currentHeight, bool sinalAtivar, int velocidadeBase, Texture2D textura) {
   if (sinalAtivar && !bike->ativo) {
     bike->posicao.x = (float)currentWidth;
-    bike->posicao.y = currentHeight * 0.80f - 50;
-    bike->tamanho = (Vector2){50, 50};
+    bike->posicao.y = currentHeight * 0.75f - 50;
+    bike->tamanho = (Vector2){70, 70};
     bike->ativo = true;
   }
 
   if (bike->ativo) {
     bike->posicao.x -= (7 + velocidadeBase);
-    if (bike->posicao.x < -50) bike->ativo = false;
+    if (bike->posicao.x < -70) bike->ativo = false;
 
     if (textura.id > 0) {
       DrawTextureV(textura, bike->posicao, WHITE);
@@ -73,14 +73,14 @@ void AtualizarDesenharBike(Inimigo *bike, int currentWidth, int currentHeight, b
 void AtualizarDesenharMadeira(Inimigo *madeira, int currentWidth, int currentHeight, bool sinalAtivar, int velocidadeBase, Texture2D textura) {
   if (sinalAtivar && !madeira->ativo) {
     madeira->posicao.x = (float)currentWidth;
-    madeira->posicao.y = currentHeight * 0.80f - 50;
-    madeira->tamanho = (Vector2){100, 50};
+    madeira->posicao.y = currentHeight * 0.75f - 50;
+    madeira->tamanho = (Vector2){140, 70};
     madeira->ativo = true;
   }
 
   if (madeira->ativo) {
     madeira->posicao.x -= (7 + velocidadeBase);
-    if (madeira->posicao.x < -100) madeira->ativo = false;
+    if (madeira->posicao.x < -140) madeira->ativo = false;
 
     if (textura.id > 0) {
       DrawTextureV(textura, madeira->posicao, WHITE);
@@ -93,7 +93,7 @@ void AtualizarDesenharMadeira(Inimigo *madeira, int currentWidth, int currentHei
 void AtualizarDesenharCaboclo(Inimigo *caboclo, int currentWidth, int currentHeight, bool sinalAtivar, int velocidadeBase, Texture2D textura) {
   if (sinalAtivar && !caboclo->ativo) {
     caboclo->posicao.x = (float)currentWidth;
-    caboclo->posicao.y = currentHeight * 0.80f - 80;
+    caboclo->posicao.y = currentHeight * 0.75f - 80;
     caboclo->tamanho = (Vector2){60, 80};
     caboclo->estado = 0;
     caboclo->ativo = true;
