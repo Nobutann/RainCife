@@ -1,8 +1,12 @@
 #include "hairy_leg.h"
 #include "player.h"
 
-void InitHairyLeg(HairyLeg *leg, Vector2 startPosition) {
-    leg->rect = (Rectangle){ startPosition.x, startPosition.y, 140, GROUND };
+void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale) {
+    LoadHairyLegSprites(&leg->sprites);
+    leg->currentAnim = &leg->sprites.idle;
+    leg->groundY = groundY;
+    float spriteH = (float)leg->currentAnim->sheet.height * scale;
+    leg->rect = (Rectangle){ startPosition.x, groundY - spriteH, 140, spriteH };
     leg->state = HL_IDLE;
     leg->timer = 0.0f;
     leg->health = 100;
@@ -10,11 +14,13 @@ void InitHairyLeg(HairyLeg *leg, Vector2 startPosition) {
     leg->waveRight.active = false;
     leg->isKickActive = false;
     leg->direction = -1;
-    LoadHairyLegSprites(&leg->sprites);
-    leg->currentAnim = &leg->sprites.idle;
 }
 
-void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime) {
+void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale) {
+    leg->groundY = groundY;
+    float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
+    leg->rect.height = currentSpriteH;
+
     if (leg->state == HL_IDLE || leg->state == HL_VULNERABLE) {
         float centroRato = playerRect.x + (playerRect.width / 2.0f);
         float centroPerna = leg->rect.x + (leg->rect.width / 2.0f);
@@ -64,10 +70,10 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime) {
 
         case HL_FALLING:
             leg->rect.y += 2000 * deltaTime;
-            if (leg->rect.y >= (GROUND + 300) - leg->rect.height) {
-                leg->rect.y = (GROUND + 300) - leg->rect.height;
-                leg->waveLeft = (Shockwave){ {leg->rect.x, GROUND - 50 + 300, 50, 70}, {1000, 0}, true };
-                leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, GROUND - 50 + 300, 50, 70}, {1000, 0}, true };
+            if (leg->rect.y >= leg->groundY - currentSpriteH) {
+                leg->rect.y = leg->groundY - currentSpriteH;
+                leg->waveLeft  = (Shockwave){ {leg->rect.x,                    leg->groundY - 50, 50, 70}, {1000, 0}, true };
+                leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width,  leg->groundY - 50, 50, 70}, {1000, 0}, true };
 
                 leg->state = HL_VULNERABLE;
                 leg->sprites.idle.currentFrame = 0;
@@ -87,7 +93,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime) {
         case HL_SWEEPING:
             leg->timer += deltaTime;
             if (leg->timer < 0.5f) {
-                if (leg->rect.y < (GROUND + 300) - leg->rect.height) leg->rect.y += 400 * deltaTime;
+                if (leg->rect.y < leg->groundY - currentSpriteH) leg->rect.y += 400 * deltaTime;
                 leg->rect.x -= 100 * leg->direction * deltaTime;
             }
             else if (leg->timer < 1.2f) {
@@ -141,13 +147,14 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime) {
     }
 }
 
-void DrawHairyLeg(HairyLeg *leg) {
-    bool flipX = (leg->direction == 1);
-    float offsetX = flipX ? -150.0f : -200.0f;
-    float offsetY = -20.0f;
+void DrawHairyLeg(HairyLeg *leg, float scale) {
+    bool flipX   = (leg->direction == 1);
+    float offsetX = flipX ? -(scale * 75.0f) : -(scale * 100.0f);
+    float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
+    float offsetY = 0.0f;
 
-    Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->rect.y + offsetY };
-    DrawAnimationFrame(leg->currentAnim, posicaoBoss, 2.0f, flipX, WHITE);
+    Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->groundY - currentSpriteH + offsetY };
+    DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
 }
 
 void UnloadHairyLeg(HairyLeg *leg) {

@@ -31,11 +31,12 @@ typedef struct {
     int direction;
     HairyLegSprites sprites;
     Animation *currentAnim;
+    float groundY;
 } HairyLeg;
 
-void InitHairyLeg(HairyLeg *leg, Vector2 startPosition);
-void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime);
-void DrawHairyLeg(HairyLeg *leg);
+void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale);
+void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale);
+void DrawHairyLeg(HairyLeg *leg, float scale);
 void UnloadHairyLeg(HairyLeg *leg);
 
 #endif
