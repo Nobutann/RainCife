@@ -31,10 +31,10 @@ void AtualizarDesenharPassaro2(Inimigo *passaro, int currentWidth, int currentHe
   }
 
   if (passaro->ativo) {
-    passaro->posicao.x -= (8 + velocidadeBase);
+    passaro->posicao.x -= (10 + velocidadeBase);
     passaro->posicao.y += passaro->velocidadeY;
 
-    if (passaro->posicao.y < currentHeight * 0.40f) {
+    if (passaro->posicao.y < currentHeight * 0.20f) {
       passaro->velocidadeY = 3.0f;
     } else if (passaro->posicao.y > currentHeight * 0.70f) {
       passaro->velocidadeY = -3.0f;

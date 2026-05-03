@@ -15,8 +15,8 @@ GameScreen RunOptions(Config *config)
         int fontSize = currentHeight / 25;
 
         Rectangle btnLanguage = { (float)currentWidth / 2, (float)startY - 5, 100, 30 };
-        Rectangle btnScreen   = { (float)currentWidth / 2, (float)startY + spacing - 5, 100, 30 };
-        Rectangle barVolume  = { (float)currentWidth / 2, (float)startY + spacing * 2 + 5, 200, 25 };
+        Rectangle btnScreen = { (float)currentWidth / 2, (float)startY + spacing - 5, 100, 30 };
+        Rectangle barVolume = { (float)currentWidth / 2, (float)startY + spacing * 2 + 5, 200, 25 };
 
         Vector2 mouse = GetMousePosition();
 
