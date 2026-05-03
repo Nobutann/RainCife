@@ -7,7 +7,7 @@
 #define GRAVITY 800.0f
 #define JUMP_FORCE -400.0f
 #define SPEED 500.0f
-#define GROUND 100.0f
+#define GROUND 500.0f
 
 typedef struct
 {

@@ -81,12 +81,12 @@ void UpdatePlayer(Player *player, float dt)
     player->position.x += player->velocity.x * dt;
     player->position.y += player->velocity.y * dt;
 
-    if (player->position.y >= GROUND)
-    {
-        player->position.y = GROUND;
+    if (player->position.y + 130 >= GROUND)
+        {
+        player->position.y = GROUND - 130;
         player->velocity.y = 0;
         player->onGround = true;
-    }
+        }
 
     UpdateLayeredAnimation(player->currentAnim, dt);
 }
@@ -94,6 +94,8 @@ void UpdatePlayer(Player *player, float dt)
 void DrawPlayer(Player *player)
 {
     DrawLayeredAnimation(player->currentAnim, player->position, 2.0f, !player->facingRight, WHITE);
+    float offsetY = 100.0f;
+    DrawRectangleLines(player->position.x, player->position.y, 100, 100, GREEN);
 }
 
 void UnloadPlayer(Player *player)
