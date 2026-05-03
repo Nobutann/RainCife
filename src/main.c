@@ -5,6 +5,7 @@
 #include "hairy_leg.h"
 #include "hitbox_enemy.h"
 #include "background.h"
+#include "enemy_caller.h"
 int main(void)
 {
     Config config = CarregarConfig();
@@ -79,12 +80,18 @@ int main(void)
             Texture2D texCaboclo = { 0 };
             Texture2D texPeixe = { 0 };
 
+            bool autoSpawn = false;
+            float spawnTimer = 0.0f;
+            const float spawnInterval = 2.0f;
+
             while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
             {
                 if (IsKeyPressed(KEY_ESCAPE))
                 {
                     currentScreen = SCREEN_START;
                 }
+
+                if (IsKeyPressed(KEY_ENTER)) autoSpawn = !autoSpawn;
 
                 float dt = GetFrameTime();
                 int currentWidth = GetScreenWidth();
@@ -100,6 +107,21 @@ int main(void)
                 bool sinalCaboclo = IsKeyPressed(KEY_C);
                 bool sinalPeixe = IsKeyPressed(KEY_P);
 
+                if (autoSpawn) {
+                    spawnTimer -= dt;
+                    if (spawnTimer <= 0) {
+                        EnemyType sorteado = SortearInimigoFase(1);
+                        if (sorteado == ENEMY_PASSARO1) sinalPassaro1 = true;
+                        else if (sorteado == ENEMY_PASSARO2) sinalPassaro2 = true;
+                        else if (sorteado == ENEMY_BIKE) sinalBike = true;
+                        else if (sorteado == ENEMY_MADEIRA) sinalMadeira = true;
+                        else if (sorteado == ENEMY_CABOCLO) sinalCaboclo = true;
+                        else if (sorteado == ENEMY_PEIXE) sinalPeixe = true;
+                        
+                        spawnTimer = spawnInterval;
+                    }
+                }
+
                 UpdateBackground(&bg, dt);
 
                 float standingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * -0.2f);
@@ -113,15 +135,16 @@ int main(void)
                     ClearBackground(BLACK);
                     DrawBackground(&bg, currentWidth, currentHeight, groundY);
 
+                    ConfiguracaoFase configFase = ObterConfiguracaoFase(1);
                     bool spawnP1 = false, spawnP2 = false, spawnB = false, spawnM = false, spawnC = false, spawnPx = false;
 
                     for (int i = 0; i < MAX_ENEMIES; i++) {
-                        bool triggerP1 = (sinalPassaro1 && !spawnP1 && !passaro1[i].ativo) ? (spawnP1 = true) : false;
-                        bool triggerP2 = (sinalPassaro2 && !spawnP2 && !passaro2[i].ativo) ? (spawnP2 = true) : false;
-                        bool triggerB = (sinalBike && !spawnB && !bike[i].ativo) ? (spawnB = true) : false;
-                        bool triggerM = (sinalMadeira && !spawnM && !madeira[i].ativo) ? (spawnM = true) : false;
-                        bool triggerC = (sinalCaboclo && !spawnC && !caboclo[i].ativo) ? (spawnC = true) : false;
-                        bool triggerPx = (sinalPeixe && !spawnPx && !peixe[i].ativo) ? (spawnPx = true) : false;
+                        bool triggerP1 = (sinalPassaro1 && configFase.inimigosPermitidos[ENEMY_PASSARO1] && !spawnP1 && !passaro1[i].ativo) ? (spawnP1 = true) : false;
+                        bool triggerP2 = (sinalPassaro2 && configFase.inimigosPermitidos[ENEMY_PASSARO2] && !spawnP2 && !passaro2[i].ativo) ? (spawnP2 = true) : false;
+                        bool triggerB = (sinalBike && configFase.inimigosPermitidos[ENEMY_BIKE] && !spawnB && !bike[i].ativo) ? (spawnB = true) : false;
+                        bool triggerM = (sinalMadeira && configFase.inimigosPermitidos[ENEMY_MADEIRA] && !spawnM && !madeira[i].ativo) ? (spawnM = true) : false;
+                        bool triggerC = (sinalCaboclo && configFase.inimigosPermitidos[ENEMY_CABOCLO] && !spawnC && !caboclo[i].ativo) ? (spawnC = true) : false;
+                        bool triggerPx = (sinalPeixe && configFase.inimigosPermitidos[ENEMY_PEIXE] && !spawnPx && !peixe[i].ativo) ? (spawnPx = true) : false;
 
                         AtualizarDesenharPassaro1(&passaro1[i], currentWidth, currentHeight, triggerP1, 0, texPassaro1);
                         AtualizarDesenharPassaro2(&passaro2[i], currentWidth, currentHeight, triggerP2, 0, texPassaro2);
@@ -143,11 +166,13 @@ int main(void)
 
                     DrawHairyLeg(&pernaCabeluda, bossScale);
 
-                    // Verificação de colisão com o Boss (Perna Cabeluda) e seus ataques
+                    // Verificação de colisão com o Boss (Perna Cabeluda) e seus ataques (Desativado para testes)
+                    /*
                     if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect)) currentScreen = SCREEN_START;
                     if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.kickHitbox)) currentScreen = SCREEN_START;
                     if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect)) currentScreen = SCREEN_START;
                     if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect)) currentScreen = SCREEN_START;
+                    */
 
                     DrawText("1: P1 | 2: P2 | B: Bike | M: Madeira | C: Caboclo | P: Peixe", 20, 20, 20, GRAY);
 
