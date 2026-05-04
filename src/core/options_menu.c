@@ -1,7 +1,7 @@
 #include <raylib.h>
-#include "screens.h"
+#include "core/screens.h"
 #include "utils.h"
-#include "config_manager.h"
+#include "core/config_manager.h"
 
 GameScreen RunOptions(Config *config)
 {

@@ -1,12 +1,16 @@
-#include "hairy_leg.h"
-#include "player.h"
+#include "entities/hairy_leg.h"
+#include "entities/player.h"
+#include <stdbool.h>
 
 void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale) {
     LoadHairyLegSprites(&leg->sprites);
     leg->currentAnim = &leg->sprites.idle;
     leg->groundY = groundY;
     float spriteH = (float)leg->currentAnim->sheet.height * scale;
-    leg->rect = (Rectangle){ startPosition.x, groundY - spriteH, 140, spriteH };
+    float emptyTop = spriteH * 0.10f;
+    float emptyBottom = spriteH * 0.08f;
+    float hitboxH = spriteH - emptyTop - emptyBottom;
+    leg->rect = (Rectangle){ startPosition.x, groundY - emptyBottom - hitboxH, 40.0f * scale, hitboxH };
     leg->state = HL_IDLE;
     leg->timer = 0.0f;
     leg->health = 100;
@@ -19,11 +23,15 @@ void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float sca
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale) {
     leg->groundY = groundY;
     float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
+    float emptyTop = currentSpriteH * 0.10f;
+    float emptyBottom = currentSpriteH * 0.08f;
+    float defaultHitboxH = currentSpriteH - emptyTop - emptyBottom;
     float oldHeight = leg->rect.height;
-    leg->rect.height = currentSpriteH;
-    
-    if (leg->state != HL_JUMPING_UP && leg->state != HL_FALLING) {
-        leg->rect.y = leg->groundY - currentSpriteH;
+    leg->rect.height = defaultHitboxH;
+    leg->isKickActive = false;
+
+    if (leg->state != HL_JUMPING_UP && leg->state != HL_FALLING && leg->state != HL_HANGING && leg->state != HL_SWEEPING) {
+        leg->rect.y = leg->groundY - emptyBottom - leg->rect.height;
     }
 
     if (leg->state == HL_IDLE || leg->state == HL_VULNERABLE) {
@@ -66,19 +74,33 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
         case HL_JUMPING_UP:
             leg->rect.y -= 1500 * deltaTime;
             if (leg->rect.y < -leg->rect.height) {
-                leg->state = HL_FALLING;
-                leg->sprites.fall.currentFrame = 0;
-                leg->sprites.fall.timer = 0.0f;
+                leg->state = HL_HANGING;
                 leg->rect.x = playerRect.x;
             }
             break;
 
+        case HL_HANGING:
+            leg->timer += deltaTime;
+            leg->rect.x = playerRect.x;
+
+            if(leg->timer > 2.0f){
+                leg->state = HL_FALLING;
+                leg->sprites.fall.currentFrame = 0;
+                leg->sprites.fall.timer = 0.0f;
+                leg->timer = 0.0f;
+            }
+
+            break;
+
+
         case HL_FALLING:
             leg->rect.y += 2000 * deltaTime;
-            if (leg->rect.y >= leg->groundY - currentSpriteH) {
+            if (leg->rect.y >= leg->groundY - emptyBottom - defaultHitboxH) {
+                float waveW = 25.0f * scale;
+                float waveH = 35.0f * scale;
                 leg->rect.y = leg->groundY - currentSpriteH;
-                leg->waveLeft = (Shockwave){ {leg->rect.x, leg->rect.y + currentSpriteH * 0.75f, 50, 70}, {600, 0}, true };
-                leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, leg->rect.y + currentSpriteH * 0.75f, 50, 70}, {600, 0}, true };
+                leg->waveLeft = (Shockwave){ {leg->rect.x, leg->rect.y + currentSpriteH * 0.75f, waveW, waveH}, {600, 0}, true };
+                leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, leg->rect.y + currentSpriteH * 0.75f, waveW, waveH}, {600, 0}, true };
 
                 leg->state = HL_VULNERABLE;
                 leg->sprites.idle.currentFrame = 0;
@@ -97,12 +119,20 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
 
         case HL_SWEEPING:
             leg->timer += deltaTime;
+            leg->rect.height = 60.0f * scale;
+            leg->rect.y = leg->groundY - emptyBottom - leg->rect.height;
+
+            float sweepFootWidth = 160.0f * scale;
+            float footX = (leg->direction == 1) ? (leg->rect.x + leg->rect.width) : (leg->rect.x - sweepFootWidth);
+            leg->kickHitbox = (Rectangle){ footX, leg->rect.y, sweepFootWidth, leg->rect.height };
+            leg->isKickActive = false;
+
             if (leg->timer < 0.5f) {
-                if (leg->rect.y < leg->groundY - currentSpriteH) leg->rect.y += 400 * deltaTime;
                 leg->rect.x -= 100 * leg->direction * deltaTime;
             }
             else if (leg->timer < 1.2f) {
-                leg->rect.x += 1000 * leg->direction * deltaTime;
+                leg->isKickActive = true;
+                leg->rect.x += 2000 * leg->direction * deltaTime;
             }
             else {
                 leg->state = HL_VULNERABLE;
@@ -118,9 +148,10 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
                 leg->isKickActive = false;
             }
             else if (leg->timer < 0.7f) {
-                float larguraHitbox = 160;
+                float larguraHitbox = 80.0f * scale;
+                float alturaHitbox = 40.0f * scale;
                 float hitboxX = (leg->direction == 1) ? (leg->rect.x + leg->rect.width) : (leg->rect.x - larguraHitbox);
-                leg->kickHitbox = (Rectangle){ hitboxX, leg->rect.y + currentSpriteH * 0.7f, larguraHitbox, 80 };
+                leg->kickHitbox = (Rectangle){ hitboxX, leg->rect.y + currentSpriteH * 0.7f, larguraHitbox, alturaHitbox };
                 leg->isKickActive = true;
             }
             else if (leg->timer < 1.2f) {
@@ -139,6 +170,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
         case HL_IDLE:
         case HL_VULNERABLE: leg->currentAnim = &leg->sprites.idle; break;
         case HL_JUMPING_UP: leg->currentAnim = &leg->sprites.jump; break;
+        case HL_HANGING: leg->currentAnim = &leg->sprites.idle; break;
         case HL_FALLING: leg->currentAnim = &leg->sprites.fall; break;
         case HL_KICKING: leg->currentAnim = &leg->sprites.kick; break;
         case HL_SWEEPING: leg->currentAnim = &leg->sprites.rasteira; break;
@@ -150,20 +182,28 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
     if (!(isAttack && isLastFrame)) {
         UpdateAnimation(leg->currentAnim, deltaTime);
     }
+    if (isAttack && leg->currentAnim->currentFrame >= leg->currentAnim->frameCount) {
+        leg->currentAnim->currentFrame = leg->currentAnim->frameCount - 1;
+    }
 }
 
 void DrawHairyLeg(HairyLeg *leg, float scale) {
     bool flipX = (leg->direction == 1);
-    float offsetX = flipX ? -(scale * 75.0f) : -(scale * 100.0f);
+    float offsetX = flipX ? -(scale * 90.0f) : -(scale * 115.0f);
     float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
-    float offsetY = 0.0f;
+    float emptyBottom = currentSpriteH * 0.08f;
+    float offsetY = -(currentSpriteH - emptyBottom - leg->rect.height);
+
+    if (leg->state == HL_SWEEPING) {
+        offsetY = -(currentSpriteH - leg->rect.height);
+    }
 
     Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->rect.y + offsetY };
     DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
 
     // Linhas de debug para hitboxes
     DrawRectangleLinesEx(leg->rect, 2.0f, RED); // Hitbox principal
-    
+
     if (leg->isKickActive) {
         DrawRectangleLinesEx(leg->kickHitbox, 2.0f, ORANGE); // Hitbox do chute
     }

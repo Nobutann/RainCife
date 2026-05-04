@@ -1,7 +1,7 @@
+/*
 #include <raylib.h>
 #include "screens.h"
 #include "game.h"
-#include "hitbox_enemy.h"
 
 GameScreen RunGame(Config *config) {
     static Inimigo passaro1[MAX_ENEMIES] = { 0 };
@@ -61,3 +61,5 @@ GameScreen RunGame(Config *config) {
     }
     return SCREEN_EXIT;
 }
+
+*/

@@ -2,11 +2,12 @@
 #define HAIRY_LEG_H
 
 #include "raylib.h"
-#include "sprites.h"
+#include "graphics/sprites.h"
 
 typedef enum {
     HL_IDLE,
     HL_JUMPING_UP,
+    HL_HANGING,
     HL_FALLING,
     HL_VULNERABLE,
     HL_SWEEPING,

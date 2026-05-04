@@ -1,5 +1,5 @@
 #include <raylib.h>
-#include "screens.h"
+#include "core/screens.h"
 #include "utils.h"
 
 GameScreen RunStart()

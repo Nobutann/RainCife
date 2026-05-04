@@ -1,6 +1,6 @@
 #include <raylib.h>
-#include "background.h"
-#include "player.h"
+#include "graphics/background.h"
+#include "entities/player.h"
 
 void InitBackground(Background *bg)
 {

@@ -2,15 +2,16 @@
 #define PLAYER_H
 
 #include <raylib.h>
-#include "sprites.h"
+#include "graphics/sprites.h"
+#include "gameplay/weapon.h"
 
 #define GRAVITY 800.0f
-#define JUMP_FORCE -400.0f
-#define SPEED 500.0f
+#define JUMP_FORCE -600.0f
+#define SPEED 600.0f
 #define GROUND_RATIO 0.82f
 #define SIDEWALK_THICKNESS_RATIO 0.08f
 
-typedef struct
+typedef struct Player
 {
     Vector2 position;
     Vector2 velocity;
@@ -20,6 +21,7 @@ typedef struct
     LayeredAnimation *currentAnim;
     bool facingRight;
     bool isBossFighting;
+    Weapon weapon;
 } Player;
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed);
