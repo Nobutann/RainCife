@@ -5,23 +5,19 @@ ConfiguracaoFase ObterConfiguracaoFase(int faseId) {
     ConfiguracaoFase config = {0};
     config.faseId = faseId;
 
-    // Inicializa todos como falso
     for (int i = 0; i < ENEMY_COUNT; i++) {
         config.inimigosPermitidos[i] = false;
     }
 
-    // Configuração específica por fase
     switch (faseId) {
         case 1:
             config.inimigosPermitidos[ENEMY_BIRD1] = true;
             config.inimigosPermitidos[ENEMY_BIKE] = true;
             config.inimigosPermitidos[ENEMY_WOOD] = true;
             config.inimigosPermitidos[ENEMY_POSTE] = true;
+            config.inimigosPermitidos[ENEMY_SAFE_POSTE] = true;
             break;
-        
-        // Futuras fases podem ser adicionadas aqui
         default:
-            // Por padrão, se a fase não existir, permite bird1
             config.inimigosPermitidos[ENEMY_BIRD1] = true;
             break;
     }

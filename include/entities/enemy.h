@@ -12,6 +12,7 @@ typedef enum
     ENEMY_WOOD,
     ENEMY_POSTE,
     ENEMY_FISH,
+    ENEMY_SAFE_POSTE,
     ENEMY_COUNT
 } EnemyType;
 
@@ -26,10 +27,22 @@ typedef struct
     double stateTimer;
     Vector2 basePosition;
     bool headDetached;
+    float animationTimer;
+    int currentFrame;
 } Enemy;
+
+typedef struct {
+    Texture2D textures[ENEMY_COUNT];
+    Texture2D posteSemCabeca;
+    Texture2D posteCabecas;
+    Texture2D fishWaterJump;
+    Animation fishAnticipation;
+    Texture2D bikeSkin2;
+    Texture2D bikeSkinItau;
+} EnemyAssets;
 
 void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed);
 void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed, Rectangle playerHitbox);
-void DrawEnemy(Enemy *enemy, Texture2D *textures, Texture2D extraTex1, Texture2D extraTex2);
+void DrawEnemy(Enemy *enemy, EnemyAssets *assets);
 
 #endif
