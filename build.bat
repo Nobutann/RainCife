@@ -5,8 +5,8 @@ echo Compilando o jogo com %GCC_PATH%...
 :: Cria a pasta libs se nao existir
 if not exist libs mkdir libs
 
-:: Compila todos os arquivos .c da pasta src
-%GCC_PATH% src\main.c src\game.c src\start_menu.c src\options_menu.c src\credits_menu.c src\config_manager.c src\hitbox_enemy.c src\utils.c src\hairy_leg.c src\player.c src\sprites.c src\background.c src\enemy_caller.c -o libs\jogo.exe -I"include" -I"src" -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lraylib -lopengl32 -lgdi32 -lwinmm
+:: Compila todos os arquivos .c
+%GCC_PATH% src\core\main.c src\core\start_menu.c src\core\options_menu.c src\core\credits_menu.c src\core\config_manager.c src\entities\player.c src\entities\hairy_leg.c src\entities\enemy.c src\gameplay\weapon.c src\graphics\background.c src\graphics\sprites.c src\game.c src\utils.c src\enemy_caller.c -o libs\jogo.exe -I"include" -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lraylib -lopengl32 -lgdi32 -lwinmm
 
 if %errorlevel% neq 0 (
     echo.

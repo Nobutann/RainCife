@@ -2,16 +2,7 @@
 #define ENEMY_CALLER_H
 
 #include <stdbool.h>
-
-typedef enum {
-    ENEMY_PASSARO1,
-    ENEMY_PASSARO2,
-    ENEMY_BIKE,
-    ENEMY_MADEIRA,
-    ENEMY_CABOCLO,
-    ENEMY_PEIXE,
-    ENEMY_COUNT
-} EnemyType;
+#include "entities/enemy.h"
 
 typedef struct {
     int faseId;

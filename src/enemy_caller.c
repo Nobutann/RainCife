@@ -13,14 +13,16 @@ ConfiguracaoFase ObterConfiguracaoFase(int faseId) {
     // Configuração específica por fase
     switch (faseId) {
         case 1:
-            config.inimigosPermitidos[ENEMY_PASSARO1] = true;
+            config.inimigosPermitidos[ENEMY_BIRD1] = true;
             config.inimigosPermitidos[ENEMY_BIKE] = true;
+            config.inimigosPermitidos[ENEMY_WOOD] = true;
+            config.inimigosPermitidos[ENEMY_POSTE] = true;
             break;
         
         // Futuras fases podem ser adicionadas aqui
         default:
-            // Por padrão, se a fase não existir, permite passaro1
-            config.inimigosPermitidos[ENEMY_PASSARO1] = true;
+            // Por padrão, se a fase não existir, permite bird1
+            config.inimigosPermitidos[ENEMY_BIRD1] = true;
             break;
     }
 

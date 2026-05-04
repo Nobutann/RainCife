@@ -5,6 +5,7 @@
 #include "entities/hairy_leg.h"
 #include "entities/enemy.h"
 #include "graphics/background.h"
+#include "enemy_caller.h"
 
 #define MAX_ACTIVE_ENEMIES 12
 
@@ -69,7 +70,20 @@ int main(void)
             InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
 
             Enemy enemies[MAX_ACTIVE_ENEMIES] = {0};
-            Texture2D texEnemies = {0};
+            Texture2D enemyTextures[ENEMY_COUNT];
+            enemyTextures[ENEMY_BIRD1] = LoadTexture("assets/sprites/Enemys_obstacles/Bird.png");
+            enemyTextures[ENEMY_BIRD2] = LoadTexture("assets/sprites/Enemys_obstacles/Bird.png");
+            enemyTextures[ENEMY_BIKE] = LoadTexture("assets/sprites/Enemys_obstacles/Bike.png");
+            enemyTextures[ENEMY_WOOD] = LoadTexture("assets/sprites/Enemys_obstacles/Tree.png");
+            enemyTextures[ENEMY_POSTE] = LoadTexture("assets/sprites/Enemys_obstacles/Poste_mal_completo.png");
+            enemyTextures[ENEMY_FISH] = LoadTexture("assets/sprites/Enemys_obstacles/Fish.png");
+
+            Texture2D texPosteSemCabeca = LoadTexture("assets/sprites/Enemys_obstacles/Poste_mal_sem_cabeca.png");
+            Texture2D texPosteCabecas = LoadTexture("assets/sprites/Enemys_obstacles/Poste_mal_cabecas.png");
+
+            bool autoSpawn = false;
+            float spawnTimer = 0.0f;
+            const float spawnInterval = 2.0f;
 
             while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
             {
@@ -89,8 +103,25 @@ int main(void)
                 bool spawnBird2 = IsKeyPressed(KEY_TWO);
                 bool spawnBike = IsKeyPressed(KEY_B);
                 bool spawnWood = IsKeyPressed(KEY_M);
-                bool spawnCaboclo = IsKeyPressed(KEY_C);
+                bool spawnPoste = IsKeyPressed(KEY_C);
                 bool spawnFish = IsKeyPressed(KEY_P);
+
+                if (IsKeyPressed(KEY_ENTER)) autoSpawn = !autoSpawn;
+
+                if (autoSpawn) {
+                    spawnTimer -= dt;
+                    if (spawnTimer <= 0) {
+                        EnemyType sorteado = SortearInimigoFase(1);
+                        if (sorteado == ENEMY_BIRD1) spawnBird1 = true;
+                        else if (sorteado == ENEMY_BIRD2) spawnBird2 = true;
+                        else if (sorteado == ENEMY_BIKE) spawnBike = true;
+                        else if (sorteado == ENEMY_WOOD) spawnWood = true;
+                        else if (sorteado == ENEMY_POSTE) spawnPoste = true;
+                        else if (sorteado == ENEMY_FISH) spawnFish = true;
+                        
+                        spawnTimer = spawnInterval;
+                    }
+                }
 
                 if (spawnBird1)
                 {
@@ -140,13 +171,13 @@ int main(void)
                     }
                 }
 
-                if (spawnCaboclo)
+                if (spawnPoste)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
                         if (!enemies[i].active)
                         {
-                            InitEnemy(&enemies[i], ENEMY_CABOCLO, currentWidth, currentHeight, 0);
+                            InitEnemy(&enemies[i], ENEMY_POSTE, currentWidth, currentHeight, 0);
                             break;
                         }
                     }
@@ -168,7 +199,7 @@ int main(void)
 
                 for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                 {
-                    UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0);
+                    UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0, playerHitbox);
                     if (enemies[i].active)
                     {
                         Rectangle enemyRect =
@@ -218,7 +249,10 @@ int main(void)
 
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
-                        DrawEnemy(&enemies[i], (Texture2D){0});
+                        if (enemies[i].active)
+                        {
+                            DrawEnemy(&enemies[i], enemyTextures, texPosteSemCabeca, texPosteCabecas);
+                        }
                     }
 
                     DrawPlayer(&player, playerScale);
@@ -231,6 +265,9 @@ int main(void)
 
             UnloadPlayer(&player);
             UnloadBackground(&bg);
+            for (int i = 0; i < ENEMY_COUNT; i++) UnloadTexture(enemyTextures[i]);
+            UnloadTexture(texPosteSemCabeca);
+            UnloadTexture(texPosteCabecas);
         }
     }
 
