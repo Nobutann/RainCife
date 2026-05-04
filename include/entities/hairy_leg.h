@@ -7,6 +7,7 @@
 typedef enum {
     HL_IDLE,
     HL_JUMPING_UP,
+    HL_HANGING,
     HL_FALLING,
     HL_VULNERABLE,
     HL_SWEEPING,

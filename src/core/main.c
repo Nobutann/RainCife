@@ -59,7 +59,7 @@ int main(void)
             int initW = GetScreenWidth();
             int initH = GetScreenHeight();
             float initGroundY = initH * GROUND_RATIO;
-            float initBossScale = (float)initH * 0.32f / 252.0f;
+            float initBossScale = (float)initH * 0.65f / 252.0f;
 
             Player player;
             Vector2 startPos = { 100, initGroundY };
@@ -83,7 +83,7 @@ int main(void)
                 int currentHeight = GetScreenHeight();
                 float groundY = currentHeight * GROUND_RATIO;
                 float playerScale = (float)currentHeight * 0.45f / 252.0f;
-                float bossScale = (float)currentHeight * 0.40f / 252.0f;
+                float bossScale = (float)currentHeight * 0.65f / 252.0f;
 
                 bool spawnBird1 = IsKeyPressed(KEY_ONE);
                 bool spawnBird2 = IsKeyPressed(KEY_TWO);
@@ -165,7 +165,7 @@ int main(void)
                 }
 
                 Rectangle playerHitbox = GetPlayerHitbox(&player, playerScale);
-                
+
                 for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                 {
                     UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0);
@@ -202,7 +202,7 @@ int main(void)
                 {
                     currentScreen = SCREEN_START;
                 }
-                if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect)) 
+                if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect))
                 {
                     currentScreen = SCREEN_START;
                 }
