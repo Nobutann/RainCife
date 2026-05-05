@@ -3,9 +3,11 @@
 #include "core/config_manager.h"
 #include "entities/player.h"
 #include "entities/hairy_leg.h"
+#include "entities/shark.h"
 #include "entities/enemy.h"
 #include "graphics/background.h"
 #include "enemy_caller.h"
+#include "gameplay/levels.h"
 
 #define MAX_ACTIVE_ENEMIES 12
 
@@ -69,6 +71,12 @@ int main(void)
             HairyLeg pernaCabeluda;
             InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
 
+            Shark shark;
+            InitShark(&shark, initW, initH);
+
+            Level *levels = InitGameLevels();
+            Level *currentLevel = levels;
+
             Enemy enemies[MAX_ACTIVE_ENEMIES] = {0};
             EnemyAssets enemyAssets = {0};
             enemyAssets.textures[ENEMY_BIRD1] = LoadTexture("assets/sprites/Enemys_obstacles/Bird.png");
@@ -117,7 +125,7 @@ int main(void)
                 if (autoSpawn) {
                     spawnTimer -= dt;
                     if (spawnTimer <= 0) {
-                        EnemyType sorteado = SortearInimigoFase(1);
+                        EnemyType sorteado = SortearInimigoFase(currentLevel->enemyConfigId);
                         if (sorteado == ENEMY_BIRD1) spawnBird1 = true;
                         else if (sorteado == ENEMY_BIRD2) spawnBird2 = true;
                         else if (sorteado == ENEMY_BIKE) spawnBike = true;
@@ -242,23 +250,62 @@ int main(void)
                 float playerStandingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * 0.1f);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale);
 
-                UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
+                if (IsKeyPressed(KEY_RIGHT) && currentLevel->next) {
+                    currentLevel = currentLevel->next;
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
+                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+                    InitShark(&shark, currentWidth, currentHeight);
+                }
+                if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
+                    currentLevel = currentLevel->prev;
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
+                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+                    InitShark(&shark, currentWidth, currentHeight);
+                }
 
-                if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect))
+                if (currentLevel->bossId == 1) {
+                    UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
+                }
+                if (currentLevel->bossId == 2) {
+                    UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
+                }
+
+                if (currentLevel->bossId == 2 && CheckCollisionRecs(playerHitbox, shark.rect))
                 {
                     currentScreen = SCREEN_START;
                 }
-                if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.kickHitbox))
-                {
-                    currentScreen = SCREEN_START;
+
+                for (int i = 0; i < MAX_WATER_BALLS; i++) {
+                    if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect)) {
+                        currentScreen = SCREEN_START;
+                    }
                 }
-                if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect))
-                {
-                    currentScreen = SCREEN_START;
+
+                if (currentLevel->bossId == 2) {
+                    for (int i = 0; i < MAX_WATER_BALLS; i++) {
+                        if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect)) {
+                            currentScreen = SCREEN_START;
+                        }
+                    }
                 }
-                if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect))
-                {
-                    currentScreen = SCREEN_START;
+
+                if (currentLevel->bossId == 1) {
+                    if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect))
+                    {
+                        currentScreen = SCREEN_START;
+                    }
+                    if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.kickHitbox))
+                    {
+                        currentScreen = SCREEN_START;
+                    }
+                    if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect))
+                    {
+                        currentScreen = SCREEN_START;
+                    }
+                    if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect))
+                    {
+                        currentScreen = SCREEN_START;
+                    }
                 }
 
 
@@ -276,8 +323,14 @@ int main(void)
 
                     DrawPlayer(&player, playerScale);
 
-                    DrawHairyLeg(&pernaCabeluda, bossScale);
-                    DrawText("1: P1 | 2: P2 | B: Bike | M: Madeira | C: Caboclo | P: Peixe", 20, 20, 20, GRAY);
+                    if (currentLevel->bossId == 1) DrawHairyLeg(&pernaCabeluda, bossScale);
+                    if (currentLevel->bossId == 2) DrawShark(&shark);
+                    
+                    char faseText[32];
+                    TextCopy(faseText, TextFormat("FASE %d", currentLevel->id));
+                    DrawText(faseText, currentWidth / 2 - MeasureText(faseText, 30) / 2, 50, 30, WHITE);
+
+                    DrawText("SETAS: Trocar Fase | 1,2,B,M,C,P: Spawn | ENTER: AutoSpawn", 20, 20, 20, GRAY);
 
                 EndDrawing();
             }
@@ -291,6 +344,7 @@ int main(void)
             UnloadAnimation(&enemyAssets.fishAnticipation);
             UnloadTexture(enemyAssets.bikeSkin2);
             UnloadTexture(enemyAssets.bikeSkinItau);
+            UnloadShark(&shark);
         }
     }
 
