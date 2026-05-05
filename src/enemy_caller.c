@@ -17,6 +17,15 @@ ConfiguracaoFase ObterConfiguracaoFase(int faseId) {
             config.inimigosPermitidos[ENEMY_POSTE] = true;
             config.inimigosPermitidos[ENEMY_SAFE_POSTE] = true;
             break;
+        case 2:
+            config.inimigosPermitidos[ENEMY_BIRD1] = true;
+            config.inimigosPermitidos[ENEMY_BIRD2] = true;
+            config.inimigosPermitidos[ENEMY_BIKE] = true;
+            config.inimigosPermitidos[ENEMY_WOOD] = true;
+            config.inimigosPermitidos[ENEMY_POSTE] = true;
+            config.inimigosPermitidos[ENEMY_FISH] = true;
+            config.inimigosPermitidos[ENEMY_SAFE_POSTE] = true;
+            break;
         default:
             config.inimigosPermitidos[ENEMY_BIRD1] = true;
             break;
