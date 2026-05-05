@@ -141,31 +141,49 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             }
             break;
 
-        case HL_SWEEPING:
-            leg->timer += deltaTime;
-            leg->rect.height = 60.0f * scale;
-            leg->rect.y = leg->groundY - emptyBottom - leg->rect.height;
+            case HL_SWEEPING:
+                leg->timer += deltaTime;
+                leg->rect.height = 60.0f * scale;
+                leg->rect.y = leg->groundY - emptyBottom - leg->rect.height;
 
-            float sweepFootWidth = 160.0f * scale;
-            float footX = (leg->direction == 1) ? (leg->rect.x + leg->rect.width) : (leg->rect.x - sweepFootWidth);
-            leg->kickHitbox = (Rectangle){ footX, leg->rect.y, sweepFootWidth, leg->rect.height };
-            leg->isKickActive = false;
+                float sweepFootWidth = 160.0f * scale;
+                float footX = (leg->direction == 1) ? (leg->rect.x + leg->rect.width) : (leg->rect.x - sweepFootWidth);
+                leg->kickHitbox = (Rectangle){ footX, leg->rect.y, sweepFootWidth, leg->rect.height };
+                leg->isKickActive = false;
 
-            if (leg->timer < 0.5f) {
-                leg->rect.x -= 100 * leg->direction * deltaTime;
-                leg->sprites.rasteira.currentFrame = 1;
-            }
-            else if (leg->timer < 1.2f) {
-                leg->isKickActive = true;
-                leg->rect.x += 1000 * leg->direction * deltaTime;
-                leg->sprites.rasteira.currentFrame = 3;
-            }
-            else {
-                leg->state = HL_VULNERABLE;
-                leg->sprites.idle.currentFrame = 0;
-                leg->timer = 0.0f;
-            }
-            break;
+                if(leg->direction == -1){
+                    if (leg->timer < 0.5f) {
+                        leg->rect.x -= 100 * leg->direction * deltaTime;
+                        leg->sprites.rasteira.currentFrame = 1;
+                    }
+                    else if (leg->timer < 1.2f) {
+                        leg->isKickActive = true;
+                        leg->rect.x += 1000 * leg->direction * deltaTime;
+                        leg->sprites.rasteira.currentFrame = 3;
+                    }
+                    else{
+                        leg->state = HL_VULNERABLE;
+                        leg->sprites.idle.currentFrame = 0;
+                        leg->timer = 0.0f;
+                    }
+                }else if (leg->direction == 1) {
+                    if (leg->timer < 0.5f) {
+                        leg->rect.x -= 100 * leg->direction * deltaTime;
+                        leg->sprites.rasteira.currentFrame = 0;
+                    }
+                    else if (leg->timer < 1.2f) {
+                        leg->isKickActive = true;
+                        leg->rect.x += 1000 * leg->direction * deltaTime;
+                        leg->sprites.rasteira.currentFrame = 2;
+                    }
+                    else{
+                        leg->state = HL_VULNERABLE;
+                        leg->sprites.idle.currentFrame = 0;
+                        leg->timer = 0.0f;
+                    }
+                }
+
+                break;
 
         case HL_KICKING:
             leg->timer += deltaTime;
