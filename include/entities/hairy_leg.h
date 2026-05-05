@@ -11,7 +11,8 @@ typedef enum {
     HL_FALLING,
     HL_VULNERABLE,
     HL_SWEEPING,
-    HL_KICKING
+    HL_KICKING,
+    HL_JUMPING_BACK
 } HairyLegState;
 
 typedef struct {

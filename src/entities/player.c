@@ -10,7 +10,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->speed = speed;
     player->onGround = true;
     player->currentAnim = &player->sprites.walkFront;
-    player->isBossFighting = false;
+    player->isBossFighting = true;
     player->facingRight = false;
     player->sprites.attack = (LayeredAnimation){0};
     EquipWeapon(player, WEAPON_HAMMER);
