@@ -11,8 +11,7 @@
 
 #define MAX_ACTIVE_ENEMIES 30
 
-int main(void)
-{
+int main(void) {
     Config config = CarregarConfig();
 
     config.telaCheia = 1;
@@ -20,8 +19,7 @@ int main(void)
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "RatTsunami");
 
-    if (config.telaCheia)
-    {
+    if (config.telaCheia) {
         int monitor = GetCurrentMonitor();
         SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
         ToggleFullscreen();
@@ -32,30 +30,24 @@ int main(void)
 
     GameScreen currentScreen = SCREEN_START;
 
-    while (currentScreen != SCREEN_EXIT && !WindowShouldClose())
-    {
-        if (IsKeyPressed(KEY_F11))
-        {
+    while (currentScreen != SCREEN_EXIT && !WindowShouldClose()) {
+        if (IsKeyPressed(KEY_F11)) {
             ToggleFullscreen();
         }
 
-        if (currentScreen == SCREEN_START)
-        {
+        if (currentScreen == SCREEN_START) {
             currentScreen = RunStart();
         }
 
-        if (currentScreen == SCREEN_OPTIONS)
-        {
+        if (currentScreen == SCREEN_OPTIONS) {
             currentScreen = RunOptions(&config);
         }
 
-        if (currentScreen == SCREEN_CREDITS)
-        {
+        if (currentScreen == SCREEN_CREDITS) {
             currentScreen = RunCredits();
         }
 
-        if (currentScreen == SCREEN_GAME)
-        {
+        if (currentScreen == SCREEN_GAME) {
             Background bg;
             InitBackground(&bg);
 
@@ -98,16 +90,13 @@ int main(void)
             bool autoSpawn = false;
             float spawnTimer = 0.0f;
 
-            while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
-            {
-                if (IsKeyPressed(KEY_ESCAPE))
-                {
+            while (!WindowShouldClose() && currentScreen == SCREEN_GAME) {
+                if (IsKeyPressed(KEY_ESCAPE)) {
                     currentScreen = SCREEN_START;
                 }
 
                 float dt = GetFrameTime();
-                if (dt > 0.1f)
-                {
+                if (dt > 0.1f) {
                     dt = 0.1f;
                 }
 
@@ -126,33 +115,25 @@ int main(void)
                 bool spawnSafePoste = IsKeyPressed(KEY_I);
                 bool spawnFish = IsKeyPressed(KEY_P);
 
-                if (IsKeyPressed(KEY_ENTER))
-                {
+                if (IsKeyPressed(KEY_ENTER)) {
                     autoSpawn = !autoSpawn;
                 }
 
-                if (autoSpawn)
-                {
+                if (autoSpawn) {
                     spawnTimer -= dt;
-                    if (spawnTimer <= 0)
-                    {
+                    if (spawnTimer <= 0) {
                         int groundObstacleCount = 0;
-                        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                        {
-                            if (enemies[i].active && (enemies[i].type == ENEMY_BIKE || enemies[i].type == ENEMY_WOOD))
-                            {
+                        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                            if (enemies[i].active && (enemies[i].type == ENEMY_BIKE || enemies[i].type == ENEMY_WOOD)) {
                                 groundObstacleCount++;
                             }
                         }
 
                         EnemyType sorteado = SortearInimigoFase(currentLevel->enemyConfigId);
                         
-                        if ((sorteado == ENEMY_BIKE || sorteado == ENEMY_WOOD) && groundObstacleCount >= 2)
-                        {
+                        if ((sorteado == ENEMY_BIKE || sorteado == ENEMY_WOOD) && groundObstacleCount >= 2) {
                             spawnTimer = 0.5f;
-                        }
-                        else
-                        {
+                        } else {
                             if (sorteado == ENEMY_BIRD1) spawnBird1 = true;
                             else if (sorteado == ENEMY_BIRD2) spawnBird2 = true;
                             else if (sorteado == ENEMY_BIKE) spawnBike = true;
@@ -166,84 +147,63 @@ int main(void)
                     }
                 }
 
-                if (spawnBird1)
-                {
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (!enemies[i].active)
-                        {
+                if (spawnBird1) {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (!enemies[i].active) {
                             InitEnemy(&enemies[i], ENEMY_BIRD1, currentWidth, currentHeight, 0);
                             break;
                         }
                     }
                 }
 
-                if (spawnBird2)
-                {
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (!enemies[i].active)
-                        {
+                if (spawnBird2) {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (!enemies[i].active) {
                             InitEnemy(&enemies[i], ENEMY_BIRD2, currentWidth, currentHeight, 0);
                             break;
                         }
                     }
                 }
 
-                if (spawnBike)
-                {
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (!enemies[i].active)
-                        {
+                if (spawnBike) {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (!enemies[i].active) {
                             InitEnemy(&enemies[i], ENEMY_BIKE, currentWidth, currentHeight, 0);
                             break;
                         }
                     }
                 }
 
-                if (spawnWood)
-                {
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (!enemies[i].active)
-                        {
+                if (spawnWood) {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (!enemies[i].active) {
                             InitEnemy(&enemies[i], ENEMY_WOOD, currentWidth, currentHeight, 0);
                             break;
                         }
                     }
                 }
 
-                if (spawnPoste)
-                {
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (!enemies[i].active)
-                        {
+                if (spawnPoste) {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (!enemies[i].active) {
                             InitEnemy(&enemies[i], ENEMY_POSTE, currentWidth, currentHeight, 0);
                             break;
                         }
                     }
                 }
 
-                if (spawnFish)
-                {
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (!enemies[i].active)
-                        {
+                if (spawnFish) {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (!enemies[i].active) {
                             InitEnemy(&enemies[i], ENEMY_FISH, currentWidth, currentHeight, 0);
                             break;
                         }
                     }
                 }
 
-                if (spawnSafePoste)
-                {
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (!enemies[i].active)
-                        {
+                if (spawnSafePoste) {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (!enemies[i].active) {
                             InitEnemy(&enemies[i], ENEMY_SAFE_POSTE, currentWidth, currentHeight, 0);
                             break;
                         }
@@ -252,21 +212,17 @@ int main(void)
 
                 Rectangle playerHitbox = GetPlayerHitbox(&player, playerScale);
 
-                for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                {
+                for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
                     UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0, playerHitbox);
-                    if (enemies[i].active)
-                    {
-                        Rectangle enemyRect = 
-                        { 
+                    if (enemies[i].active) {
+                        Rectangle enemyRect = { 
                             enemies[i].position.x, 
                             enemies[i].position.y, 
                             enemies[i].size.x, 
                             enemies[i].size.y 
                         };
 
-                        if (enemies[i].type != ENEMY_SAFE_POSTE && CheckCollisionRecs(playerHitbox, enemyRect))
-                        {
+                        if (enemies[i].type != ENEMY_SAFE_POSTE && CheckCollisionRecs(playerHitbox, enemyRect)) {
                             currentScreen = SCREEN_START;
                         }
                     }
@@ -278,73 +234,73 @@ int main(void)
                 float playerStandingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * 0.1f);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale);
 
-                if (IsKeyPressed(KEY_RIGHT) && currentLevel->next)
-                {
+                if (IsKeyPressed(KEY_RIGHT) && currentLevel->next) {
                     currentLevel = currentLevel->next;
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        enemies[i].active = false;
+                    }
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
                     player.isBossFighting = (currentLevel->bossId != 0);
                 }
-                if (IsKeyPressed(KEY_LEFT) && currentLevel->prev)
-                {
+                if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
                     currentLevel = currentLevel->prev;
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        enemies[i].active = false;
+                    }
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
                     player.isBossFighting = (currentLevel->bossId != 0);
                 }
 
-                if (currentLevel->bossId == 1)
-                {
+                if (currentLevel->bossId == 1) {
                     UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
                 }
-                if (currentLevel->bossId == 2)
-                {
+                if (currentLevel->bossId == 2) {
                     UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
                 }
 
-                if (currentLevel->bossId == 2 && CheckCollisionRecs(playerHitbox, shark.rect))
-                {
+                if (currentLevel->bossId == 2 && CheckCollisionRecs(playerHitbox, shark.rect)) {
                     currentScreen = SCREEN_START;
                 }
 
-                for (int i = 0; i < MAX_WATER_BALLS; i++)
-                {
-                    if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect))
-                    {
+                for (int i = 0; i < MAX_WATER_BALLS; i++) {
+                    if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect)) {
                         currentScreen = SCREEN_START;
                     }
                 }
 
-                if (currentLevel->bossId == 1)
-                {
-                    if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect)) currentScreen = SCREEN_START;
-                    if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.kickHitbox)) currentScreen = SCREEN_START;
-                    if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect)) currentScreen = SCREEN_START;
-                    if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect)) currentScreen = SCREEN_START;
+                if (currentLevel->bossId == 1) {
+                    if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect)) {
+                        currentScreen = SCREEN_START;
+                    }
+                    if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.kickHitbox)) {
+                        currentScreen = SCREEN_START;
+                    }
+                    if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect)) {
+                        currentScreen = SCREEN_START;
+                    }
+                    if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect)) {
+                        currentScreen = SCREEN_START;
+                    }
                 }
 
                 BeginDrawing();
                     ClearBackground(BLACK);
                     DrawBackground(&bg, currentWidth, currentHeight, bgGroundY);
 
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                    {
-                        if (enemies[i].active)
-                        {
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                        if (enemies[i].active) {
                             DrawEnemy(&enemies[i], &enemyAssets);
                         }
                     }
 
                     DrawPlayer(&player, playerScale);
 
-                    if (currentLevel->bossId == 1)
-                    {
+                    if (currentLevel->bossId == 1) {
                         DrawHairyLeg(&pernaCabeluda, bossScale);
                     }
-                    if (currentLevel->bossId == 2)
-                    {
+                    if (currentLevel->bossId == 2) {
                         DrawShark(&shark);
                     }
                     
@@ -359,7 +315,9 @@ int main(void)
 
             UnloadPlayer(&player);
             UnloadBackground(&bg);
-            for (int i = 0; i < ENEMY_COUNT; i++) UnloadTexture(enemyAssets.textures[i]);
+            for (int i = 0; i < ENEMY_COUNT; i++) {
+                UnloadTexture(enemyAssets.textures[i]);
+            }
             UnloadTexture(enemyAssets.posteSemCabeca);
             UnloadTexture(enemyAssets.posteCabecas);
             UnloadTexture(enemyAssets.fishWaterJump);
