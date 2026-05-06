@@ -98,7 +98,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
 
                 if (leg->timer > 0.4f) {
                     leg->state = HL_FALLING;
-                    leg->sprites.fall.currentFrame = 0;
+                    leg->sprites.fall.currentFrame = (leg->direction == 1) ? 1 : 0;
                     leg->timer = 0.0f;
                 }
                 break;
@@ -109,7 +109,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
 
             if(leg->timer > 2.0f){
                 leg->state = HL_FALLING;
-                leg->sprites.fall.currentFrame = 0;
+                leg->sprites.fall.currentFrame = (leg->direction == 1) ? 1 : 0;
                 leg->sprites.fall.timer = 0.0f;
                 leg->timer = 0.0f;
             }
@@ -118,51 +118,27 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
 
 
             case HL_FALLING:
-                if(leg->direction == 1){
-                    if (leg->sprites.fall.currentFrame == 0) {
-                        leg->rect.y += 1700 * deltaTime;
-                        if (leg->rect.y >= leg->groundY - emptyBottom - defaultHitboxH) {
-                            float waveW = 25.0f * scale;
-                            float waveH = 35.0f * scale;
+                if (leg->sprites.fall.currentFrame == ((leg->direction == 1) ? 1 : 0)) {
+                    leg->rect.y += 1700 * deltaTime;
 
-                            leg->rect.y = leg->groundY - emptyBottom - defaultHitboxH;
+                    if (leg->rect.y >= leg->groundY - emptyBottom - defaultHitboxH) {
+                        float waveW = 25.0f * scale;
+                        float waveH = 35.0f * scale;
 
-                            leg->waveLeft = (Shockwave){ {leg->rect.x, leg->rect.y + defaultHitboxH * 0.75f, waveW, waveH}, {600, 0}, true };
-                            leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, leg->rect.y + defaultHitboxH * 0.75f, waveW, waveH}, {600, 0}, true };
+                        leg->rect.y = leg->groundY - emptyBottom - defaultHitboxH;
 
-                            leg->sprites.fall.currentFrame = 1;
-                            leg->timer = 0.0f;
-                        }
-                    } else {
-                        leg->timer += deltaTime;
-                        if (leg->timer > 0.5f) {
-                            leg->state = HL_IDLE;
-                            leg->sprites.fall.currentFrame = 0;
-                            leg->timer = 0.0f;
-                        }
+                        leg->waveLeft = (Shockwave){ {leg->rect.x, leg->rect.y + defaultHitboxH * 0.75f, waveW, waveH}, {600, 0}, true };
+                        leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, leg->rect.y + defaultHitboxH * 0.75f, waveW, waveH}, {600, 0}, true };
+
+                        leg->sprites.fall.currentFrame = (leg->direction == 1) ? 0 : 1;
+                        leg->timer = 0.0f;
                     }
-                }else if(leg->direction == -1){
-                    if (leg->sprites.fall.currentFrame == 0) {
-                        leg->rect.y += 1700 * deltaTime;
-                        if (leg->rect.y >= leg->groundY - emptyBottom - defaultHitboxH) {
-                            float waveW = 25.0f * scale;
-                            float waveH = 35.0f * scale;
-
-                            leg->rect.y = leg->groundY - emptyBottom - defaultHitboxH;
-
-                            leg->waveLeft = (Shockwave){ {leg->rect.x, leg->rect.y + defaultHitboxH * 0.75f, waveW, waveH}, {600, 0}, true };
-                            leg->waveRight = (Shockwave){ {leg->rect.x + leg->rect.width, leg->rect.y + defaultHitboxH * 0.75f, waveW, waveH}, {600, 0}, true };
-
-                            leg->sprites.fall.currentFrame = 1;
-                            leg->timer = 0.0f;
-                        }
-                    } else {
-                        leg->timer += deltaTime;
-                        if (leg->timer > 0.5f) {
-                            leg->state = HL_IDLE;
-                            leg->sprites.idle.currentFrame = 0;
-                            leg->timer = 0.0f;
-                        }
+                } else {
+                    leg->timer += deltaTime;
+                    if (leg->timer > 0.5f) {
+                        leg->state = HL_IDLE;
+                        leg->sprites.idle.currentFrame = 0;
+                        leg->timer = 0.0f;
                     }
                 }
                 break;
