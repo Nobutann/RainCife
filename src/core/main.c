@@ -106,8 +106,11 @@ int main(void)
                 }
 
                 float dt = GetFrameTime();
-                if (dt > 0.1f) dt = 0.1f; // Cap delta time to prevent huge skips after loading
-                
+                if (dt > 0.1f)
+                {
+                    dt = 0.1f;
+                }
+
                 int currentWidth = GetScreenWidth();
                 int currentHeight = GetScreenHeight();
                 float groundY = currentHeight * ENTITY_GROUND_RATIO;
@@ -115,45 +118,55 @@ int main(void)
                 float playerScale = (float)currentHeight * 0.45f / 300.0f;
                 float bossScale = (float)currentHeight * 0.65f / 252.0f;
 
-                bool sinalPassaro1 = IsKeyPressed(KEY_ONE);
-                bool sinalPassaro2 = IsKeyPressed(KEY_TWO);
-                bool sinalBike = IsKeyPressed(KEY_B);
-                bool sinalMadeira = IsKeyPressed(KEY_M);
-                bool sinalCaboclo = IsKeyPressed(KEY_C);
-                bool sinalSafePoste = IsKeyPressed(KEY_I);
-                bool sinalPeixe = IsKeyPressed(KEY_P);
+                bool spawnBird1 = IsKeyPressed(KEY_ONE);
+                bool spawnBird2 = IsKeyPressed(KEY_TWO);
+                bool spawnBike = IsKeyPressed(KEY_B);
+                bool spawnWood = IsKeyPressed(KEY_M);
+                bool spawnPoste = IsKeyPressed(KEY_C);
+                bool spawnSafePoste = IsKeyPressed(KEY_I);
+                bool spawnFish = IsKeyPressed(KEY_P);
 
-                if (IsKeyPressed(KEY_ENTER)) autoSpawn = !autoSpawn;
+                if (IsKeyPressed(KEY_ENTER))
+                {
+                    autoSpawn = !autoSpawn;
+                }
 
-                if (autoSpawn) {
+                if (autoSpawn)
+                {
                     spawnTimer -= dt;
-                    if (spawnTimer <= 0) {
+                    if (spawnTimer <= 0)
+                    {
                         int groundObstacleCount = 0;
-                        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
-                            if (enemies[i].active && (enemies[i].type == ENEMY_BIKE || enemies[i].type == ENEMY_WOOD)) {
+                        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                        {
+                            if (enemies[i].active && (enemies[i].type == ENEMY_BIKE || enemies[i].type == ENEMY_WOOD))
+                            {
                                 groundObstacleCount++;
                             }
                         }
 
                         EnemyType sorteado = SortearInimigoFase(currentLevel->enemyConfigId);
                         
-                        if ((sorteado == ENEMY_BIKE || sorteado == ENEMY_WOOD) && groundObstacleCount >= 2) {
+                        if ((sorteado == ENEMY_BIKE || sorteado == ENEMY_WOOD) && groundObstacleCount >= 2)
+                        {
                             spawnTimer = 0.5f;
-                        } else {
-                            if (sorteado == ENEMY_BIRD1) sinalPassaro1 = true;
-                            else if (sorteado == ENEMY_BIRD2) sinalPassaro2 = true;
-                            else if (sorteado == ENEMY_BIKE) sinalBike = true;
-                            else if (sorteado == ENEMY_WOOD) sinalMadeira = true;
-                            else if (sorteado == ENEMY_POSTE) sinalCaboclo = true;
-                            else if (sorteado == ENEMY_SAFE_POSTE) sinalSafePoste = true;
-                            else if (sorteado == ENEMY_FISH) sinalPeixe = true;
+                        }
+                        else
+                        {
+                            if (sorteado == ENEMY_BIRD1) spawnBird1 = true;
+                            else if (sorteado == ENEMY_BIRD2) spawnBird2 = true;
+                            else if (sorteado == ENEMY_BIKE) spawnBike = true;
+                            else if (sorteado == ENEMY_WOOD) spawnWood = true;
+                            else if (sorteado == ENEMY_POSTE) spawnPoste = true;
+                            else if (sorteado == ENEMY_SAFE_POSTE) spawnSafePoste = true;
+                            else if (sorteado == ENEMY_FISH) spawnFish = true;
                             
                             spawnTimer = currentLevel->spawnInterval;
                         }
                     }
                 }
 
-                if (sinalPassaro1)
+                if (spawnBird1)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -165,7 +178,7 @@ int main(void)
                     }
                 }
 
-                if (sinalPassaro2)
+                if (spawnBird2)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -177,7 +190,7 @@ int main(void)
                     }
                 }
 
-                if (sinalBike)
+                if (spawnBike)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -189,7 +202,7 @@ int main(void)
                     }
                 }
 
-                if (sinalMadeira)
+                if (spawnWood)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -201,7 +214,7 @@ int main(void)
                     }
                 }
 
-                if (sinalCaboclo)
+                if (spawnPoste)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -213,7 +226,7 @@ int main(void)
                     }
                 }
 
-                if (sinalPeixe)
+                if (spawnFish)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -225,7 +238,7 @@ int main(void)
                     }
                 }
 
-                if (sinalSafePoste)
+                if (spawnSafePoste)
                 {
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -244,7 +257,14 @@ int main(void)
                     UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0, playerHitbox);
                     if (enemies[i].active)
                     {
-                        Rectangle enemyRect = { enemies[i].position.x, enemies[i].position.y, enemies[i].size.x, enemies[i].size.y };
+                        Rectangle enemyRect = 
+                        { 
+                            enemies[i].position.x, 
+                            enemies[i].position.y, 
+                            enemies[i].size.x, 
+                            enemies[i].size.y 
+                        };
+
                         if (enemies[i].type != ENEMY_SAFE_POSTE && CheckCollisionRecs(playerHitbox, enemyRect))
                         {
                             currentScreen = SCREEN_START;
@@ -258,14 +278,16 @@ int main(void)
                 float playerStandingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * 0.1f);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale);
 
-                if (IsKeyPressed(KEY_RIGHT) && currentLevel->next) {
+                if (IsKeyPressed(KEY_RIGHT) && currentLevel->next)
+                {
                     currentLevel = currentLevel->next;
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
                     player.isBossFighting = (currentLevel->bossId != 0);
                 }
-                if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
+                if (IsKeyPressed(KEY_LEFT) && currentLevel->prev)
+                {
                     currentLevel = currentLevel->prev;
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
@@ -273,10 +295,12 @@ int main(void)
                     player.isBossFighting = (currentLevel->bossId != 0);
                 }
 
-                if (currentLevel->bossId == 1) {
+                if (currentLevel->bossId == 1)
+                {
                     UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
                 }
-                if (currentLevel->bossId == 2) {
+                if (currentLevel->bossId == 2)
+                {
                     UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
                 }
 
@@ -285,13 +309,16 @@ int main(void)
                     currentScreen = SCREEN_START;
                 }
 
-                for (int i = 0; i < MAX_WATER_BALLS; i++) {
-                    if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect)) {
+                for (int i = 0; i < MAX_WATER_BALLS; i++)
+                {
+                    if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect))
+                    {
                         currentScreen = SCREEN_START;
                     }
                 }
 
-                if (currentLevel->bossId == 1) {
+                if (currentLevel->bossId == 1)
+                {
                     if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect)) currentScreen = SCREEN_START;
                     if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.kickHitbox)) currentScreen = SCREEN_START;
                     if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect)) currentScreen = SCREEN_START;
@@ -304,13 +331,22 @@ int main(void)
 
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
-                        if (enemies[i].active) DrawEnemy(&enemies[i], &enemyAssets);
+                        if (enemies[i].active)
+                        {
+                            DrawEnemy(&enemies[i], &enemyAssets);
+                        }
                     }
 
                     DrawPlayer(&player, playerScale);
 
-                    if (currentLevel->bossId == 1) DrawHairyLeg(&pernaCabeluda, bossScale);
-                    if (currentLevel->bossId == 2) DrawShark(&shark);
+                    if (currentLevel->bossId == 1)
+                    {
+                        DrawHairyLeg(&pernaCabeluda, bossScale);
+                    }
+                    if (currentLevel->bossId == 2)
+                    {
+                        DrawShark(&shark);
+                    }
                     
                     char faseText[32];
                     TextCopy(faseText, TextFormat("FASE %d", currentLevel->id));
