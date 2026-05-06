@@ -13,7 +13,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->isBossFighting = true;
     player->facingRight = false;
     player->sprites.attack = (LayeredAnimation){0};
-    EquipWeapon(player, WEAPON_HAMMER);
+    EquipWeapon(player, WEAPON_BAT);
     player->weapon.cooldownTimer = player->weapon.cooldown;
 }
 
