@@ -1,3 +1,4 @@
+# Detecta automaticamente qual toolchain esta instalada
 ifneq ($(wildcard C:/msys64/mingw64/bin/gcc.exe),)
     CC       = C:/msys64/mingw64/bin/gcc.exe
     INCLUDES = -I./include -IC:/msys64/mingw64/include
