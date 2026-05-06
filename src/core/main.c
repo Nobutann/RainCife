@@ -79,8 +79,7 @@ int main(void)
 
             Enemy enemies[MAX_ACTIVE_ENEMIES] = {0};
             EnemyAssets enemyAssets = {0};
-            enemyAssets.textures[ENEMY_BIRD1] = LoadTexture("assets/sprites/Enemys_obstacles/Bird.png");
-            enemyAssets.textures[ENEMY_BIRD2] = LoadTexture("assets/sprites/Enemys_obstacles/Bird.png");
+            enemyAssets.birdAnimation = LoadAnimation("assets/sprites/Enemys_obstacles/Bird-Sheet.png", 7, 0.1f);
             enemyAssets.textures[ENEMY_BIKE] = LoadTexture("assets/sprites/Enemys_obstacles/Bike.png");
             enemyAssets.textures[ENEMY_WOOD] = LoadTexture("assets/sprites/Enemys_obstacles/Tree.png");
             enemyAssets.textures[ENEMY_POSTE] = LoadTexture("assets/sprites/Enemys_obstacles/Poste_mal_completo.png");
@@ -336,6 +335,7 @@ int main(void)
             UnloadTexture(enemyAssets.posteCabecas);
             UnloadTexture(enemyAssets.fishWaterJump);
             UnloadAnimation(&enemyAssets.fishAnticipation);
+            UnloadAnimation(&enemyAssets.birdAnimation);
             UnloadTexture(enemyAssets.bikeSkin2);
             UnloadTexture(enemyAssets.bikeSkinItau);
             UnloadShark(&shark);
