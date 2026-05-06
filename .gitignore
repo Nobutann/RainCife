@@ -4,5 +4,5 @@
 libs/*.dll
 libs/*.exe
 *.o
-
+nul
 obj/

@@ -6,6 +6,7 @@
 typedef struct {
     float time;
     Texture2D floor;
+    Texture2D bossHairyLeg;
 } Background;
 
 void InitBackground(Background *bg);
