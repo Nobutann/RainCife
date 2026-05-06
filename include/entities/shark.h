@@ -16,10 +16,11 @@ typedef enum {
 typedef struct {
     Rectangle rect;
     Vector2 direction;
+    float speed;
     bool active;
 } WaterBall;
 
-#define MAX_WATER_BALLS 5
+#define MAX_WATER_BALLS 30
 
 typedef struct {
     Rectangle rect;
@@ -29,6 +30,7 @@ typedef struct {
     float timer;
     float shootTimer;
     int shootCount;
+    int targetShootCount;
     int arcDrops;
     bool active;
     int health;
