@@ -12,7 +12,7 @@ endif
 CFLAGS = -std=c99 -Wall -Wextra -DPLATFORM_DESKTOP
 
 TARGET = bin/RatTsunami.exe
-SRC = $(wildcard src/*.c) $(wildcard src/**/*.c)
+SRC = $(wildcard src/.c) $(wildcard src//.c)
 OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
 
 all: dirs $(TARGET)
