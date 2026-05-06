@@ -1,8 +1,6 @@
 #ifndef BACKGROUND_H
 #define BACKGROUND_H
 
-#define BG_GROUND_RATIO 0.9f
-
 #include <raylib.h>
 
 typedef struct {
