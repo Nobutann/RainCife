@@ -20,7 +20,20 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
 void UpdatePlayer(Player *player, float dt, float groundY, float scale)
 {
     float spriteH = player->sprites.walkFront.layers[0].sheet.height * scale;
-    float feetOffset = spriteH * 1.0f;
+    float feetOffset = spriteH * 1.1f;
+    int screenWidth = GetScreenWidth();
+
+    Rectangle hitbox = GetPlayerHitbox(player, scale);
+
+    if (hitbox.x < 0)
+    {
+        player->position.x -= hitbox.x;
+    }
+
+    if (hitbox.x + hitbox.width > screenWidth)
+    {
+        player->position.x -= (hitbox.x + hitbox.width - screenWidth);
+    }
 
     if (IsKeyDown(KEY_D))
     {
