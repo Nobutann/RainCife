@@ -66,17 +66,17 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             if (enemy->position.x < -50)
             {
                 enemy->active = false;
-            }
+            } 
             break;
 
         case ENEMY_BIRD2:
             enemy->position.x -= (8 + baseSpeed);
             enemy->position.y += enemy->velocity.y;
-            if (enemy->position.y < screenHeight * 0.20f)
+            if (enemy->position.y < screenHeight * 0.20f) 
             {
                 enemy->velocity.y = 7.0f;
-            }
-            else if (enemy->position.y > screenHeight * 0.70f)
+            }    
+            else if (enemy->position.y > screenHeight * 0.70f) 
             {
                 enemy->velocity.y = -7.0f;
             }
@@ -88,10 +88,10 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
 
         case ENEMY_BIKE:
             enemy->position.x -= (7 + baseSpeed);
-            if (enemy->position.x < -70)
-            {
-                enemy->active = false;
-            }
+        if (enemy->position.x < -70) 
+        {
+            enemy->active = false;
+        }
             break;
         case ENEMY_WOOD:
             enemy->position.x -= (7 + baseSpeed);
@@ -144,13 +144,13 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                 enemy->position.y += enemy->velocity.y;
                 enemy->velocity.y += 0.55f;
             }
-
+            
             if (enemy->position.y > screenHeight + 200 || enemy->position.x < -200)
             {
                 enemy->active = false;
             }
             break;
-
+            
         case ENEMY_SAFE_POSTE:
             enemy->position.x -= (7 + baseSpeed);
             if (enemy->position.x < -150)
@@ -174,9 +174,9 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
         {
             if (assets->textures[ENEMY_POSTE].id > 0)
             {
-                Rectangle source = {0.0f, 0.0f, (float)assets->textures[ENEMY_POSTE].width, (float)assets->textures[ENEMY_POSTE].height};
-                Rectangle dest = {enemy->basePosition.x, enemy->basePosition.y, 150.0f, 450.0f};
-                Vector2 origin = {0.0f, 0.0f};
+                Rectangle source = { 0.0f, 0.0f, (float)assets->textures[ENEMY_POSTE].width, (float)assets->textures[ENEMY_POSTE].height };
+                Rectangle dest = { enemy->basePosition.x, enemy->basePosition.y, 150.0f, 450.0f };
+                Vector2 origin = { 0.0f, 0.0f };
                 DrawTexturePro(assets->textures[ENEMY_POSTE], source, dest, origin, 0.0f, WHITE);
             }
         }
@@ -184,23 +184,23 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
         {
             if (assets->posteSemCabeca.id > 0)
             {
-                Rectangle source = {0.0f, 0.0f, (float)assets->posteSemCabeca.width, (float)assets->posteSemCabeca.height};
-                Rectangle dest = {enemy->basePosition.x, enemy->basePosition.y + 75.0f, 150.0f, 375.0f};
-                Vector2 origin = {0.0f, 0.0f};
+                Rectangle source = { 0.0f, 0.0f, (float)assets->posteSemCabeca.width, (float)assets->posteSemCabeca.height };
+                Rectangle dest = { enemy->basePosition.x, enemy->basePosition.y + 75.0f, 150.0f, 375.0f };
+                Vector2 origin = { 0.0f, 0.0f };
                 DrawTexturePro(assets->posteSemCabeca, source, dest, origin, 0.0f, WHITE);
             }
-
+            
             if (assets->posteCabecas.id > 0)
             {
-                Rectangle source = {0.0f, 0.0f, (float)assets->posteCabecas.width, (float)assets->posteCabecas.height};
-                Rectangle dest = {enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y};
-                Vector2 origin = {0.0f, 0.0f};
+                Rectangle source = { 0.0f, 0.0f, (float)assets->posteCabecas.width, (float)assets->posteCabecas.height };
+                Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
+                Vector2 origin = { 0.0f, 0.0f };
                 DrawTexturePro(assets->posteCabecas, source, dest, origin, 0.0f, WHITE);
             }
         }
         return;
     }
-
+    
     if (enemy->type == ENEMY_FISH)
     {
         if (enemy->state == 0)
@@ -213,57 +213,57 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             Texture2D texture = assets->textures[ENEMY_FISH];
             if (texture.id > 0)
             {
-                Rectangle source = {0.0f, 0.0f, (float)texture.width, (float)texture.height};
-                Rectangle dest = {enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y};
-                Vector2 origin = {0.0f, 0.0f};
+                Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
+                Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
+                Vector2 origin = { 0.0f, 0.0f };
                 DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
             }
-
+            
             if (enemy->velocity.y < -5.0f && assets->fishWaterJump.id > 0)
             {
-                Rectangle sSrc = {0.0f, 0.0f, (float)assets->fishWaterJump.width, (float)assets->fishWaterJump.height};
-                Rectangle sDst = {enemy->position.x + 20, enemy->position.y + 80, 76.0f, 76.0f};
-                Vector2 sOrg = {0.0f, 0.0f};
+                Rectangle sSrc = { 0.0f, 0.0f, (float)assets->fishWaterJump.width, (float)assets->fishWaterJump.height };
+                Rectangle sDst = { enemy->position.x + 20, enemy->position.y + 80, 76.0f, 76.0f };
+                Vector2 sOrg = { 0.0f, 0.0f };
                 DrawTexturePro(assets->fishWaterJump, sSrc, sDst, sOrg, 0.0f, WHITE);
             }
         }
         return;
     }
-
+    
     if (enemy->type == ENEMY_SAFE_POSTE)
     {
         if (assets->textures[ENEMY_SAFE_POSTE].id > 0)
         {
-            Rectangle source = {170.0f, 0.0f, 36.0f, 260.0f};
-            Rectangle dest = {enemy->position.x + 37.5f, enemy->position.y, 60.0f, 450.0f};
-            Vector2 origin = {0.0f, 0.0f};
+            Rectangle source = { 170.0f, 0.0f, 36.0f, 260.0f };
+            Rectangle dest = { enemy->position.x + 37.5f, enemy->position.y, 60.0f, 450.0f };
+            Vector2 origin = { 0.0f, 0.0f };
             DrawTexturePro(assets->textures[ENEMY_SAFE_POSTE], source, dest, origin, 0.0f, WHITE);
         }
         return;
     }
-
+    
     if (enemy->type == ENEMY_BIKE)
     {
         Texture2D texture = assets->textures[ENEMY_BIKE];
         if (enemy->state == 1) texture = assets->bikeSkin2;
         else if (enemy->state == 2) texture = assets->bikeSkinItau;
-
+        
         if (texture.id > 0)
         {
-            Rectangle source = {0.0f, 0.0f, (float)texture.width, (float)texture.height};
-            Rectangle dest = {enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y};
-            Vector2 origin = {0.0f, 0.0f};
+            Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
+            Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
+            Vector2 origin = { 0.0f, 0.0f };
             DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
         }
         return;
     }
-
+    
     Texture2D texture = assets->textures[enemy->type];
     if (texture.id > 0)
     {
-        Rectangle source = {0.0f, 0.0f, (float)texture.width, (float)texture.height};
-        Rectangle dest = {enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y};
-        Vector2 origin = {0.0f, 0.0f};
+        Rectangle source = { 0.0f, 0.0f, (float)texture.width, (float)texture.height };
+        Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
+        Vector2 origin = { 0.0f, 0.0f };
         DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
     }
     else

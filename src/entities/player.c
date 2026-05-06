@@ -6,7 +6,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {
     LoadPlayerSprites(&player->sprites);
     player->position = initialPos;
-    player->velocity = (Vector2){0, 0};
+    player->velocity = (Vector2) {0, 0};
     player->speed = speed;
     player->onGround = true;
     player->currentAnim = &player->sprites.walkFront;
@@ -140,7 +140,7 @@ Rectangle GetPlayerHitbox(Player *player, float scale)
             hitboxH
         };
     }
-    return (Rectangle){player->position.x, player->position.y, 50, 50};
+    return (Rectangle){ player->position.x, player->position.y, 50, 50 };
 }
 
 void DrawPlayer(Player *player, float scale)

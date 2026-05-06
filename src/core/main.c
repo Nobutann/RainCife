@@ -65,7 +65,7 @@ int main(void)
             float initBossScale = (float)initH * 0.65f / 252.0f;
 
             Player player;
-            Vector2 startPos = {100, initGroundY};
+            Vector2 startPos = { 100, initGroundY };
             InitPlayer(&player, startPos, SPEED);
 
             Level *levels = InitGameLevels();
@@ -73,7 +73,7 @@ int main(void)
             player.isBossFighting = (currentLevel->bossId != 0);
 
             HairyLeg pernaCabeluda;
-            InitHairyLeg(&pernaCabeluda, (Vector2){(float)initW * 0.6f, initGroundY}, initGroundY, initBossScale);
+            InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
 
             Shark shark;
             InitShark(&shark, initW, initH);
@@ -113,7 +113,7 @@ int main(void)
 
                 int currentWidth = GetScreenWidth();
                 int currentHeight = GetScreenHeight();
-                float groundY = currentWidth * ENTITY_GROUND_RATIO;
+                float groundY = currentHeight * ENTITY_GROUND_RATIO;
                 float bgGroundY = currentHeight * BG_GROUND_RATIO;
                 float playerScale = (float)currentHeight * 0.45f / 300.0f;
                 float bossScale = (float)currentHeight * 0.65f / 252.0f;
@@ -146,7 +146,7 @@ int main(void)
                         }
 
                         EnemyType sorteado = SortearInimigoFase(currentLevel->enemyConfigId);
-
+                        
                         if ((sorteado == ENEMY_BIKE || sorteado == ENEMY_WOOD) && groundObstacleCount >= 2)
                         {
                             spawnTimer = 0.5f;
@@ -160,7 +160,7 @@ int main(void)
                             else if (sorteado == ENEMY_POSTE) spawnPoste = true;
                             else if (sorteado == ENEMY_SAFE_POSTE) spawnSafePoste = true;
                             else if (sorteado == ENEMY_FISH) spawnFish = true;
-
+                            
                             spawnTimer = currentLevel->spawnInterval;
                         }
                     }
@@ -257,12 +257,12 @@ int main(void)
                     UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0, playerHitbox);
                     if (enemies[i].active)
                     {
-                        Rectangle enemyRect =
-                        {
-                            enemies[i].position.x,
-                            enemies[i].position.y,
-                            enemies[i].size.x,
-                            enemies[i].size.y
+                        Rectangle enemyRect = 
+                        { 
+                            enemies[i].position.x, 
+                            enemies[i].position.y, 
+                            enemies[i].size.x, 
+                            enemies[i].size.y 
                         };
 
                         if (enemies[i].type != ENEMY_SAFE_POSTE && CheckCollisionRecs(playerHitbox, enemyRect))
@@ -285,7 +285,7 @@ int main(void)
                     {
                         enemies[i].active = false;
                     }
-                    InitHairyLeg(&pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
+                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
                     player.isBossFighting = (currentLevel->bossId != 0);
                 }
@@ -296,7 +296,7 @@ int main(void)
                     {
                         enemies[i].active = false;
                     }
-                    InitHairyLeg(&pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
+                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
                     player.isBossFighting = (currentLevel->bossId != 0);
                 }
@@ -344,33 +344,33 @@ int main(void)
                 }
 
                 BeginDrawing();
-                ClearBackground(BLACK);
-                DrawBackground(&bg, currentWidth, currentHeight, bgGroundY);
+                    ClearBackground(BLACK);
+                    DrawBackground(&bg, currentWidth, currentHeight, bgGroundY);
 
-                for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                {
-                    if (enemies[i].active)
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
-                        DrawEnemy(&enemies[i], &enemyAssets);
+                        if (enemies[i].active)
+                        {
+                            DrawEnemy(&enemies[i], &enemyAssets);
+                        }
                     }
-                }
 
-                DrawPlayer(&player, playerScale);
+                    DrawPlayer(&player, playerScale);
 
-                if (currentLevel->bossId == 1)
-                {
-                    DrawHairyLeg(&pernaCabeluda, bossScale);
-                }
-                if (currentLevel->bossId == 2)
-                {
-                    DrawShark(&shark);
-                }
+                    if (currentLevel->bossId == 1)
+                    {
+                        DrawHairyLeg(&pernaCabeluda, bossScale);
+                    }
+                    if (currentLevel->bossId == 2)
+                    {
+                        DrawShark(&shark);
+                    }
+                    
+                    char faseText[32];
+                    TextCopy(faseText, TextFormat("FASE %d", currentLevel->id));
+                    DrawText(faseText, currentWidth / 2 - MeasureText(faseText, 30) / 2, 50, 30, WHITE);
 
-                char faseText[32];
-                TextCopy(faseText, TextFormat("FASE %d", currentLevel->id));
-                DrawText(faseText, currentWidth / 2 - MeasureText(faseText, 30) / 2, 50, 30, WHITE);
-
-                DrawText("SETAS: Trocar Fase | 1,2,B,M,C,P: Spawn | ENTER: AutoSpawn", 20, 20, 20, GRAY);
+                    DrawText("SETAS: Trocar Fase | 1,2,B,M,C,P: Spawn | ENTER: AutoSpawn", 20, 20, 20, GRAY);
 
                 EndDrawing();
             }

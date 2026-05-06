@@ -1,4 +1,3 @@
-/*
 #include <raylib.h>
 #include "screens.h"
 #include "game.h"
@@ -61,5 +60,3 @@ GameScreen RunGame(Config *config) {
     }
     return SCREEN_EXIT;
 }
-
-*/
