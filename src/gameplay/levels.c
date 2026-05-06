@@ -40,8 +40,9 @@ void FreeLevels(Level *head) {
 Level* InitGameLevels() {
     Level *head = NULL;
     
-    AddLevel(&head, CreateLevel(1, 1, 2.0f, 30.0f, 1));
-    AddLevel(&head, CreateLevel(2, 2, 1.5f, 45.0f, 2));
+    AddLevel(&head, CreateLevel(1, 1, 1.2f, 30.0f, 1));
+    AddLevel(&head, CreateLevel(2, 2, 0.8f, 45.0f, 2));
+    AddLevel(&head, CreateLevel(3, 1, 1.0f, 60.0f, 0));
     
     return head;
 }

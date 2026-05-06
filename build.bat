@@ -1,12 +1,24 @@
 @echo off
-set GCC_PATH=C:\msys64\mingw64\bin\gcc.exe
-echo Compilando o jogo com %GCC_PATH%...
 
-:: Cria a pasta libs se nao existir
+:: Detecta qual GCC esta disponivel
+if exist C:\msys64\mingw64\bin\gcc.exe (
+    set GCC_PATH=C:\msys64\mingw64\bin\gcc.exe
+    set INC=-I"include" -I"C:/msys64/mingw64/include"
+    set LIB=-L"C:/msys64/mingw64/lib"
+) else if exist C:\raylib\w64devkit\bin\gcc.exe (
+    set GCC_PATH=C:\raylib\w64devkit\bin\gcc.exe
+    set INC=-I"include" -I"C:/raylib-5.5_win64_mingw-w64/include"
+    set LIB=-L"C:/raylib-5.5_win64_mingw-w64/lib"
+) else (
+    echo [ERRO] Nenhum GCC encontrado! Instale MSYS2 ou w64devkit.
+    pause
+    exit /b 1
+)
+
+echo Compilando com %GCC_PATH%...
 if not exist libs mkdir libs
 
-:: Compila todos os arquivos .c
-%GCC_PATH% src\core\main.c src\core\start_menu.c src\core\options_menu.c src\core\credits_menu.c src\core\config_manager.c src\entities\player.c src\entities\hairy_leg.c src\entities\shark.c src\entities\enemy.c src\gameplay\weapon.c src\gameplay\levels.c src\graphics\background.c src\graphics\sprites.c src\game.c src\utils.c src\enemy_caller.c -o libs\jogo.exe -I"include" -I"C:/msys64/mingw64/include" -L"C:/msys64/mingw64/lib" -lraylib -lopengl32 -lgdi32 -lwinmm
+%GCC_PATH% src\core\main.c src\core\start_menu.c src\core\options_menu.c src\core\credits_menu.c src\core\config_manager.c src\entities\player.c src\entities\hairy_leg.c src\entities\shark.c src\entities\enemy.c src\gameplay\weapon.c src\gameplay\levels.c src\graphics\background.c src\graphics\sprites.c src\game.c src\utils.c src\enemy_caller.c -o libs\jogo.exe %INC% %LIB% -lraylib -lopengl32 -lgdi32 -lwinmm
 
 if %errorlevel% neq 0 (
     echo.

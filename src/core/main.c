@@ -229,13 +229,7 @@ int main(void)
                     UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0, playerHitbox);
                     if (enemies[i].active)
                     {
-                        Rectangle enemyRect =
-                        {
-                            enemies[i].position.x,
-                            enemies[i].position.y,
-                            enemies[i].size.x,
-                            enemies[i].size.y
-                        };
+                        Rectangle enemyRect = GetEnemyHitbox(&enemies[i]);
 
                         if (enemies[i].type != ENEMY_SAFE_POSTE && CheckCollisionRecs(playerHitbox, enemyRect))
                         {
