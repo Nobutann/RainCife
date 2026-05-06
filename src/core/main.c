@@ -109,7 +109,7 @@ int main(void)
                 int currentWidth = GetScreenWidth();
                 int currentHeight = GetScreenHeight();
                 float groundY = currentHeight * GROUND_RATIO;
-                float playerScale = (float)currentHeight * 0.45f / 252.0f;
+                float playerScale = (float)currentHeight * 0.45f / 300.0f;
                 float bossScale = (float)currentHeight * 0.65f / 252.0f;
 
                 bool spawnBird1 = IsKeyPressed(KEY_ONE);
