@@ -14,26 +14,36 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
         case ENEMY_BIRD1:
             enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.4f};
             enemy->size = (Vector2){100, 100};
+            enemy->hitboxOffset = (Vector2){18, 28};
+            enemy->hitboxSize  = (Vector2){58, 42};
             break;
         case ENEMY_BIRD2:
             enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.35f};
             enemy->size = (Vector2){100, 100};
             enemy->velocity.y = 7.0f;
+            enemy->hitboxOffset = (Vector2){18, 28};
+            enemy->hitboxSize  = (Vector2){58, 42};
             break;
         case ENEMY_BIKE:
-            enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 140};
-            enemy->size = (Vector2){280, 140};
+            enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 185};
+            enemy->size = (Vector2){350, 250};
             enemy->state = GetRandomValue(0, 2);
+            enemy->hitboxOffset = (Vector2){55, 65};
+            enemy->hitboxSize  = (Vector2){230, 125};
             break;
         case ENEMY_WOOD:
-            enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 140};
-            enemy->size = (Vector2){280, 140};
+            enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 260};
+            enemy->size = (Vector2){450, 350};
+            enemy->hitboxOffset = (Vector2){10, 95};
+            enemy->hitboxSize  = (Vector2){415, 175};
             break;
         case ENEMY_POSTE:
             enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 450};
             enemy->position = enemy->basePosition;
             enemy->size = (Vector2){150, 150};
             enemy->headDetached = false;
+            enemy->hitboxOffset = (Vector2){22, 18};
+            enemy->hitboxSize  = (Vector2){106, 95};
             break;
         case ENEMY_FISH:
             enemy->basePosition = (Vector2){(float)screenWidth * 0.55f, screenHeight * 0.82f - 40};
@@ -43,13 +53,27 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
             enemy->velocity.x = -(4.0f + baseSpeed);
             enemy->state = 0;
             enemy->stateTimer = GetTime();
+            enemy->hitboxOffset = (Vector2){15, 22};
+            enemy->hitboxSize  = (Vector2){84, 68};
             break;
         case ENEMY_SAFE_POSTE:
             enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 450};
             enemy->position = enemy->basePosition;
             enemy->size = (Vector2){150, 450};
+            enemy->hitboxOffset = (Vector2){42, 40};
+            enemy->hitboxSize  = (Vector2){65, 390};
             break;
     }
+}
+
+Rectangle GetEnemyHitbox(Enemy *enemy)
+{
+    return (Rectangle){
+        enemy->position.x + enemy->hitboxOffset.x,
+        enemy->position.y + enemy->hitboxOffset.y,
+        enemy->hitboxSize.x,
+        enemy->hitboxSize.y
+    };
 }
 
 void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed, Rectangle playerHitbox)
@@ -198,6 +222,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
                 DrawTexturePro(assets->posteCabecas, source, dest, origin, 0.0f, WHITE);
             }
         }
+        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;
     }
     
@@ -227,6 +252,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
                 DrawTexturePro(assets->fishWaterJump, sSrc, sDst, sOrg, 0.0f, WHITE);
             }
         }
+        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;
     }
     
@@ -239,6 +265,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             Vector2 origin = { 0.0f, 0.0f };
             DrawTexturePro(assets->textures[ENEMY_SAFE_POSTE], source, dest, origin, 0.0f, WHITE);
         }
+        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, DARKGRAY);
         return;
     }
     
@@ -255,6 +282,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             Vector2 origin = { 0.0f, 0.0f };
             DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
         }
+        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;
     }
     
@@ -270,4 +298,5 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
     {
         DrawRectangleV(enemy->position, enemy->size, RED);
     }
+    DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
 }

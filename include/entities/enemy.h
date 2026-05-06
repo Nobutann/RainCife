@@ -29,6 +29,8 @@ typedef struct
     bool headDetached;
     float animationTimer;
     int currentFrame;
+    Vector2 hitboxOffset;
+    Vector2 hitboxSize;
 } Enemy;
 
 typedef struct {
@@ -44,5 +46,6 @@ typedef struct {
 void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed);
 void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed, Rectangle playerHitbox);
 void DrawEnemy(Enemy *enemy, EnemyAssets *assets);
+Rectangle GetEnemyHitbox(Enemy *enemy);
 
 #endif
