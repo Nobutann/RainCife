@@ -128,10 +128,10 @@ Rectangle GetPlayerHitbox(Player *player, float scale)
         float frameRenderWidth = baseLayer->frameWidth * scale;
         float frameRenderHeight = baseLayer->sheet.height * scale;
 
-        float offsetX = frameRenderWidth * 0.35f;
-        float offsetY = frameRenderHeight * 0.30f;
-        float hitboxW = frameRenderWidth * 0.35f;
-        float hitboxH = frameRenderHeight * 0.50f;
+        float offsetX = frameRenderWidth * 0.45f;
+        float offsetY = frameRenderHeight * 0.40f;
+        float hitboxW = frameRenderWidth * 0.15f;
+        float hitboxH = frameRenderHeight * 0.40f;
 
         return (Rectangle){
             player->position.x + offsetX,

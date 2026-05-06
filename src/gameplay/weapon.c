@@ -5,6 +5,27 @@
 
 void UseBat(Player *player)
 {
+    bool isIdle = (player->isBossFighting && player->velocity.x == 0);
+
+    if (isIdle)
+    {
+        player->sprites.attack.layers[0] = player->sprites.idleLegs.layers[0];
+        player->sprites.attack.layers[0].currentFrame = 0;
+        player->sprites.attack.layers[0].timer = 0.0f;
+        player->sprites.attack.layers[2] = player->sprites.idleHead.layers[0];
+        player->sprites.attack.layers[2].currentFrame = 0;
+        player->sprites.attack.layers[2].timer = 0.0f;
+    }
+    else
+    {
+        player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
+        player->sprites.attack.layers[0].currentFrame = 0;
+        player->sprites.attack.layers[0].timer = 0.0f;
+        player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
+        player->sprites.attack.layers[2].currentFrame = 0;
+        player->sprites.attack.layers[2].timer = 0.0f;
+    }
+
     player->currentAnim = &player->sprites.attack;
     player->sprites.attack.layers[1].currentFrame = 0;
     player->sprites.attack.layers[1].timer = 0.0f;
@@ -12,6 +33,28 @@ void UseBat(Player *player)
 
 void UseHammer(Player *player)
 {
+    
+    bool isIdle = (player->isBossFighting && player->velocity.x == 0);
+
+    if (isIdle)
+    {
+        player->sprites.attack.layers[0] = player->sprites.idleLegs.layers[0];
+        player->sprites.attack.layers[0].currentFrame = 0;
+        player->sprites.attack.layers[0].timer = 0.0f;
+        player->sprites.attack.layers[2] = player->sprites.idleHead.layers[0];
+        player->sprites.attack.layers[2].currentFrame = 0;
+        player->sprites.attack.layers[2].timer = 0.0f;
+    }
+    else
+    {
+        player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
+        player->sprites.attack.layers[0].currentFrame = 0;
+        player->sprites.attack.layers[0].timer = 0.0f;
+        player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
+        player->sprites.attack.layers[2].currentFrame = 0;
+        player->sprites.attack.layers[2].timer = 0.0f;
+    }
+    
     player->currentAnim = &player->sprites.attack;
     player->sprites.attack.layers[1].currentFrame = 0;
     player->sprites.attack.layers[1].timer = 0.0f;

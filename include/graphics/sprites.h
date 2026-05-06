@@ -24,6 +24,8 @@ typedef struct
 typedef struct
 {
     LayeredAnimation idle;
+    LayeredAnimation idleLegs;
+    LayeredAnimation idleHead;
     LayeredAnimation walkFront;
     LayeredAnimation walkBackwards;
     LayeredAnimation jumpUp;

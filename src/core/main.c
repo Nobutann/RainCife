@@ -61,7 +61,7 @@ int main(void)
 
             int initW = GetScreenWidth();
             int initH = GetScreenHeight();
-            float initGroundY = initH * GROUND_RATIO;
+            float initGroundY = initH * ENTITY_GROUND_RATIO;
             float initBossScale = (float)initH * 0.65f / 252.0f;
 
             Player player;
@@ -108,8 +108,9 @@ int main(void)
                 float dt = GetFrameTime();
                 int currentWidth = GetScreenWidth();
                 int currentHeight = GetScreenHeight();
-                float groundY = currentHeight * GROUND_RATIO;
-                float playerScale = (float)currentHeight * 0.45f / 252.0f;
+                float groundY = currentHeight * ENTITY_GROUND_RATIO;
+                float bgGroundY = currentHeight * BG_GROUND_RATIO;
+                float playerScale = (float)currentHeight * 0.45f / 300.0f;
                 float bossScale = (float)currentHeight * 0.65f / 252.0f;
 
                 bool spawnBird1 = IsKeyPressed(KEY_ONE);
@@ -311,7 +312,7 @@ int main(void)
 
                 BeginDrawing();
                     ClearBackground(BLACK);
-                    DrawBackground(&bg, currentWidth, currentHeight, groundY);
+                    DrawBackground(&bg, currentWidth, currentHeight, bgGroundY);
 
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {

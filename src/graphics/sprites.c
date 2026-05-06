@@ -29,9 +29,15 @@ void UpdateLayeredAnimation(LayeredAnimation *layredAnimation, float dt)
 
 void DrawLayeredAnimation(LayeredAnimation *layeredAnimation, Vector2 position, float scale, bool flipX, Color tint)
 {
+    float refWidth = layeredAnimation->layers[0].frameWidth * scale;
+
     for (int i = 0; i < layeredAnimation->layerCount; i++)
     {
-        DrawAnimationFrame(&layeredAnimation->layers[i], position, scale, flipX, tint);
+        float fw = layeredAnimation->layers[i].frameWidth * scale;
+        float offsetX = flipX ? 0 : (refWidth - fw);
+
+        Vector2 layerPos = {position.x + offsetX, position.y};
+        DrawAnimationFrame(&layeredAnimation->layers[i], layerPos, scale, flipX, tint);
     }
 }
 
@@ -63,6 +69,12 @@ void LoadPlayerSprites(PlayerSprites *playerSprites)
 
     playerSprites->idle.layerCount = 1;
     playerSprites->idle.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_complete-Sheet.png", 6, FRAME_TIME);
+
+    playerSprites->idleLegs.layerCount = 1;
+    playerSprites->idleLegs.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_legs_attack.png", 1, FRAME_TIME);
+
+    playerSprites->idleHead.layerCount = 1;
+    playerSprites->idleHead.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_head_attack.png", 1, FRAME_TIME);
 }
 
 float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime)
@@ -87,6 +99,8 @@ void UnloadPlayerSprites(PlayerSprites *playerSprites)
     UnloadLayeredAnimation(&playerSprites->jumpDown);
     UnloadLayeredAnimation(&playerSprites->walkBackwards);
     UnloadLayeredAnimation(&playerSprites->attack);
+    UnloadLayeredAnimation(&playerSprites->idleLegs);
+    UnloadLayeredAnimation(&playerSprites->idleHead);
 }
 
 void UpdateAnimation(Animation *animation, float dt)
@@ -110,21 +124,22 @@ void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, boo
     if (animation->sheet.id > 0 && animation->frameCount > 0)
     {
         float fw = animation->frameWidth;
+        float fh = animation->sheet.height;
 
         Rectangle source =
         {
             animation->currentFrame * fw + (flipX ? fw : 0),
             0,
             flipX ? -fw : fw,
-            animation->sheet.height
+            fh
         };
 
         Rectangle dest =
         {
             position.x,
             position.y,
-            animation->frameWidth * scale,
-            animation->sheet.height * scale
+            fw * scale,
+            fh * scale
         };
 
         DrawTexturePro(animation->sheet, source, dest, (Vector2){0, 0}, 0.0f, tint);

@@ -8,7 +8,7 @@
 #define GRAVITY 800.0f
 #define JUMP_FORCE -600.0f
 #define SPEED 600.0f
-#define GROUND_RATIO 0.82f
+#define ENTITY_GROUND_RATIO 0.87f
 #define SIDEWALK_THICKNESS_RATIO 0.08f
 
 typedef struct Player
