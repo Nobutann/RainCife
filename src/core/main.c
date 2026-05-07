@@ -93,9 +93,12 @@ int main(void)
             enemyAssets.bikeSkin2 = LoadTexture("assets/sprites/Enemys_obstacles/Bike_2.png");
             enemyAssets.bikeSkinItau = LoadTexture("assets/sprites/Enemys_obstacles/Bike_itau.png");
 
+            player.isBossFighting = (currentLevel->bossId != 0);
+
             bool autoSpawn = false;
             float spawnTimer = 0.0f;
-            const float spawnInterval = 2.0f;
+            const float spawnInterval = 1.5f;
+            float safePosteFollowUpTimer = -1.0f;
 
             while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
             {
@@ -125,6 +128,16 @@ int main(void)
                     spawnTimer -= dt;
                     if (spawnTimer <= 0) {
                         EnemyType sorteado = SortearInimigoFase(currentLevel->enemyConfigId);
+
+                        if (sorteado == ENEMY_BIRD1) {
+                            bool bird1Exists = false;
+                            for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) {
+                                if (enemies[i].active && enemies[i].type == ENEMY_BIRD1) { bird1Exists = true; break; }
+                            }
+                            while (bird1Exists && sorteado == ENEMY_BIRD1)
+                                sorteado = SortearInimigoFase(currentLevel->enemyConfigId);
+                        }
+
                         if (sorteado == ENEMY_BIRD1) spawnBird1 = true;
                         else if (sorteado == ENEMY_BIRD2) spawnBird2 = true;
                         else if (sorteado == ENEMY_BIKE) spawnBike = true;
@@ -132,19 +145,31 @@ int main(void)
                         else if (sorteado == ENEMY_POSTE) spawnPoste = true;
                         else if (sorteado == ENEMY_SAFE_POSTE) spawnSafePoste = true;
                         else if (sorteado == ENEMY_FISH) spawnFish = true;
-                        
+
                         spawnTimer = spawnInterval;
                     }
                 }
 
                 if (spawnBird1)
                 {
+                    bool bird1Active = false;
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
-                        if (!enemies[i].active)
+                        if (enemies[i].active && enemies[i].type == ENEMY_BIRD1)
                         {
-                            InitEnemy(&enemies[i], ENEMY_BIRD1, currentWidth, currentHeight, 0);
+                            bird1Active = true;
                             break;
+                        }
+                    }
+                    if (!bird1Active)
+                    {
+                        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                        {
+                            if (!enemies[i].active)
+                            {
+                                InitEnemy(&enemies[i], ENEMY_BIRD1, currentWidth, currentHeight, 0);
+                                break;
+                            }
                         }
                     }
                 }
@@ -216,8 +241,29 @@ int main(void)
                         if (!enemies[i].active)
                         {
                             InitEnemy(&enemies[i], ENEMY_SAFE_POSTE, currentWidth, currentHeight, 0);
+                            safePosteFollowUpTimer = 0.5f;
                             break;
                         }
+                    }
+                }
+
+                if (safePosteFollowUpTimer > 0.0f)
+                {
+                    safePosteFollowUpTimer -= dt;
+                    if (safePosteFollowUpTimer <= 0.0f)
+                    {
+                        safePosteFollowUpTimer = -1.0f;
+                        EnemyType followUp;
+                        do { followUp = SortearInimigoFase(currentLevel->enemyConfigId); } while (followUp == ENEMY_SAFE_POSTE);
+                        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                        {
+                            if (!enemies[i].active)
+                            {
+                                InitEnemy(&enemies[i], followUp, currentWidth, currentHeight, 0);
+                                break;
+                            }
+                        }
+                        spawnTimer = spawnInterval;
                     }
                 }
 
@@ -248,12 +294,14 @@ int main(void)
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
+                    player.isBossFighting = (currentLevel->bossId != 0);
                 }
                 if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
                     currentLevel = currentLevel->prev;
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
+                    player.isBossFighting = (currentLevel->bossId != 0);
                 }
 
                 if (currentLevel->bossId == 1) {

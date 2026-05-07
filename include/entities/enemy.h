@@ -27,6 +27,7 @@ typedef struct
     double stateTimer;
     Vector2 basePosition;
     bool headDetached;
+    bool headLanded;
     float animationTimer;
     int currentFrame;
     Vector2 hitboxOffset;
