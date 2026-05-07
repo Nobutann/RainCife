@@ -38,12 +38,13 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
             enemy->hitboxSize  = (Vector2){325, 175};
             break;
         case ENEMY_POSTE:
-            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 450};
+            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 600};
             enemy->position = enemy->basePosition;
-            enemy->size = (Vector2){150, 150};
+            enemy->size = (Vector2){200, 200};
             enemy->headDetached = false;
-            enemy->hitboxOffset = (Vector2){22, 18};
-            enemy->hitboxSize  = (Vector2){106, 95};
+            enemy->headLanded = false;
+            enemy->hitboxOffset = (Vector2){29, 24};
+            enemy->hitboxSize  = (Vector2){142, 127};
             break;
         case ENEMY_FISH:
             enemy->basePosition = (Vector2){(float)screenWidth * 0.55f, screenHeight * 0.82f - 40};
@@ -57,11 +58,11 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
             enemy->hitboxSize  = (Vector2){84, 68};
             break;
         case ENEMY_SAFE_POSTE:
-            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 450};
+            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 600};
             enemy->position = enemy->basePosition;
-            enemy->size = (Vector2){150, 450};
-            enemy->hitboxOffset = (Vector2){42, 40};
-            enemy->hitboxSize  = (Vector2){65, 390};
+            enemy->size = (Vector2){200, 600};
+            enemy->hitboxOffset = (Vector2){56, 53};
+            enemy->hitboxSize  = (Vector2){87, 520};
             break;
     }
 }
@@ -86,7 +87,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
     switch(enemy->type)
     {
         case ENEMY_BIRD1:
-            enemy->position.x -= (7 + baseSpeed);
+            enemy->position.x -= (10 + baseSpeed);
             if (enemy->position.x < -50)
             {
                 enemy->active = false;
@@ -111,14 +112,14 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             break;
 
         case ENEMY_BIKE:
-            enemy->position.x -= (7 + baseSpeed);
+            enemy->position.x -= (10 + baseSpeed);
         if (enemy->position.x < -70) 
         {
             enemy->active = false;
         }
             break;
         case ENEMY_WOOD:
-            enemy->position.x -= (7 + baseSpeed);
+            enemy->position.x -= (10 + baseSpeed);
             if (enemy->position.x < -140)
             {
                 enemy->active = false;
@@ -126,7 +127,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             break;
 
         case ENEMY_POSTE:
-            enemy->basePosition.x -= (7 + baseSpeed);
+            enemy->basePosition.x -= (10 + baseSpeed);
             if (!enemy->headDetached)
             {
                 enemy->position = enemy->basePosition;
@@ -137,14 +138,27 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                     enemy->velocity.y = -5.0f;
                 }
             }
-            else
+            else if (!enemy->headLanded)
             {
                 enemy->position.x += enemy->velocity.x;
                 enemy->position.y += enemy->velocity.y;
                 enemy->velocity.y += 0.4f;
+
+                float landY = screenHeight * 0.785f - 180;
+                if (enemy->position.y >= landY)
+                {
+                    enemy->position.y = landY;
+                    enemy->velocity.y = 0;
+                    enemy->velocity.x = -(10 + baseSpeed);
+                    enemy->headLanded = true;
+                }
+            }
+            else
+            {
+                enemy->position.x += enemy->velocity.x;
             }
 
-            if (enemy->basePosition.x < -150 && enemy->position.y > screenHeight + 100)
+            if (enemy->headLanded ? enemy->position.x < -200 : enemy->basePosition.x < -200)
             {
                 enemy->active = false;
             }
@@ -153,7 +167,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
         case ENEMY_FISH:
             if (enemy->state == 0)
             {
-                enemy->basePosition.x -= (7 + baseSpeed);
+                enemy->basePosition.x -= (10 + baseSpeed);
                 enemy->position.x = enemy->basePosition.x;
                 if (GetTime() - enemy->stateTimer > 0.8)
                 {
@@ -176,7 +190,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             break;
             
         case ENEMY_SAFE_POSTE:
-            enemy->position.x -= (7 + baseSpeed);
+            enemy->position.x -= (10 + baseSpeed);
             if (enemy->position.x < -150)
             {
                 enemy->active = false;
@@ -199,7 +213,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             if (assets->textures[ENEMY_POSTE].id > 0)
             {
                 Rectangle source = { 0.0f, 0.0f, (float)assets->textures[ENEMY_POSTE].width, (float)assets->textures[ENEMY_POSTE].height };
-                Rectangle dest = { enemy->basePosition.x, enemy->basePosition.y, 150.0f, 450.0f };
+                Rectangle dest = { enemy->basePosition.x, enemy->basePosition.y, 200.0f, 600.0f };
                 Vector2 origin = { 0.0f, 0.0f };
                 DrawTexturePro(assets->textures[ENEMY_POSTE], source, dest, origin, 0.0f, WHITE);
             }
@@ -209,14 +223,16 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             if (assets->posteSemCabeca.id > 0)
             {
                 Rectangle source = { 0.0f, 0.0f, (float)assets->posteSemCabeca.width, (float)assets->posteSemCabeca.height };
-                Rectangle dest = { enemy->basePosition.x, enemy->basePosition.y + 75.0f, 150.0f, 375.0f };
+                Rectangle dest = { enemy->basePosition.x, enemy->basePosition.y + 100.0f, 200.0f, 500.0f };
                 Vector2 origin = { 0.0f, 0.0f };
                 DrawTexturePro(assets->posteSemCabeca, source, dest, origin, 0.0f, WHITE);
             }
-            
+
             if (assets->posteCabecas.id > 0)
             {
-                Rectangle source = { 0.0f, 0.0f, (float)assets->posteCabecas.width, (float)assets->posteCabecas.height };
+                float halfW = (float)assets->posteCabecas.width / 2.0f;
+                float srcX = enemy->headLanded ? halfW : 0.0f;
+                Rectangle source = { srcX, 0.0f, halfW, (float)assets->posteCabecas.height };
                 Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
                 Vector2 origin = { 0.0f, 0.0f };
                 DrawTexturePro(assets->posteCabecas, source, dest, origin, 0.0f, WHITE);
@@ -261,7 +277,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
         if (assets->textures[ENEMY_SAFE_POSTE].id > 0)
         {
             Rectangle source = { 170.0f, 0.0f, 36.0f, 260.0f };
-            Rectangle dest = { enemy->position.x + 37.5f, enemy->position.y, 60.0f, 450.0f };
+            Rectangle dest = { enemy->position.x + 50.0f, enemy->position.y, 80.0f, 600.0f };
             Vector2 origin = { 0.0f, 0.0f };
             DrawTexturePro(assets->textures[ENEMY_SAFE_POSTE], source, dest, origin, 0.0f, WHITE);
         }
