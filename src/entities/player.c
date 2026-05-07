@@ -15,6 +15,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->sprites.attack = (LayeredAnimation){0};
     EquipWeapon(player, WEAPON_BAT);
     player->weapon.cooldownTimer = player->weapon.cooldown;
+    player->isJumping = false;
 }
 
 void UpdatePlayer(Player *player, float dt, float groundY, float scale)
@@ -84,12 +85,37 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
 
     if ((IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_W)) && player->onGround)
     {
-        player->velocity.y = JUMP_FORCE;
+        player->velocity.y = JUMP_FORCE_MIN;
+        player->isJumping = true;
         player->onGround = false;
+        player->jumpHoldTimer = 0.0f;
         if (!player->weapon.attacking)
         {
             player->currentAnim = &player->sprites.jumpUp;
         }
+    }
+
+    if (player->isJumping && (IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_W)))
+    {
+        if (player->jumpHoldTimer < JUMP_HOLD_MAX)
+        {
+            player->jumpHoldTimer += dt;
+            float extraForce = (JUMP_FORCE_MAX - JUMP_FORCE_MIN) * (dt /JUMP_HOLD_MAX);
+            player->velocity.y += extraForce;
+            if (player->velocity.y < JUMP_FORCE_MAX)
+            {
+                player->velocity.y = JUMP_FORCE_MAX;
+            }
+        }
+        else
+        {
+            player->isJumping = false;
+        }
+    }
+
+    if (IsKeyReleased(KEY_SPACE) || IsKeyReleased(KEY_W))
+    {
+        player->isJumping = false;
     }
 
     if (!player->onGround)
