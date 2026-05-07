@@ -2,6 +2,7 @@
 #include "gameplay/weapon.h"
 #include "entities/player.h"
 #include "graphics/sprites.h"
+#include <stdio.h>
 
 void UseBat(Player *player)
 {

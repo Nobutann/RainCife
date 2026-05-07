@@ -44,6 +44,15 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         {
             player->currentAnim = &player->sprites.walkFront;
         }
+        else if (player->weapon.attacking)
+        {
+            player->sprites.attack.layers[0].sheet = player->sprites.walkFront.layers[0].sheet;
+            player->sprites.attack.layers[0].frameWidth = player->sprites.walkFront.layers[0].frameWidth;
+            player->sprites.attack.layers[0].frameCount = player->sprites.walkFront.layers[0].frameCount;
+            player->sprites.attack.layers[2].sheet = player->sprites.walkFront.layers[2].sheet;
+            player->sprites.attack.layers[2].frameWidth = player->sprites.walkFront.layers[2].frameWidth;
+            player->sprites.attack.layers[2].frameCount = player->sprites.walkFront.layers[2].frameCount;
+        }
     }
     else if (IsKeyDown(KEY_A))
     {
@@ -54,6 +63,15 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
             if (player->onGround && !player->weapon.attacking)
             {
                 player->currentAnim = &player->sprites.walkFront;
+            }
+            else if (player->weapon.attacking)
+            {
+                player->sprites.attack.layers[0].sheet = player->sprites.walkFront.layers[0].sheet;
+                player->sprites.attack.layers[0].frameWidth = player->sprites.walkFront.layers[0].frameWidth;
+                player->sprites.attack.layers[0].frameCount = player->sprites.walkFront.layers[0].frameCount;
+                player->sprites.attack.layers[2].sheet = player->sprites.walkFront.layers[2].sheet;
+                player->sprites.attack.layers[2].frameWidth = player->sprites.walkFront.layers[2].frameWidth;
+                player->sprites.attack.layers[2].frameCount = player->sprites.walkFront.layers[2].frameCount;
             }
         }
         else
@@ -139,6 +157,21 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         if (player->weapon.attackTimer <= 0)
         {
             player->weapon.attacking = false;
+            if (player->onGround)
+            {
+                if (player->velocity.x != 0)
+                {
+                    player->currentAnim = &player->sprites.idle;
+                }
+                else
+                {
+                    player->currentAnim = &player->sprites.walkFront;
+                }
+            }
+            else
+            {
+                player->currentAnim = &player->sprites.jumpDown;
+            }
         }
     }
 
