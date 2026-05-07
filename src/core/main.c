@@ -311,7 +311,7 @@ int main(void)
                     UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
                 }
 
-                if (currentLevel->bossId == 2 && CheckCollisionRecs(playerHitbox, shark.rect))
+                if (currentLevel->bossId == 2 && CheckCollisionRecs(playerHitbox, GetSharkHitbox(&shark)))
                 {
                     currentScreen = SCREEN_START;
                 }
