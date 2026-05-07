@@ -285,7 +285,7 @@ Rectangle GetSharkHitbox(Shark *shark) {
             hitboxSize   = (Vector2){ 650.0f,  540.0f };
             break;
         case SHARK_ARC_ATTACK:
-            hitboxOffset = (Vector2){ -60.0f, -140.0f };
+            hitboxOffset = (Vector2){ 40.0f, -140.0f };
             hitboxSize   = (Vector2){ 630.0f,  380.0f };
             break;
         default:
