@@ -35,11 +35,20 @@ typedef struct {
     bool active;
     int health;
     WaterBall balls[MAX_WATER_BALLS];
+
+    Texture2D texShoot;   // Shark_attack_bubble.png — spritesheet 3 frames
+    Texture2D texDash;    // Shark_dash.png
+    Texture2D texJump;    // Shark_jump.png
+    Texture2D texBubble;  // bubble.png — projétil
+
+    float animTimer;
+    int animFrame;
 } Shark;
 
 void InitShark(Shark *shark, int screenWidth, int screenHeight);
 void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight);
 void DrawShark(Shark *shark);
 void UnloadShark(Shark *shark);
+Rectangle GetSharkHitbox(Shark *shark);
 
 #endif
