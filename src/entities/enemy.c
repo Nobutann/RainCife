@@ -34,8 +34,8 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
         case ENEMY_WOOD:
             enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 260};
             enemy->size = (Vector2){450, 350};
-            enemy->hitboxOffset = (Vector2){10, 95};
-            enemy->hitboxSize  = (Vector2){415, 175};
+            enemy->hitboxOffset = (Vector2){100, 95};
+            enemy->hitboxSize  = (Vector2){325, 175};
             break;
         case ENEMY_POSTE:
             enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 450};
@@ -286,6 +286,15 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
         return;
     }
     
+    if (enemy->type == ENEMY_BIRD1 || enemy->type == ENEMY_BIRD2)
+    {
+        UpdateAnimation(&assets->birdAnimation, GetFrameTime());
+        float scale = enemy->size.x / (float)assets->birdAnimation.frameWidth;
+        DrawAnimationFrame(&assets->birdAnimation, enemy->position, scale, false, WHITE);
+        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
+        return;
+    }
+
     Texture2D texture = assets->textures[enemy->type];
     if (texture.id > 0)
     {

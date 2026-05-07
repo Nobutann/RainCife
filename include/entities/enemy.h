@@ -39,6 +39,7 @@ typedef struct {
     Texture2D posteCabecas;
     Texture2D fishWaterJump;
     Animation fishAnticipation;
+    Animation birdAnimation;
     Texture2D bikeSkin2;
     Texture2D bikeSkinItau;
 } EnemyAssets;
