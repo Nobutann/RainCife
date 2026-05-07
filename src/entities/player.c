@@ -121,6 +121,12 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
     if (!player->onGround)
     {
         player->velocity.y += GRAVITY * dt;
+        
+        if (IsKeyDown(KEY_S))
+        {
+            player->velocity.y += GRAVITY * 2.0f * dt;
+        }
+        
         if (player->velocity.y > 0 && !player->weapon.attacking)
         {
             player->currentAnim = &player->sprites.jumpDown;
