@@ -4,7 +4,7 @@
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
-            float ballSize = 90.0f;
+            float ballSize = 120.0f;
             shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width / 2 - ballSize / 2, shark->rect.y + shark->rect.height / 2 - ballSize / 2, ballSize, ballSize };
             
             Vector2 playerCenter = { playerRect.x + playerRect.width / 2, playerRect.y + playerRect.height / 2 };
@@ -233,10 +233,10 @@ void DrawShark(Shark *shark) {
     float sw = 600.0f, sh = 700.0f;
     Rectangle dest = { shark->rect.x - 120.0f, shark->rect.y - 120.0f, sw, sh };
 
-    float dw = 1150.0f, dh = 600.0f;
+    float dw = 1150.0f, dh = 450.0f;
     Rectangle destDash = { shark->rect.x - 225.0f, shark->rect.y - 230.0f, dw, dh };
 
-    float jw = 1250.0f, jh = 750.0f;
+    float jw = 1450.0f, jh = 750.0f;
     Rectangle destJump = { shark->rect.x - 200.0f, shark->rect.y - 200.0f, jw, jh };
 
     switch (shark->state) {
