@@ -4,7 +4,7 @@
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
-            float ballSize = 60.0f;
+            float ballSize = 90.0f;
             shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width / 2 - ballSize / 2, shark->rect.y + shark->rect.height / 2 - ballSize / 2, ballSize, ballSize };
             
             Vector2 playerCenter = { playerRect.x + playerRect.width / 2, playerRect.y + playerRect.height / 2 };
@@ -22,7 +22,7 @@ static void FireProjectile(Shark *shark, Rectangle playerRect) {
 static void FireBubble(Shark *shark) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
-            float bubbleSize = 80.0f;
+            float bubbleSize = 120.0f;
             shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width / 2 - bubbleSize / 2, shark->rect.y + shark->rect.height / 2, bubbleSize, bubbleSize };
             shark->balls[i].direction = (Vector2){ 0, 1.0f }; 
             shark->balls[i].speed = 9.5f * 60.0f; 
@@ -223,6 +223,7 @@ void DrawShark(Shark *shark) {
         Rectangle b = shark->balls[i].rect;
         Rectangle src = { 0, 0, (float)shark->texBubble.width, (float)shark->texBubble.height };
         DrawTexturePro(shark->texBubble, src, b, (Vector2){ 0, 0 }, 0.0f, WHITE);
+        DrawRectangleLinesEx(b, 2.0f, RED);
     }
 
     if (shark->state == SHARK_WAIT_RETURN) return;
@@ -285,7 +286,7 @@ Rectangle GetSharkHitbox(Shark *shark) {
             hitboxSize   = (Vector2){ 650.0f,  540.0f };
             break;
         case SHARK_ARC_ATTACK:
-            hitboxOffset = (Vector2){ -60.0f, -140.0f };
+            hitboxOffset = (Vector2){ 40.0f, -140.0f };
             hitboxSize   = (Vector2){ 630.0f,  380.0f };
             break;
         default:
