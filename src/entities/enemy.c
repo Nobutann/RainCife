@@ -32,10 +32,10 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
             enemy->hitboxSize  = (Vector2){230, 125};
             break;
         case ENEMY_WOOD:
-            enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 260};
-            enemy->size = (Vector2){450, 350};
-            enemy->hitboxOffset = (Vector2){100, 95};
-            enemy->hitboxSize  = (Vector2){325, 175};
+            enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 360};
+            enemy->size = (Vector2){550, 450};
+            enemy->hitboxOffset = (Vector2){150, 150};
+            enemy->hitboxSize  = (Vector2){275, 225};
             break;
         case ENEMY_POSTE:
             enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 600};
