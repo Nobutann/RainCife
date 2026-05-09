@@ -2,16 +2,29 @@
 #define BACKGROUND_H
 
 #include <raylib.h>
+#include "sprites.h"
+
+typedef enum
+{
+    PHASE_RUNNING,
+    PHASE_BOSS
+} GamePhase;
 
 typedef struct {
     float time;
+    float scrollX;
     Texture2D floor;
     Texture2D bossHairyLeg;
+    Animation water;
+    Texture2D barFrame;
+    Texture2D barBackground;
+    Texture2D barFill;
 } Background;
 
 void InitBackground(Background *bg);
-void UpdateBackground(Background *bg, float dt);
+void UpdateBackground(Background *bg, float dt, GamePhase phase);
 void DrawBackground(Background *bg, int screenWidth, int screenHeight, float groundY);
+void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight);
 void UnloadBackground(Background *bg);
 
 #endif
