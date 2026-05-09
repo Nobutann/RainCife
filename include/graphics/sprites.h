@@ -13,6 +13,8 @@ typedef struct
     int currentFrame;
     float frameTime;
     float timer;
+    float offsetX;
+    float offsetY;
 } Animation;
 
 typedef struct
@@ -30,6 +32,8 @@ typedef struct
     LayeredAnimation walkBackwards;
     LayeredAnimation jumpUp;
     LayeredAnimation jumpDown;
+    LayeredAnimation jumpUpLegs;
+    LayeredAnimation jumpDownLegs;
     LayeredAnimation attack;
 } PlayerSprites;
 
