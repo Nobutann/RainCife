@@ -136,6 +136,26 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         player->isJumping = false;
     }
 
+    if (!player->onGround && player->weapon.attacking)
+    {
+        if (player->velocity.y <= 0)
+        {
+            player->sprites.attack.layers[0].sheet = player->sprites.jumpUpLegs.layers[0].sheet;
+            player->sprites.attack.layers[0].frameWidth = player->sprites.jumpUpLegs.layers[0].frameWidth;
+            player->sprites.attack.layers[0].frameCount = player->sprites.jumpUpLegs.layers[0].frameCount;
+            player->sprites.attack.layers[0].offsetX = 20.0f;
+            player->sprites.attack.layers[0].offsetY = 42.0f;
+        }
+        else
+        {
+            player->sprites.attack.layers[0].sheet = player->sprites.jumpDownLegs.layers[0].sheet;
+            player->sprites.attack.layers[0].frameWidth = player->sprites.jumpDownLegs.layers[0].frameWidth;
+            player->sprites.attack.layers[0].frameCount = player->sprites.jumpDownLegs.layers[0].frameCount;
+            player->sprites.attack.layers[0].offsetX = 20.0f;
+            player->sprites.attack.layers[0].offsetY = 44.0f;
+        }
+    }
+
     if (!player->onGround)
     {
         player->velocity.y += GRAVITY * dt;
@@ -183,6 +203,26 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         player->position.y = groundY - feetOffset;
         player->velocity.y = 0;
         player->onGround = true;
+
+        if (player->weapon.attacking)
+        {
+            if (player->velocity.x != 0)
+            {
+                player->sprites.attack.layers[0].sheet = player->sprites.walkFront.layers[0].sheet;
+                player->sprites.attack.layers[0].frameWidth = player->sprites.walkFront.layers[0].frameWidth;
+                player->sprites.attack.layers[0].frameCount = player->sprites.walkFront.layers[0].frameCount;
+                player->sprites.attack.layers[0].offsetX = 0.0f;
+                player->sprites.attack.layers[0].offsetY = 0.0f;
+            }
+            else
+            {
+                player->sprites.attack.layers[0].sheet = player->sprites.idleLegs.layers[0].sheet;
+                player->sprites.attack.layers[0].frameWidth = player->sprites.idleLegs.layers[0].frameWidth;
+                player->sprites.attack.layers[0].frameCount = player->sprites.idleLegs.layers[0].frameCount;
+                player->sprites.attack.layers[0].offsetX = 0.0f;
+                player->sprites.attack.layers[0].offsetY = 0.0f;
+            }
+        }
     }
 
     if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
@@ -222,7 +262,7 @@ Rectangle GetPlayerHitbox(Player *player, float scale)
 }
 
 void DrawPlayer(Player *player, float scale)
-{
+{   
     DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
     Rectangle hitbox = GetPlayerHitbox(player, scale);
     DrawRectangleLines((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height, GREEN);

@@ -35,8 +35,11 @@ void DrawLayeredAnimation(LayeredAnimation *layeredAnimation, Vector2 position, 
     {
         float fw = layeredAnimation->layers[i].frameWidth * scale;
         float offsetX = flipX ? 0 : (refWidth - fw);
-
-        Vector2 layerPos = {position.x + offsetX, position.y};
+        float manualOffsetX = layeredAnimation->layers[i].offsetX;
+        Vector2 layerPos = {
+            position.x + offsetX + (flipX ? manualOffsetX : -manualOffsetX) * scale,
+            position.y + layeredAnimation->layers[i].offsetY * scale
+        };
         DrawAnimationFrame(&layeredAnimation->layers[i], layerPos, scale, flipX, tint);
     }
 }
@@ -75,6 +78,12 @@ void LoadPlayerSprites(PlayerSprites *playerSprites)
 
     playerSprites->idleHead.layerCount = 1;
     playerSprites->idleHead.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_head_attack.png", 1, FRAME_TIME);
+
+    playerSprites->jumpUpLegs.layerCount = 1;
+    playerSprites->jumpUpLegs.layers[0] = LoadAnimation("assets/sprites/Player/attack/Legs_jump_up.png", 1, FRAME_TIME);
+
+    playerSprites->jumpDownLegs.layerCount = 1;
+    playerSprites->jumpDownLegs.layers[0] = LoadAnimation("assets/sprites/Player/attack/Legs_jump_down.png", 1, FRAME_TIME);
 }
 
 float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime)
@@ -101,6 +110,8 @@ void UnloadPlayerSprites(PlayerSprites *playerSprites)
     UnloadLayeredAnimation(&playerSprites->attack);
     UnloadLayeredAnimation(&playerSprites->idleLegs);
     UnloadLayeredAnimation(&playerSprites->idleHead);
+    UnloadLayeredAnimation(&playerSprites->jumpUpLegs);
+    UnloadLayeredAnimation(&playerSprites->jumpDownLegs);
 }
 
 void UpdateAnimation(Animation *animation, float dt)
