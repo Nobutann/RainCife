@@ -227,6 +227,29 @@ int main(void)
                 UpdateBackground(&bg, dt, phase);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale);
 
+                if (IsKeyPressed(KEY_RIGHT) && currentLevel->next) {
+                    currentLevel = currentLevel->next;
+                    phase = PHASE_RUNNING;
+                    progressTimer = 0.0f;
+                    autoSpawn = true;
+                    spawnTimer = 0.0f;
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
+                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+                    InitShark(&shark, currentWidth, currentHeight);
+                    player.isBossFighting = false;
+                }
+                if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
+                    currentLevel = currentLevel->prev;
+                    phase = PHASE_RUNNING;
+                    progressTimer = 0.0f;
+                    autoSpawn = true;
+                    spawnTimer = 0.0f;
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
+                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+                    InitShark(&shark, currentWidth, currentHeight);
+                    player.isBossFighting = false;
+                }
+
                 if (phase == PHASE_BOSS)
                 {
                     if (currentLevel->bossId == 1)
