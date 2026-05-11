@@ -18,7 +18,7 @@ int main(void)
     config.telaCheia = 1;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 600, "RatTsunami");
+    InitWindow(800, 600, "RainCife");
 
     if (config.telaCheia)
     {
