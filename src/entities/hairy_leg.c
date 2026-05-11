@@ -20,13 +20,16 @@ void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float sca
     leg->direction = -1;
 }
 
+bool IsHairyLegKickColliding(const HairyLeg *leg, Rectangle playerHitbox) {
+    return leg->isKickActive && CheckCollisionRecs(playerHitbox, leg->kickHitbox);
+}
+
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale) {
     leg->groundY = groundY;
     float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
     float emptyTop = currentSpriteH * 0.10f;
     float emptyBottom = currentSpriteH * 0.08f;
     float defaultHitboxH = currentSpriteH - emptyTop - emptyBottom;
-    float oldHeight = leg->rect.height;
     leg->rect.height = defaultHitboxH;
     leg->isKickActive = false;
 

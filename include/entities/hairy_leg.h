@@ -38,6 +38,7 @@ typedef struct {
 
 void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale);
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale);
+bool IsHairyLegKickColliding(const HairyLeg *leg, Rectangle playerHitbox);
 void DrawHairyLeg(HairyLeg *leg, float scale);
 void UnloadHairyLeg(HairyLeg *leg);
 
