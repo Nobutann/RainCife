@@ -1,72 +1,47 @@
-ifeq ($(OS),Windows_NT)
-    PLATFORM_OS = WINDOWS
-    EXT        = .exe
-    ifneq ($(wildcard C:/msys64/mingw64/bin/gcc.exe),)
-        CC       = C:/msys64/mingw64/bin/gcc.exe
-        INCLUDES = -I./include -IC:/msys64/mingw64/include
-        LIBS     = -LC:/msys64/mingw64/lib -lraylib -lopengl32 -lgdi32 -lwinmm
-    else
-        CC       = C:/raylib/w64devkit/bin/gcc.exe
-        INCLUDES = -I./include -IC:/raylib-5.5_win64_mingw-w64/include -IC:/raylib/raylib/src
-        LIBS     = -LC:/raylib-5.5_win64_mingw-w64/lib -lraylib -lopengl32 -lgdi32 -lwinmm
-    endif
-    RM       = rd /s /q
-    MKDIR    = mkdir
-    FIX_PATH = $(subst /,\,$1)
+# Detecta automaticamente qual toolchain esta instalada
+# Detecta automaticamente qual toolchain esta instalada
+ifneq ($(wildcard C:/msys64/mingw64/include/raylib.h),)
+
+    CC       = C:/msys64/mingw64/bin/gcc.exe
+    INCLUDES = -I./include -I"C:/msys64/mingw64/include"
+    LIBS     = -L"C:/msys64/mingw64/lib" -lraylib -lopengl32 -lgdi32 -lwinmm
+
 else
-    PLATFORM_OS = LINUX
-    EXT        =
-    CC         = gcc
-    INCLUDES   = -I./include
-    LIBS       = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -lXrandr -lXinerama -lXi -lXcursor
-    RM         = rm -rf
-    MKDIR      = mkdir -p
-    FIX_PATH   = $1
+
+    CC       = C:/raylib/w64devkit/bin/gcc.exe
+    INCLUDES = -I./include -I"C:/raylib-5.5_win64_mingw-w64/include" -I"C:/raylib/raylib/src"
+    LIBS     = -L"C:/raylib-5.5_win64_mingw-w64/lib" -lraylib -lopengl32 -lgdi32 -lwinmm
+
 endif
 
-CFLAGS  = -std=c99 -Wall -Wextra -DPLATFORM_DESKTOP
-LDFLAGS =
+CFLAGS = -std=c99 -Wall -Wextra -DPLATFORM_DESKTOP
 
-# Build mode: make BUILD=release
-ifeq ($(BUILD),release)
-    CFLAGS += -O2 -DNDEBUG
-else
-    CFLAGS += -g -O0 -DDEBUG
-endif
-
-TARGET = bin/RatTsunami$(EXT)
-SRC    = $(wildcard src/*.c) $(wildcard src/**/*.c)
-OBJ    = $(patsubst src/%.c, obj/%.o, $(SRC))
-
-# ── Targets ────────────────────────────────────────────────────────────────────
-
-.PHONY: all run clean dirs release info
+TARGET = bin/RatTsunami.exe
+SRC = $(wildcard src/*.c) $(wildcard src/**/*.c)
+OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
 
 all: dirs $(TARGET)
 
-release:
-	$(MAKE) BUILD=release
-
 $(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $@ $(LIBS) $(LDFLAGS)
+	$(CC) $^ -o $@ $(LIBS)
 
 obj/%.o: src/%.c
-	$(MKDIR) $(dir $@)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 run: all
 	./$(TARGET)
 
 clean:
-	$(RM) $(call FIX_PATH,bin) $(call FIX_PATH,obj)
+	-rm -rf bin/ obj/ 2>nul
+	-rd /s /q bin 2>nul
+	-rd /s /q obj 2>nul
 
 dirs:
-	-$(MKDIR) bin
-	-$(MKDIR) obj
+	-mkdir bin 2>nul
+	-mkdir obj 2>nul
+	-mkdir obj\core 2>nul
+	-mkdir obj\entities 2>nul
+	-mkdir obj\graphics 2>nul
+	-mkdir obj\gameplay 2>nul
 
-info:
-	@echo "Platform : $(PLATFORM_OS)"
-	@echo "Compiler : $(CC)"
-	@echo "Target   : $(TARGET)"
-	@echo "Sources  : $(SRC)"
-	@echo "Build    : $(if $(filter release,$(BUILD)),release,debug)"
+.PHONY: all run clean dirs  
