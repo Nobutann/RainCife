@@ -15,7 +15,8 @@ typedef enum {
     HL_SWEEPING,
     HL_SWEEP_RECOVERING,
     HL_KICKING,
-    HL_JUMPING_BACK
+    HL_JUMPING_BACK,
+    HL_DEAD
 } HairyLegState;
 
 typedef struct {

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <math.h>
 #include <stdbool.h>
 
 #include "entities/hairy_leg.h"
@@ -9,6 +10,7 @@ extern Rectangle GetAnimationFrameSource(const Animation *animation, bool flipX)
 extern float GetHairyLegSpriteOffsetX(const HairyLeg *leg, float scale);
 extern bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect, float screenWidth);
 extern Rectangle GetPlayerAttackHitbox(Player *player, float scale);
+extern void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY, float scale);
 extern bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float playerScale);
 
 static HairyLeg MakeJumpingLeg(void)
@@ -85,6 +87,30 @@ static Player MakeAttackingPlayer(bool facingRight)
     player.weapon.attacking = true;
     player.weapon.hitConnected = false;
     player.weapon.damage = 2.0f;
+    player.sprites.walkFront.layerCount = 1;
+    player.sprites.walkFront.layers[0].frameWidth = 100;
+    player.sprites.walkFront.layers[0].sheet.height = 200;
+    player.currentAnim = &player.sprites.walkFront;
+
+    return player;
+}
+
+static Player MakeBossIntroPlayer(void)
+{
+    Player player = {0};
+
+    player.position = (Vector2){900.0f, 10.0f};
+    player.velocity = (Vector2){250.0f, -300.0f};
+    player.onGround = false;
+    player.isBossFighting = false;
+    player.isJumping = true;
+    player.jumpHoldTimer = 0.2f;
+    player.weapon.attacking = true;
+    player.weapon.attackTimer = 0.3f;
+    player.weapon.hitConnected = true;
+    player.sprites.idle.layerCount = 1;
+    player.sprites.idle.layers[0].frameWidth = 100;
+    player.sprites.idle.layers[0].sheet.height = 200;
     player.sprites.walkFront.layerCount = 1;
     player.sprites.walkFront.layers[0].frameWidth = 100;
     player.sprites.walkFront.layers[0].sheet.height = 200;
@@ -180,6 +206,21 @@ int main(void)
     Rectangle rightPlayerWithRoom = {840.0f, 300.0f, 40.0f, 80.0f};
     assert(ShouldHairyLegJumpBackFromCorner(&rightCornerPressure, rightPlayerWithRoom, 1280.0f));
 
+    Player introPlayer = MakeBossIntroPlayer();
+    Rectangle introBossHitbox = {500.0f, 300.0f, 40.0f, 200.0f};
+    PlacePlayerForBossIntro(&introPlayer, introBossHitbox, 520.0f, 1.0f);
+    Rectangle introPlayerHitbox = GetPlayerHitbox(&introPlayer, 1.0f);
+    assert(fabsf((introPlayerHitbox.x + introPlayerHitbox.width) - 280.0f) < 0.001f);
+    assert(fabsf(introPlayer.position.y - 300.0f) < 0.001f);
+    assert(introPlayer.velocity.x == 0.0f);
+    assert(introPlayer.velocity.y == 0.0f);
+    assert(introPlayer.onGround);
+    assert(introPlayer.isBossFighting);
+    assert(!introPlayer.isJumping);
+    assert(!introPlayer.weapon.attacking);
+    assert(!introPlayer.weapon.hitConnected);
+    assert(introPlayer.currentAnim == &introPlayer.sprites.idle);
+
     Player rightAttackPlayer = MakeAttackingPlayer(false);
     Rectangle rightAttackHitbox = GetPlayerAttackHitbox(&rightAttackPlayer, 1.0f);
     Rectangle rightPlayerBody = GetPlayerHitbox(&rightAttackPlayer, 1.0f);
@@ -202,6 +243,31 @@ int main(void)
 
     DamageHairyLeg(&damagedLeg, 200);
     assert(damagedLeg.health == 0);
+    assert(damagedLeg.state == HL_DEAD);
+    assert(damagedLeg.currentAnim == &damagedLeg.sprites.death);
+
+    HairyLeg deathLeg = {0};
+    deathLeg.health = 2;
+    deathLeg.state = HL_KICKING;
+    deathLeg.isKickActive = true;
+    deathLeg.rect = (Rectangle){120.0f, 300.0f, 40.0f, 200.0f};
+    deathLeg.groundY = 500.0f;
+    deathLeg.sprites.death.frameCount = 1;
+    deathLeg.sprites.death.frameTime = 0.01f;
+    deathLeg.sprites.death.sheet = (Texture2D){0};
+    deathLeg.sprites.death.sheet.width = 100;
+    deathLeg.sprites.death.sheet.height = 252;
+    DamageHairyLeg(&deathLeg, 2);
+    assert(deathLeg.health == 0);
+    assert(deathLeg.state == HL_DEAD);
+    assert(deathLeg.currentAnim == &deathLeg.sprites.death);
+    assert(deathLeg.sprites.death.currentFrame == 0);
+    assert(!deathLeg.isKickActive);
+
+    UpdateHairyLeg(&deathLeg, unusedPlayer, 0.5f, deathLeg.groundY, 1.0f);
+    assert(deathLeg.state == HL_DEAD);
+    assert(deathLeg.currentAnim == &deathLeg.sprites.death);
+    assert(deathLeg.timer >= 0.5f);
 
     HairyLeg sweepRecovery = MakeSweepingLeg(1, 1.2f);
     UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.01f, sweepRecovery.groundY, 1.0f);

@@ -2,6 +2,8 @@
 #include "entities/player.h"
 #include "gameplay/weapon.h"
 
+#define BOSS_INTRO_PLAYER_GAP 220.0f
+
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {
     LoadPlayerSprites(&player->sprites);
@@ -299,6 +301,52 @@ Rectangle GetPlayerAttackHitbox(Player *player, float scale)
     float attackX = attacksRight ? bodyHitbox.x + bodyHitbox.width : bodyHitbox.x - attackWidth;
 
     return (Rectangle){ attackX, attackY, attackWidth, attackHeight };
+}
+
+void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY, float scale)
+{
+    player->velocity = (Vector2){0.0f, 0.0f};
+    player->onGround = true;
+    player->isBossFighting = true;
+    player->isJumping = false;
+    player->jumpHoldTimer = 0.0f;
+    player->weapon.attacking = false;
+    player->weapon.attackTimer = 0.0f;
+    player->weapon.hitConnected = false;
+
+    if (player->sprites.idle.layerCount > 0)
+    {
+        player->currentAnim = &player->sprites.idle;
+    }
+    else if (!player->currentAnim && player->sprites.walkFront.layerCount > 0)
+    {
+        player->currentAnim = &player->sprites.walkFront;
+    }
+
+    float spriteH = 0.0f;
+    if (player->sprites.walkFront.layerCount > 0)
+    {
+        spriteH = player->sprites.walkFront.layers[0].sheet.height * scale;
+    }
+    else if (player->currentAnim && player->currentAnim->layerCount > 0)
+    {
+        spriteH = player->currentAnim->layers[0].sheet.height * scale;
+    }
+
+    if (spriteH > 0.0f)
+    {
+        player->position.y = groundY - spriteH * 1.1f;
+    }
+
+    Rectangle hitbox = GetPlayerHitbox(player, scale);
+    float targetHitboxRight = bossHitbox.x - BOSS_INTRO_PLAYER_GAP * scale;
+    player->position.x += targetHitboxRight - (hitbox.x + hitbox.width);
+
+    hitbox = GetPlayerHitbox(player, scale);
+    if (hitbox.x < 0.0f)
+    {
+        player->position.x -= hitbox.x;
+    }
 }
 
 void DrawPlayer(Player *player, float scale)

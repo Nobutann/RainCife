@@ -11,6 +11,7 @@
 #include "core/cursor.h"
 
 #define MAX_ACTIVE_ENEMIES 12
+#define HAIRY_LEG_DEATH_ADVANCE_DELAY 1.0f
 
 static void StartLevel(
     Level **currentLevel,
@@ -177,11 +178,13 @@ int main(void)
                         if (currentLevel->bossId == 1)
                         {
                             InitHairyLeg(&pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
+                            PlacePlayerForBossIntro(&player, pernaCabeluda.rect, playerStandingY, playerScale);
                         }
 
                         if (currentLevel->bossId == 2)
                         {
                             InitShark(&shark, currentWidth, currentHeight);
+                            PlacePlayerForBossIntro(&player, GetSharkHitbox(&shark), playerStandingY, playerScale);
                         }
                     }
 
@@ -279,7 +282,7 @@ int main(void)
                         UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
                         TryDamageHairyLegFromPlayerAttack(&pernaCabeluda, &player, playerScale);
 
-                        if (pernaCabeluda.health <= 0 && currentLevel->next)
+                        if (pernaCabeluda.state == HL_DEAD && pernaCabeluda.timer >= HAIRY_LEG_DEATH_ADVANCE_DELAY && currentLevel->next)
                         {
                             StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
                             bossDefeatedThisFrame = true;
@@ -291,7 +294,7 @@ int main(void)
                         UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
                     }
 
-                    if (!bossDefeatedThisFrame && currentLevel->bossId == 1)
+                    if (!bossDefeatedThisFrame && currentLevel->bossId == 1 && pernaCabeluda.state != HL_DEAD)
                     {
                         if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect))
                         {
