@@ -35,5 +35,6 @@ void UnloadPlayer(Player *player);
 Rectangle GetPlayerHitbox(Player *player, float scale);
 bool IsPlayerAttackHitboxActive(const Player *player);
 Rectangle GetPlayerAttackHitbox(Player *player, float scale);
+void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY, float scale);
 
 #endif

@@ -48,7 +48,7 @@ void UseBat(Player *player)
 
 void UseHammer(Player *player)
 {
-    
+
     bool isIdle = (player->isBossFighting && player->velocity.x == 0);
 
     if (isIdle)
@@ -64,7 +64,7 @@ void UseHammer(Player *player)
     {
         UseRunningAttackPose(player);
     }
-    
+
     player->currentAnim = &player->sprites.attack;
     player->sprites.attack.layers[1].currentFrame = 0;
     player->sprites.attack.layers[1].timer = 0.0f;
@@ -91,7 +91,7 @@ void EquipWeapon(Player *player, WeaponType type)
             player->weapon.damage = 2.0f;
             if (player->isBossFighting)
             {
-               player->weapon.cooldown = 0.5f; 
+               player->weapon.cooldown = 0.5f;
             }
             else
             {
@@ -102,7 +102,7 @@ void EquipWeapon(Player *player, WeaponType type)
             player->weapon.attackDuration = LoadAttackAnimation(&player->sprites, "assets/sprites/Player/attack/melee/Attack_sword-Sheet.png", 5, 0.08f);
             break;
         case WEAPON_HAMMER:
-            player->weapon.damage = 2.0f;
+            player->weapon.damage = 5.0f;
             player->weapon.cooldown = 1.5f;
             player->weapon.breakPower = 3;
             player->weapon.attack = UseHammer;

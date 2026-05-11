@@ -27,6 +27,8 @@ static Animation *GetHairyLegAnimationForState(HairyLeg *leg) {
         case HL_SWEEPING:
         case HL_SWEEP_RECOVERING:
             return &leg->sprites.rasteira;
+        case HL_DEAD:
+            return &leg->sprites.death;
     }
 
     return &leg->sprites.idle;
@@ -81,6 +83,17 @@ void DamageHairyLeg(HairyLeg *leg, int damage) {
     if (leg->health < 0) {
         leg->health = 0;
     }
+
+    if (leg->health == 0 && leg->state != HL_DEAD) {
+        leg->state = HL_DEAD;
+        leg->timer = 0.0f;
+        leg->isKickActive = false;
+        leg->waveLeft.active = false;
+        leg->waveRight.active = false;
+        leg->sprites.death.currentFrame = 0;
+        leg->sprites.death.timer = 0.0f;
+        leg->currentAnim = &leg->sprites.death;
+    }
 }
 
 bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect, float screenWidth) {
@@ -101,6 +114,10 @@ bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect,
 }
 
 bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float playerScale) {
+    if (leg->state == HL_DEAD) {
+        return false;
+    }
+
     if (!IsPlayerAttackHitboxActive(player) || player->weapon.hitConnected) {
         return false;
     }
@@ -352,6 +369,11 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
                 leg->sprites.idle.currentFrame = 0;
                 leg->timer = 0.0f;
             }
+            break;
+
+        case HL_DEAD:
+            leg->timer += deltaTime;
+            leg->isKickActive = false;
             break;
     }
     int screenWidth = GetScreenWidth();
