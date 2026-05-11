@@ -84,7 +84,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             break;
 
         case HL_JUMPING_UP:
-            leg->rect.y -= 1500 * deltaTime;
+            leg->rect.y -= 3000 * deltaTime;
             if (leg->rect.y < -leg->rect.height) {
                 leg->state = HL_HANGING;
                 leg->rect.x = playerRect.x;
@@ -221,6 +221,13 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             }
             break;
     }
+    int screenWidth = GetScreenWidth();
+    if (leg->rect.x < 0) {
+            leg->rect.x = 0;
+        }
+        else if (leg->rect.x + leg->rect.width > screenWidth) {
+            leg->rect.x = screenWidth - leg->rect.width;
+        }
 
     switch (leg->state) {
         case HL_IDLE:
