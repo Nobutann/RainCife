@@ -2,6 +2,7 @@
 #include "core/screens.h"
 #include "utils.h"
 #include "core/config_manager.h"
+#include "core/cursor.h"
 
 GameScreen RunOptions(Config *config)
 {
@@ -19,6 +20,8 @@ GameScreen RunOptions(Config *config)
         Rectangle barVolume = { (float)currentWidth / 2, (float)startY + spacing * 2 + 5, 200, 25 };
 
         Vector2 mouse = GetMousePosition();
+        bool hoveringButton = CheckCollisionPointRec(mouse, btnLanguage) ||
+                              CheckCollisionPointRec(mouse, btnScreen);
 
         if (CheckCollisionPointRec(mouse, btnLanguage) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
@@ -57,6 +60,7 @@ GameScreen RunOptions(Config *config)
             DrawSlider(barVolume, config->volume);
             DrawText(TextFormat("%d%%", (int)(config->volume * 100 + 0.5f)), (int)barVolume.x + (int)barVolume.width + 15, (int)barVolume.y + 2, 20, DARKGRAY);
 
+            DrawMenuCursor(hoveringButton);
         EndDrawing();
     }
     return SCREEN_EXIT;

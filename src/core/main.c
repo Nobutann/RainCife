@@ -8,6 +8,7 @@
 #include "graphics/background.h"
 #include "enemy_caller.h"
 #include "gameplay/levels.h"
+#include "core/cursor.h"
 
 #define MAX_ACTIVE_ENEMIES 12
 
@@ -52,6 +53,8 @@ int main(void)
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "RainCife");
+    HideCursor();
+    InitCustomCursor();
 
     if (config.telaCheia)
     {
@@ -145,6 +148,7 @@ int main(void)
                 }
 
                 float dt = GetFrameTime();
+                UpdateCustomCursor(dt);
                 int currentWidth = GetScreenWidth();
                 int currentHeight = GetScreenHeight();
                 float groundY = currentHeight * GROUND_RATIO;
@@ -372,6 +376,7 @@ int main(void)
                     }
 
                     DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
+                    DrawGameplayCursor(player.weapon.attacking);
                 EndDrawing();
             }
 
@@ -393,6 +398,8 @@ int main(void)
         }
     }
 
+    UnloadCustomCursor();
+    ShowCursor();
     CloseWindow();
 
     return 0;
