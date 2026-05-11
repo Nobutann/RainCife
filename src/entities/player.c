@@ -261,11 +261,39 @@ Rectangle GetPlayerHitbox(Player *player, float scale)
     return (Rectangle){ player->position.x, player->position.y, 50, 50 };
 }
 
+bool IsPlayerAttackHitboxActive(const Player *player)
+{
+    return player->weapon.attacking;
+}
+
+Rectangle GetPlayerAttackHitbox(Player *player, float scale)
+{
+    if (!IsPlayerAttackHitboxActive(player))
+    {
+        return (Rectangle){0};
+    }
+
+    Rectangle bodyHitbox = GetPlayerHitbox(player, scale);
+    float attackWidth = 90.0f * scale;
+    float attackHeight = bodyHitbox.height * 0.85f;
+    float attackY = bodyHitbox.y + (bodyHitbox.height - attackHeight) * 0.5f;
+    bool attacksRight = !player->facingRight;
+    float attackX = attacksRight ? bodyHitbox.x + bodyHitbox.width : bodyHitbox.x - attackWidth;
+
+    return (Rectangle){ attackX, attackY, attackWidth, attackHeight };
+}
+
 void DrawPlayer(Player *player, float scale)
 {   
     DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
     Rectangle hitbox = GetPlayerHitbox(player, scale);
     DrawRectangleLines((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height, GREEN);
+
+    if (IsPlayerAttackHitboxActive(player))
+    {
+        Rectangle attackHitbox = GetPlayerAttackHitbox(player, scale);
+        DrawRectangleLinesEx(attackHitbox, 2.0f, YELLOW);
+    }
 }
 
 void UnloadPlayer(Player *player)

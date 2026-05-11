@@ -11,6 +11,39 @@
 
 #define MAX_ACTIVE_ENEMIES 12
 
+static void StartLevel(
+    Level **currentLevel,
+    Level *targetLevel,
+    GamePhase *phase,
+    float *progressTimer,
+    bool *autoSpawn,
+    float *spawnTimer,
+    Enemy enemies[],
+    Player *player,
+    HairyLeg *pernaCabeluda,
+    Shark *shark,
+    int currentWidth,
+    int currentHeight,
+    float groundY,
+    float bossScale
+)
+{
+    *currentLevel = targetLevel;
+    *phase = PHASE_RUNNING;
+    *progressTimer = 0.0f;
+    *autoSpawn = true;
+    *spawnTimer = 0.0f;
+
+    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+    {
+        enemies[i].active = false;
+    }
+
+    InitHairyLeg(pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+    InitShark(shark, currentWidth, currentHeight);
+    player->isBossFighting = false;
+}
+
 int main(void)
 {
     Config config = CarregarConfig();
@@ -95,8 +128,6 @@ int main(void)
 
             GamePhase phase = PHASE_RUNNING;
             float progressTimer = 0.0f;
-            float bossHp = 100.0f;
-            float bossMaxHp = 100.0f;
 
             // player.isBossFighting = (currentLevel->bossId != 0);
             player.isBossFighting = false;
@@ -226,43 +257,37 @@ int main(void)
 
                 UpdateBackground(&bg, dt, phase);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale);
+                playerHitbox = GetPlayerHitbox(&player, playerScale);
 
                 if (IsKeyPressed(KEY_RIGHT) && currentLevel->next) {
-                    currentLevel = currentLevel->next;
-                    phase = PHASE_RUNNING;
-                    progressTimer = 0.0f;
-                    autoSpawn = true;
-                    spawnTimer = 0.0f;
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
-                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
-                    InitShark(&shark, currentWidth, currentHeight);
-                    player.isBossFighting = false;
+                    StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
                 }
                 if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
-                    currentLevel = currentLevel->prev;
-                    phase = PHASE_RUNNING;
-                    progressTimer = 0.0f;
-                    autoSpawn = true;
-                    spawnTimer = 0.0f;
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
-                    InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
-                    InitShark(&shark, currentWidth, currentHeight);
-                    player.isBossFighting = false;
+                    StartLevel(&currentLevel, currentLevel->prev, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
                 }
 
                 if (phase == PHASE_BOSS)
                 {
+                    bool bossDefeatedThisFrame = false;
+
                     if (currentLevel->bossId == 1)
                     {
                         UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
+                        TryDamageHairyLegFromPlayerAttack(&pernaCabeluda, &player, playerScale);
+
+                        if (pernaCabeluda.health <= 0 && currentLevel->next)
+                        {
+                            StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
+                            bossDefeatedThisFrame = true;
+                        }
                     }
 
-                    if (currentLevel->bossId == 2)
+                    if (!bossDefeatedThisFrame && currentLevel->bossId == 2)
                     {
                         UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
                     }
 
-                    if (currentLevel->bossId == 1)
+                    if (!bossDefeatedThisFrame && currentLevel->bossId == 1)
                     {
                         if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect))
                         {
@@ -285,7 +310,7 @@ int main(void)
                         }
                     }
 
-                    if (currentLevel->bossId == 2)
+                    if (!bossDefeatedThisFrame && currentLevel->bossId == 2)
                     {
                         if (CheckCollisionRecs(playerHitbox, GetSharkHitbox(&shark)))
                         {
@@ -302,7 +327,22 @@ int main(void)
                     }
                 }
 
-                float barValue = (phase == PHASE_RUNNING) ? (progressTimer / currentLevel->duration) : (bossHp / bossMaxHp);
+                float barValue = 1.0f;
+                if (phase == PHASE_RUNNING && currentLevel->duration > 0.0f)
+                {
+                    barValue = progressTimer / currentLevel->duration;
+                }
+                else if (phase == PHASE_BOSS)
+                {
+                    if (currentLevel->bossId == 1)
+                    {
+                        barValue = (float)pernaCabeluda.health / 100.0f;
+                    }
+                    else if (currentLevel->bossId == 2)
+                    {
+                        barValue = (float)shark.health / 200.0f;
+                    }
+                }
 
                 BeginDrawing();
                     ClearBackground(BLACK);

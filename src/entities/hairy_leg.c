@@ -72,6 +72,17 @@ bool IsHairyLegKickColliding(const HairyLeg *leg, Rectangle playerHitbox) {
     return leg->isKickActive && CheckCollisionRecs(playerHitbox, leg->kickHitbox);
 }
 
+void DamageHairyLeg(HairyLeg *leg, int damage) {
+    if (damage <= 0) {
+        return;
+    }
+
+    leg->health -= damage;
+    if (leg->health < 0) {
+        leg->health = 0;
+    }
+}
+
 bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect, float screenWidth) {
     float playerRight = playerRect.x + playerRect.width;
 
@@ -87,6 +98,21 @@ bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect,
     );
 
     return encurraladoEsquerda || encurraladoDireita;
+}
+
+bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float playerScale) {
+    if (!IsPlayerAttackHitboxActive(player) || player->weapon.hitConnected) {
+        return false;
+    }
+
+    Rectangle attackHitbox = GetPlayerAttackHitbox(player, playerScale);
+    if (!CheckCollisionRecs(attackHitbox, leg->rect)) {
+        return false;
+    }
+
+    DamageHairyLeg(leg, (int)player->weapon.damage);
+    player->weapon.hitConnected = true;
+    return true;
 }
 
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale) {

@@ -33,5 +33,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale);
 void DrawPlayer(Player *player, float scale);
 void UnloadPlayer(Player *player);
 Rectangle GetPlayerHitbox(Player *player, float scale);
+bool IsPlayerAttackHitboxActive(const Player *player);
+Rectangle GetPlayerAttackHitbox(Player *player, float scale);
 
 #endif

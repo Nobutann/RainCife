@@ -74,11 +74,12 @@ void EquipWeapon(Player *player, WeaponType type)
 
     player->weapon.type = type;
     player->weapon.cooldownTimer = 0.0f;
+    player->weapon.hitConnected = false;
 
     switch (type)
     {
         case WEAPON_BAT:
-            player->weapon.damage = 30.0f;
+            player->weapon.damage = 2.0f;
             if (player->isBossFighting)
             {
                player->weapon.cooldown = 0.5f; 
@@ -92,7 +93,7 @@ void EquipWeapon(Player *player, WeaponType type)
             player->weapon.attackDuration = LoadAttackAnimation(&player->sprites, "assets/sprites/Player/attack/melee/Attack_sword-Sheet.png", 5, 0.08f);
             break;
         case WEAPON_HAMMER:
-            player->weapon.damage = 30.0f;
+            player->weapon.damage = 2.0f;
             player->weapon.cooldown = 1.5f;
             player->weapon.breakPower = 3;
             player->weapon.attack = UseHammer;
@@ -114,6 +115,7 @@ void UseWeapon(Player *player)
 
     player->weapon.cooldownTimer = player->weapon.cooldown;
     player->weapon.attacking = true;
+    player->weapon.hitConnected = false;
     player->weapon.attackTimer = player->weapon.attackDuration;
     player->weapon.attack(player);
 }

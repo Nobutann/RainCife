@@ -2,11 +2,14 @@
 #include <stdbool.h>
 
 #include "entities/hairy_leg.h"
+#include "entities/player.h"
 
 extern bool IsHairyLegKickColliding(const HairyLeg *leg, Rectangle playerHitbox);
 extern Rectangle GetAnimationFrameSource(const Animation *animation, bool flipX);
 extern float GetHairyLegSpriteOffsetX(const HairyLeg *leg, float scale);
 extern bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect, float screenWidth);
+extern Rectangle GetPlayerAttackHitbox(Player *player, float scale);
+extern bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float playerScale);
 
 static HairyLeg MakeJumpingLeg(void)
 {
@@ -71,6 +74,23 @@ static HairyLeg MakeSweepingLeg(int direction, float timer)
     leg.currentAnim = &leg.sprites.rasteira;
 
     return leg;
+}
+
+static Player MakeAttackingPlayer(bool facingRight)
+{
+    Player player = {0};
+
+    player.position = (Vector2){100.0f, 50.0f};
+    player.facingRight = facingRight;
+    player.weapon.attacking = true;
+    player.weapon.hitConnected = false;
+    player.weapon.damage = 2.0f;
+    player.sprites.walkFront.layerCount = 1;
+    player.sprites.walkFront.layers[0].frameWidth = 100;
+    player.sprites.walkFront.layers[0].sheet.height = 200;
+    player.currentAnim = &player.sprites.walkFront;
+
+    return player;
 }
 
 int main(void)
@@ -159,6 +179,29 @@ int main(void)
     rightCornerPressure.direction = 1;
     Rectangle rightPlayerWithRoom = {840.0f, 300.0f, 40.0f, 80.0f};
     assert(ShouldHairyLegJumpBackFromCorner(&rightCornerPressure, rightPlayerWithRoom, 1280.0f));
+
+    Player rightAttackPlayer = MakeAttackingPlayer(false);
+    Rectangle rightAttackHitbox = GetPlayerAttackHitbox(&rightAttackPlayer, 1.0f);
+    Rectangle rightPlayerBody = GetPlayerHitbox(&rightAttackPlayer, 1.0f);
+    assert(rightAttackHitbox.x == rightPlayerBody.x + rightPlayerBody.width);
+
+    Player leftAttackPlayer = MakeAttackingPlayer(true);
+    Rectangle leftAttackHitbox = GetPlayerAttackHitbox(&leftAttackPlayer, 1.0f);
+    Rectangle leftPlayerBody = GetPlayerHitbox(&leftAttackPlayer, 1.0f);
+    assert(leftAttackHitbox.x + leftAttackHitbox.width == leftPlayerBody.x);
+
+    HairyLeg damagedLeg = {0};
+    damagedLeg.health = 100;
+    damagedLeg.rect = rightAttackHitbox;
+    assert(TryDamageHairyLegFromPlayerAttack(&damagedLeg, &rightAttackPlayer, 1.0f));
+    assert(damagedLeg.health == 98);
+    assert(rightAttackPlayer.weapon.hitConnected);
+
+    assert(!TryDamageHairyLegFromPlayerAttack(&damagedLeg, &rightAttackPlayer, 1.0f));
+    assert(damagedLeg.health == 98);
+
+    DamageHairyLeg(&damagedLeg, 200);
+    assert(damagedLeg.health == 0);
 
     HairyLeg sweepRecovery = MakeSweepingLeg(1, 1.2f);
     UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.01f, sweepRecovery.groundY, 1.0f);
