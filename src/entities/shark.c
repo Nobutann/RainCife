@@ -5,7 +5,7 @@ static void FireProjectile(Shark *shark, Rectangle playerRect) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
             float ballSize = 120.0f;
-            shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width / 2 - ballSize / 2, shark->rect.y + shark->rect.height / 2 - ballSize / 2, ballSize, ballSize };
+            shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width - 360, shark->rect.y - 150, ballSize, ballSize };
             
             Vector2 playerCenter = { playerRect.x + playerRect.width / 2, playerRect.y + playerRect.height / 2 };
             Vector2 shootPos = { shark->balls[i].rect.x, shark->balls[i].rect.y };
@@ -25,7 +25,7 @@ static void FireBubble(Shark *shark) {
             float bubbleSize = 120.0f;
             shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width / 2 - bubbleSize / 2, shark->rect.y + shark->rect.height / 2, bubbleSize, bubbleSize };
             shark->balls[i].direction = (Vector2){ 0, 1.0f }; 
-            shark->balls[i].speed = 9.5f * 60.0f; 
+            shark->balls[i].speed = 12.5f * 60.0f; 
             shark->balls[i].active = true;
             break;
         }
@@ -121,7 +121,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             break;
 
         case SHARK_DASH_RIGHT:
-            shark->rect.x += 1500.0f * deltaTime; 
+            shark->rect.x += 1800.0f * deltaTime; 
             if (shark->rect.x > (float)screenWidth + 100.0f) {
                 shark->state = SHARK_DASH_LEFT;
                 shark->timer = 0.0f;
@@ -130,7 +130,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
 
         case SHARK_DASH_LEFT:
             shark->startPos.x = (float)screenWidth - size - 50.0f;
-            float returnSpeed = 1200.0f; 
+            float returnSpeed = 1600.0f; 
             if (shark->rect.x > shark->startPos.x) {
                 shark->rect.x -= returnSpeed * deltaTime;
                 if (shark->rect.x < shark->startPos.x) shark->rect.x = shark->startPos.x;
@@ -148,7 +148,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         case SHARK_SHOOTING:
             shark->shootTimer += deltaTime;
 
-            if (shark->shootTimer >= 1.5f) {
+            if (shark->shootTimer >= 1.1f) {
                 if (shark->shootCount < shark->targetShootCount) {
                     FireProjectile(shark, playerRect);
                     shark->shootCount++;
@@ -200,18 +200,18 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
 
 static void DrawSharkTexture(Texture2D tex, Rectangle dest, bool flipX) {
     if (tex.id == 0) return;
-    float fw = (float)tex.width;
-    float fh = (float)tex.height;
-    Rectangle source = { flipX ? fw : 0.0f, 0.0f, flipX ? -fw : fw, fh };
+    float texWidth = (float)tex.width;
+    float texHeight = (float)tex.height;
+    Rectangle source = { flipX ? texWidth : 0.0f, 0.0f, flipX ? -texWidth : texWidth, texHeight };
     DrawTexturePro(tex, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
 }
 
 static void DrawSharkFrame(Texture2D sheet, int frame, int totalFrames, Rectangle dest, bool flipX) {
     if (sheet.id == 0) return;
-    float fw = (float)sheet.width / (float)totalFrames;
-    float fh = (float)sheet.height;
-    float ox = frame * fw;
-    Rectangle source = { flipX ? ox + fw : ox, 0.0f, flipX ? -fw : fw, fh };
+    float frameWidth = (float)sheet.width / (float)totalFrames;
+    float frameHeight = (float)sheet.height;
+    float frameOffsetX = frame * frameWidth;
+    Rectangle source = { flipX ? frameOffsetX + frameWidth : frameOffsetX, 0.0f, flipX ? -frameWidth : frameWidth, frameHeight };
     DrawTexturePro(sheet, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
 }
 
@@ -220,28 +220,28 @@ void DrawShark(Shark *shark) {
 
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) continue;
-        Rectangle b = shark->balls[i].rect;
-        Rectangle src = { 0, 0, (float)shark->texBubble.width, (float)shark->texBubble.height };
-        DrawTexturePro(shark->texBubble, src, b, (Vector2){ 0, 0 }, 0.0f, WHITE);
-        DrawRectangleLinesEx(b, 2.0f, RED);
+        Rectangle ballRect = shark->balls[i].rect;
+        Rectangle bubbleSource = { 0, 0, (float)shark->texBubble.width, (float)shark->texBubble.height };
+        DrawTexturePro(shark->texBubble, bubbleSource, ballRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
+        DrawRectangleLinesEx(ballRect, 2.0f, RED);
     }
 
     if (shark->state == SHARK_WAIT_RETURN) return;
 
     DrawRectangleLinesEx(GetSharkHitbox(shark), 2.0f, RED);
 
-    float sw = 600.0f, sh = 700.0f;
-    Rectangle dest = { shark->rect.x - 120.0f, shark->rect.y - 120.0f, sw, sh };
+    float shootSpriteWidth = 800.0f, shootSpriteHeight = 700.0f;
+    Rectangle destShoot = { shark->rect.x - 300.0f, shark->rect.y - 400.0f, shootSpriteWidth, shootSpriteHeight };
 
-    float dw = 1150.0f, dh = 450.0f;
-    Rectangle destDash = { shark->rect.x - 225.0f, shark->rect.y - 230.0f, dw, dh };
+    float dashSpriteWidth = 1150.0f, dashSpriteHeight = 650.0f;
+    Rectangle destDash = { shark->rect.x - 225.0f, shark->rect.y - 230.0f, dashSpriteWidth, dashSpriteHeight };
 
-    float jw = 1450.0f, jh = 750.0f;
-    Rectangle destJump = { shark->rect.x - 200.0f, shark->rect.y - 200.0f, jw, jh };
+    float jumpSpriteWidth = 1550.0f, jumpSpriteHeight = 1050.0f;
+    Rectangle destJump = { shark->rect.x - 400.0f, shark->rect.y - 200.0f, jumpSpriteWidth, jumpSpriteHeight };
 
     switch (shark->state) {
         case SHARK_IDLE:
-            DrawSharkFrame(shark->texShoot, 0, 3, dest, false);
+            DrawSharkFrame(shark->texShoot, 0, 3, destShoot, false);
             break;
 
         case SHARK_PREP_LEFT:
@@ -257,7 +257,7 @@ void DrawShark(Shark *shark) {
             break;
 
         case SHARK_SHOOTING:
-            DrawSharkFrame(shark->texShoot, shark->animFrame, 3, dest, false);
+            DrawSharkFrame(shark->texShoot, shark->animFrame, 3, destShoot, false);
             break;
 
         case SHARK_ARC_ATTACK:
@@ -282,16 +282,16 @@ Rectangle GetSharkHitbox(Shark *shark) {
         case SHARK_PREP_LEFT:
         case SHARK_DASH_RIGHT:
         case SHARK_DASH_LEFT:
-            hitboxOffset = (Vector2){ -60.0f, -120.0f };
-            hitboxSize   = (Vector2){ 650.0f,  540.0f };
+            hitboxOffset = (Vector2){ -60.0f, -60.0f };
+            hitboxSize = (Vector2){ 650.0f, 540.0f };
             break;
         case SHARK_ARC_ATTACK:
             hitboxOffset = (Vector2){ 40.0f, -140.0f };
-            hitboxSize   = (Vector2){ 630.0f,  380.0f };
+            hitboxSize = (Vector2){ 630.0f, 380.0f };
             break;
         default:
-            hitboxOffset = (Vector2){ -80.0f, -80.0f };
-            hitboxSize   = (Vector2){ 460.0f, 460.0f };
+            hitboxOffset = (Vector2){ -120.0f, -160.0f };
+            hitboxSize = (Vector2){ 460.0f, 460.0f };
             break;
     }
 
