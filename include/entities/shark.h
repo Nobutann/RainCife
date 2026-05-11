@@ -37,8 +37,9 @@ typedef struct {
     WaterBall balls[MAX_WATER_BALLS];
 
     Texture2D texShoot;   // Shark_attack_bubble.png — spritesheet 3 frames
-    Texture2D texDash;    // Shark_dash.png
-    Texture2D texJump;    // Shark_jump.png
+    Texture2D texDash;      // Shark_dash.png       — prep e retorno (esquerda)
+    Texture2D texDashRight; // Shark_vermelho.png   — dash da esquerda para direita
+    Texture2D texJump;    // tubarao_flying-Sheet.png — spritesheet 12 frames
     Texture2D texBubble;  // bubble.png — projétil
 
     float animTimer;
