@@ -4,6 +4,25 @@
 #include "graphics/sprites.h"
 #include <stdio.h>
 
+static void UseRunningAttackPose(Player *player)
+{
+    LayeredAnimation *runningAnim = player->currentAnim;
+
+    if (!player->isBossFighting && player->onGround && player->velocity.x != 0 && runningAnim && runningAnim->layerCount >= 3)
+    {
+        player->sprites.attack.layers[0] = runningAnim->layers[0];
+        player->sprites.attack.layers[2] = runningAnim->layers[2];
+        return;
+    }
+
+    player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
+    player->sprites.attack.layers[0].currentFrame = 0;
+    player->sprites.attack.layers[0].timer = 0.0f;
+    player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
+    player->sprites.attack.layers[2].currentFrame = 0;
+    player->sprites.attack.layers[2].timer = 0.0f;
+}
+
 void UseBat(Player *player)
 {
     bool isIdle = (player->isBossFighting && player->velocity.x == 0);
@@ -19,12 +38,7 @@ void UseBat(Player *player)
     }
     else
     {
-        player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
-        player->sprites.attack.layers[0].currentFrame = 0;
-        player->sprites.attack.layers[0].timer = 0.0f;
-        player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
-        player->sprites.attack.layers[2].currentFrame = 0;
-        player->sprites.attack.layers[2].timer = 0.0f;
+        UseRunningAttackPose(player);
     }
 
     player->currentAnim = &player->sprites.attack;
@@ -48,12 +62,7 @@ void UseHammer(Player *player)
     }
     else
     {
-        player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
-        player->sprites.attack.layers[0].currentFrame = 0;
-        player->sprites.attack.layers[0].timer = 0.0f;
-        player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
-        player->sprites.attack.layers[2].currentFrame = 0;
-        player->sprites.attack.layers[2].timer = 0.0f;
+        UseRunningAttackPose(player);
     }
     
     player->currentAnim = &player->sprites.attack;

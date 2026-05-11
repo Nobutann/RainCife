@@ -13,9 +13,29 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->isBossFighting = true;
     player->facingRight = false;
     player->sprites.attack = (LayeredAnimation){0};
-    EquipWeapon(player, WEAPON_BAT);
+    EquipWeapon(player, WEAPON_HAMMER);
     player->weapon.cooldownTimer = player->weapon.cooldown;
     player->isJumping = false;
+}
+
+static bool IsHammerAirAttack(const Player *player)
+{
+    return !player->onGround && player->weapon.attacking && player->weapon.type == WEAPON_HAMMER;
+}
+
+static void DrawLayeredAnimationLayer(LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX, Color tint)
+{
+    float refWidth = layeredAnimation->layers[0].frameWidth * scale;
+    float fw = layeredAnimation->layers[layerIndex].frameWidth * scale;
+    float offsetX = flipX ? 0.0f : (refWidth - fw);
+    float manualOffsetX = layeredAnimation->layers[layerIndex].offsetX;
+    Vector2 layerPos =
+    {
+        position.x + offsetX + (flipX ? manualOffsetX : -manualOffsetX) * scale,
+        position.y + layeredAnimation->layers[layerIndex].offsetY * scale
+    };
+
+    DrawAnimationFrame(&layeredAnimation->layers[layerIndex], layerPos, scale, flipX, tint);
 }
 
 void UpdatePlayer(Player *player, float dt, float groundY, float scale)
@@ -162,14 +182,26 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
 
         float legsWidth = (float)player->sprites.attack.layers[0].frameWidth;
         float bodyWidth = (float)player->sprites.attack.layers[1].frameWidth;
-        float headWidth = (float)player->sprites.attack.layers[2].frameWidth;
         float legsHeight = (float)player->sprites.attack.layers[0].sheet.height;
         float bodyHeight = (float)player->sprites.attack.layers[1].sheet.height;
+        if (player->weapon.type == WEAPON_HAMMER)
+        {
+            player->sprites.attack.layers[2] = player->sprites.idleHead.layers[0];
+        }
+
+        float headWidth = (float)player->sprites.attack.layers[2].frameWidth;
         float headHeight = (float)player->sprites.attack.layers[2].sheet.height;
         player->sprites.attack.layers[1].offsetX = (legsWidth - bodyWidth) * 0.5f;
         player->sprites.attack.layers[2].offsetX = (legsWidth - headWidth) * 0.5f;
         player->sprites.attack.layers[1].offsetY = legsHeight - bodyHeight;
         player->sprites.attack.layers[2].offsetY = legsHeight - headHeight;
+
+        if (player->weapon.type == WEAPON_HAMMER)
+        {
+            player->sprites.attack.layers[1].offsetX += 14.0f;
+            player->sprites.attack.layers[2].offsetX += 3.0f;
+            player->sprites.attack.layers[2].offsetY += 0.0f;
+        }
     }
     else if (player->weapon.attacking)
     {
@@ -231,9 +263,10 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         {
             if (player->velocity.x != 0)
             {
-                player->sprites.attack.layers[0].sheet = player->sprites.walkFront.layers[0].sheet;
-                player->sprites.attack.layers[0].frameWidth = player->sprites.walkFront.layers[0].frameWidth;
-                player->sprites.attack.layers[0].frameCount = player->sprites.walkFront.layers[0].frameCount;
+                LayeredAnimation *runningAnim = (!player->isBossFighting && player->velocity.x < 0) ? &player->sprites.walkBackwards : &player->sprites.walkFront;
+                player->sprites.attack.layers[0].sheet = runningAnim->layers[0].sheet;
+                player->sprites.attack.layers[0].frameWidth = runningAnim->layers[0].frameWidth;
+                player->sprites.attack.layers[0].frameCount = runningAnim->layers[0].frameCount;
                 player->sprites.attack.layers[0].offsetX = 0.0f;
                 player->sprites.attack.layers[0].offsetY = 0.0f;
             }
@@ -303,7 +336,18 @@ Rectangle GetPlayerAttackHitbox(Player *player, float scale)
 
 void DrawPlayer(Player *player, float scale)
 {   
-    DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
+    if (IsHammerAirAttack(player))
+    {
+        bool flipX = !player->facingRight;
+        DrawLayeredAnimationLayer(player->currentAnim, 1, player->position, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 0, player->position, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 2, player->position, scale, flipX, WHITE);
+    }
+    else
+    {
+        DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
+    }
+
     Rectangle hitbox = GetPlayerHitbox(player, scale);
     DrawRectangleLines((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height, GREEN);
 
