@@ -6,6 +6,7 @@
 extern bool IsHairyLegKickColliding(const HairyLeg *leg, Rectangle playerHitbox);
 extern Rectangle GetAnimationFrameSource(const Animation *animation, bool flipX);
 extern float GetHairyLegSpriteOffsetX(const HairyLeg *leg, float scale);
+extern bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect, float screenWidth);
 
 static HairyLeg MakeJumpingLeg(void)
 {
@@ -152,6 +153,33 @@ int main(void)
     UpdateHairyLeg(&rightSweepActive, unusedPlayer, 0.01f, rightSweepActive.groundY, 1.0f);
     assert(rightSweepActive.isKickActive);
     assert(rightSweepActive.sprites.rasteira.currentFrame == 3);
+
+    HairyLeg rightCornerPressure = {0};
+    rightCornerPressure.rect = (Rectangle){800.0f, 300.0f, 40.0f, 200.0f};
+    rightCornerPressure.direction = 1;
+    Rectangle rightPlayerWithRoom = {840.0f, 300.0f, 40.0f, 80.0f};
+    assert(ShouldHairyLegJumpBackFromCorner(&rightCornerPressure, rightPlayerWithRoom, 1280.0f));
+
+    HairyLeg sweepRecovery = MakeSweepingLeg(1, 1.2f);
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.01f, sweepRecovery.groundY, 1.0f);
+    assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
+    assert(sweepRecovery.rect.height == 60.0f);
+    assert(!sweepRecovery.isKickActive);
+    assert(GetHairyLegSpriteOffsetX(&sweepRecovery, 1.0f) == -90.0f);
+
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.3f, sweepRecovery.groundY, 1.0f);
+    assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
+    assert(sweepRecovery.rect.height > 60.0f);
+    assert(sweepRecovery.rect.height < 120.0f);
+    assert(GetHairyLegSpriteOffsetX(&sweepRecovery, 1.0f) == -90.0f);
+
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.3f, sweepRecovery.groundY, 1.0f);
+    assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
+    assert(sweepRecovery.rect.height < 206.64f);
+
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.4f, sweepRecovery.groundY, 1.0f);
+    assert(sweepRecovery.state == HL_VULNERABLE);
+    assert(sweepRecovery.rect.height == 206.64f);
 
     HairyLeg leftKick = {0};
     leftKick.state = HL_KICKING;

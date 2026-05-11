@@ -11,6 +11,7 @@ typedef enum {
     HL_FALLING,
     HL_VULNERABLE,
     HL_SWEEPING,
+    HL_SWEEP_RECOVERING,
     HL_KICKING,
     HL_JUMPING_BACK
 } HairyLegState;
