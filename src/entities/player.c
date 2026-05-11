@@ -136,6 +136,11 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         player->isJumping = false;
     }
 
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        UseWeapon(player);
+    }
+
     if (!player->onGround && player->weapon.attacking)
     {
         if (player->velocity.y <= 0)
@@ -143,17 +148,35 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
             player->sprites.attack.layers[0].sheet = player->sprites.jumpUpLegs.layers[0].sheet;
             player->sprites.attack.layers[0].frameWidth = player->sprites.jumpUpLegs.layers[0].frameWidth;
             player->sprites.attack.layers[0].frameCount = player->sprites.jumpUpLegs.layers[0].frameCount;
-            player->sprites.attack.layers[0].offsetX = 20.0f;
-            player->sprites.attack.layers[0].offsetY = 42.0f;
+            player->sprites.attack.layers[0].offsetX = 0.0f;
+            player->sprites.attack.layers[0].offsetY = 0.0f;
         }
         else
         {
             player->sprites.attack.layers[0].sheet = player->sprites.jumpDownLegs.layers[0].sheet;
             player->sprites.attack.layers[0].frameWidth = player->sprites.jumpDownLegs.layers[0].frameWidth;
             player->sprites.attack.layers[0].frameCount = player->sprites.jumpDownLegs.layers[0].frameCount;
-            player->sprites.attack.layers[0].offsetX = 20.0f;
-            player->sprites.attack.layers[0].offsetY = 44.0f;
+            player->sprites.attack.layers[0].offsetX = 0.0f;
+            player->sprites.attack.layers[0].offsetY = 0.0f;
         }
+
+        float legsWidth = (float)player->sprites.attack.layers[0].frameWidth;
+        float bodyWidth = (float)player->sprites.attack.layers[1].frameWidth;
+        float headWidth = (float)player->sprites.attack.layers[2].frameWidth;
+        float legsHeight = (float)player->sprites.attack.layers[0].sheet.height;
+        float bodyHeight = (float)player->sprites.attack.layers[1].sheet.height;
+        float headHeight = (float)player->sprites.attack.layers[2].sheet.height;
+        player->sprites.attack.layers[1].offsetX = (legsWidth - bodyWidth) * 0.5f;
+        player->sprites.attack.layers[2].offsetX = (legsWidth - headWidth) * 0.5f;
+        player->sprites.attack.layers[1].offsetY = legsHeight - bodyHeight;
+        player->sprites.attack.layers[2].offsetY = legsHeight - headHeight;
+    }
+    else if (player->weapon.attacking)
+    {
+        player->sprites.attack.layers[1].offsetX = 0.0f;
+        player->sprites.attack.layers[2].offsetX = 0.0f;
+        player->sprites.attack.layers[1].offsetY = 0.0f;
+        player->sprites.attack.layers[2].offsetY = 0.0f;
     }
 
     if (!player->onGround)
@@ -223,11 +246,6 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
                 player->sprites.attack.layers[0].offsetY = 0.0f;
             }
         }
-    }
-
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-    {
-        UseWeapon(player);
     }
 
     if (player->weapon.cooldownTimer > 0)
