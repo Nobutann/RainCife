@@ -269,7 +269,7 @@ int main(void)
                             currentScreen = SCREEN_START;
                         }
 
-                        if (pernaCabeluda.isKickActive && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect))
+                        if (IsHairyLegKickColliding(&pernaCabeluda, playerHitbox))
                         {
                             currentScreen = SCREEN_START;
                         }
