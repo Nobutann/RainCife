@@ -130,20 +130,26 @@ void UpdateAnimation(Animation *animation, float dt)
     }
 }
 
+Rectangle GetAnimationFrameSource(const Animation *animation, bool flipX)
+{
+    float fw = (float)animation->frameWidth;
+    float fh = (float)animation->sheet.height;
+
+    return (Rectangle){
+        animation->currentFrame * fw,
+        0.0f,
+        flipX ? -fw : fw,
+        fh
+    };
+}
+
 void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, bool flipX, Color tint)
 {
     if (animation->sheet.id > 0 && animation->frameCount > 0)
     {
         float fw = animation->frameWidth;
         float fh = animation->sheet.height;
-
-        Rectangle source =
-        {
-            animation->currentFrame * fw + (flipX ? fw : 0),
-            0,
-            flipX ? -fw : fw,
-            fh
-        };
+        Rectangle source = GetAnimationFrameSource(animation, flipX);
 
         Rectangle dest =
         {

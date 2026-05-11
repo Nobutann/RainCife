@@ -56,6 +56,7 @@ void UnloadPlayerSprites(PlayerSprites *playerSprites);
 float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime);
 void UnloadAttackAnimation(PlayerSprites *playerSprites);
 void UpdateAnimation(Animation *animation, float dt);
+Rectangle GetAnimationFrameSource(const Animation *animation, bool flipX);
 void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, bool flipX, Color tint);
 void LoadHairyLegSprites(HairyLegSprites *sprites);
 void UnloadHairyLegSprites(HairyLegSprites *sprites);
