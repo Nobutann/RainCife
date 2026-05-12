@@ -4,12 +4,14 @@
 #include "entities/player.h"
 #include "entities/hairy_leg.h"
 #include "entities/shark.h"
+#include "entities/midnight_man.h"
 #include "entities/enemy.h"
 #include "graphics/background.h"
 #include "enemy_caller.h"
 #include "gameplay/levels.h"
 
 #define MAX_ACTIVE_ENEMIES 12
+#define LEVEL6_INTRO_DURATION 2.5f
 
 int main(void)
 {
@@ -74,6 +76,9 @@ int main(void)
             Shark shark;
             InitShark(&shark, initW, initH);
 
+            MidnightMan midnightMan;
+            InitMidnightMan(&midnightMan, initW, initH, initGroundY);
+
             Level *levels = InitGameLevels();
             Level *currentLevel = levels;
 
@@ -97,6 +102,8 @@ int main(void)
             float progressTimer = 0.0f;
             float bossHp = 100.0f;
             float bossMaxHp = 100.0f;
+            bool level6IntroActive = false;
+            float level6IntroTimer = 0.0f;
 
             // player.isBossFighting = (currentLevel->bossId != 0);
             player.isBossFighting = false;
@@ -121,6 +128,21 @@ int main(void)
                 float bossScale = (float)currentHeight * 0.65f / 252.0f;
                 float standingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * -0.2f);
                 float playerStandingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * 0.1f);
+                float level6IntroProgress = 1.0f;
+
+                if (currentLevel->id == 6)
+                {
+                    if (level6IntroActive)
+                    {
+                        level6IntroTimer += dt;
+                        if (level6IntroTimer >= LEVEL6_INTRO_DURATION)
+                        {
+                            level6IntroTimer = LEVEL6_INTRO_DURATION;
+                            level6IntroActive = false;
+                        }
+                    }
+                    level6IntroProgress = level6IntroTimer / LEVEL6_INTRO_DURATION;
+                }
 
                 if (phase == PHASE_RUNNING)
                 {
@@ -148,6 +170,12 @@ int main(void)
                         {
                             InitShark(&shark, currentWidth, currentHeight);
                         }
+
+                        if (currentLevel->bossId == 3)
+                        {
+                            InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                        }
+
                     }
 
                     spawnTimer -= dt;
@@ -236,7 +264,10 @@ int main(void)
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
+                    InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
                     player.isBossFighting = false;
+                    level6IntroActive = (currentLevel->id == 6);
+                    level6IntroTimer = 0.0f;
                 }
                 if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
                     currentLevel = currentLevel->prev;
@@ -247,7 +278,10 @@ int main(void)
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
                     InitHairyLeg(&pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
                     InitShark(&shark, currentWidth, currentHeight);
+                    InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
                     player.isBossFighting = false;
+                    level6IntroActive = (currentLevel->id == 6);
+                    level6IntroTimer = 0.0f;
                 }
 
                 if (phase == PHASE_BOSS)
@@ -260,6 +294,11 @@ int main(void)
                     if (currentLevel->bossId == 2)
                     {
                         UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
+                    }
+
+                    if (currentLevel->bossId == 3)
+                    {
+                        UpdateMidnightMan(&midnightMan, playerHitbox, dt, currentWidth, currentHeight, groundY);
                     }
 
                     if (currentLevel->bossId == 1)
@@ -294,19 +333,20 @@ int main(void)
 
                         for (int i = 0; i < MAX_WATER_BALLS; i++)
                         {
-                            if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect))
+                            if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].hitbox))
                             {
                                 currentScreen = SCREEN_START;
                             }
                         }
                     }
+
                 }
 
                 float barValue = (phase == PHASE_RUNNING) ? (progressTimer / currentLevel->duration) : (bossHp / bossMaxHp);
 
                 BeginDrawing();
                     ClearBackground(BLACK);
-                    DrawBackground(&bg, currentWidth, currentHeight, groundY);
+                    DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY);
 
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -316,7 +356,10 @@ int main(void)
                         }
                     }
 
-                    DrawPlayer(&player, playerScale);
+                    if (!(currentLevel->id == 6 && level6IntroActive))
+                    {
+                        DrawPlayer(&player, playerScale);
+                    }
 
                     if (phase == PHASE_BOSS)
                     {
@@ -329,6 +372,12 @@ int main(void)
                         {
                             DrawShark(&shark);
                         }
+
+                        if (currentLevel->bossId == 3)
+                        {
+                            DrawMidnightMan(&midnightMan);
+                        }
+
                     }
 
                     DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
@@ -349,6 +398,7 @@ int main(void)
             UnloadTexture(enemyAssets.bikeSkin2);
             UnloadTexture(enemyAssets.bikeSkinItau);
             UnloadShark(&shark);
+            UnloadMidnightMan(&midnightMan);
             FreeLevels(levels);
         }
     }

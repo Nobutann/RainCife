@@ -4,8 +4,12 @@
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
-            float ballSize = 120.0f;
-            shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width - 360, shark->rect.y - 150, ballSize, ballSize };
+            float visualSize = 120.0f;
+            float hitboxSize = 60.0f;
+            float spawnX = shark->rect.x + shark->rect.width - 360;
+            float spawnY = shark->rect.y - 150;
+            shark->balls[i].rect    = (Rectangle){ spawnX, spawnY, visualSize, visualSize };
+            shark->balls[i].hitbox  = (Rectangle){ spawnX + (visualSize - hitboxSize) / 2, spawnY + (visualSize - hitboxSize) / 2, hitboxSize, hitboxSize };
             
             Vector2 playerCenter = { playerRect.x + playerRect.width / 2, playerRect.y + playerRect.height / 2 };
             Vector2 shootPos = { shark->balls[i].rect.x, shark->balls[i].rect.y };
@@ -24,6 +28,7 @@ static void FireBubble(Shark *shark) {
         if (!shark->balls[i].active) {
             float bubbleSize = 120.0f;
             shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width / 2 - bubbleSize / 2, shark->rect.y + shark->rect.height / 2, bubbleSize, bubbleSize };
+            shark->balls[i].hitbox = shark->balls[i].rect;
             shark->balls[i].direction = (Vector2){ 0, 1.0f }; 
             shark->balls[i].speed = 12.5f * 60.0f; 
             shark->balls[i].active = true;
@@ -63,8 +68,12 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
 
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (shark->balls[i].active) {
-            shark->balls[i].rect.x += shark->balls[i].direction.x * shark->balls[i].speed * deltaTime;
-            shark->balls[i].rect.y += shark->balls[i].direction.y * shark->balls[i].speed * deltaTime;
+            float dx = shark->balls[i].direction.x * shark->balls[i].speed * deltaTime;
+            float dy = shark->balls[i].direction.y * shark->balls[i].speed * deltaTime;
+            shark->balls[i].rect.x += dx;
+            shark->balls[i].rect.y += dy;
+            shark->balls[i].hitbox.x += dx;
+            shark->balls[i].hitbox.y += dy;
 
             if (shark->balls[i].rect.x < -200 || shark->balls[i].rect.x > screenWidth + 200 ||
                 shark->balls[i].rect.y < -200 || shark->balls[i].rect.y > screenHeight + 200) {
@@ -232,7 +241,7 @@ void DrawShark(Shark *shark) {
         Rectangle ballRect = shark->balls[i].rect;
         Rectangle bubbleSource = { 0, 0, (float)shark->texBubble.width, (float)shark->texBubble.height };
         DrawTexturePro(shark->texBubble, bubbleSource, ballRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
-        DrawRectangleLinesEx(ballRect, 2.0f, RED);
+        DrawRectangleLinesEx(shark->balls[i].hitbox, 2.0f, RED);
     }
 
     if (shark->state == SHARK_WAIT_RETURN) return;

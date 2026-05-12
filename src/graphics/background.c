@@ -6,6 +6,7 @@
 #define FLOOR_SCROLL_SPEED 600.0f
 #define BAR_WIDTH_RATIO 0.5f
 #define BAR_Y_RATIO 0.03f
+#define LEVEL6_BOTTOM_TRIM_RATIO 0.030f
 
 void InitBackground(Background *bg)
 {
@@ -13,6 +14,7 @@ void InitBackground(Background *bg)
     bg->scrollX = 0.0f;
     bg->floor = LoadTexture("assets/sprites/background/Floor.png");
     bg->bossHairyLeg = LoadTexture("assets/sprites/fundo/Background_1Boss.png");
+    bg->bossMidnightMan = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Homem_da_meia_noite_background.png");
     bg->water = LoadAnimation("assets/sprites/background/Water_movement_blue-Sheet.png", 76, 1.0f);
     bg->barFrame = LoadTexture("assets/sprites/background/Barra_Boss.png");
     bg->barBackground = LoadTexture("assets/sprites/background/Fundo_Barra_Boss.png");
@@ -29,15 +31,56 @@ void UpdateBackground(Background *bg, float dt, GamePhase phase)
     }
 }
 
-void DrawBackground(Background *bg, int screenWidth, int screenHeight, float groundY)
+void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY)
 {
-    if (bg->bossHairyLeg.id > 0)
+    Texture2D levelBackground;
+    if (levelId == 6)
     {
-        Rectangle sourceRec = { 0.0f, 0.0f, (float)bg->bossHairyLeg.width, (float)bg->bossHairyLeg.height };
+        levelBackground = bg->bossMidnightMan;
+    }
+    else
+    {
+        levelBackground = bg->bossHairyLeg;
+    }
+
+    if (levelBackground.id > 0)
+    {
+        Rectangle sourceRec = { 0.0f, 0.0f, (float)levelBackground.width, (float)levelBackground.height };
         Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth, (float)screenHeight };
         Vector2 origin = { 0.0f, 0.0f };
 
-        DrawTexturePro(bg->bossHairyLeg, sourceRec, destRec, origin, 0.0f, WHITE);
+        if (levelId == 6)
+        {
+            float texW = (float)levelBackground.width;
+            float texH = (float)levelBackground.height;
+            float scale = (float)screenWidth / texW;
+            float texHeightVisibleOnScreen = (float)screenHeight / scale;
+
+            if (level6IntroProgress < 0.0f)
+            {
+                level6IntroProgress = 0.0f;
+            }
+            if (level6IntroProgress > 1.0f)
+            {
+                level6IntroProgress = 1.0f;
+            }
+
+            float bottomTrimTex = texH * LEVEL6_BOTTOM_TRIM_RATIO;
+            float maxSrcY = fmaxf(0.0f, texH - texHeightVisibleOnScreen - bottomTrimTex);
+            float srcY = maxSrcY * level6IntroProgress;
+            float srcH = fminf(texHeightVisibleOnScreen, fmaxf(0.0f, texH - srcY));
+
+            sourceRec.x = 0.0f;
+            sourceRec.y = srcY;
+            sourceRec.width = texW;
+            sourceRec.height = srcH;
+            destRec.x = 0.0f;
+            destRec.y = 0.0f;
+            destRec.width = (float)screenWidth;
+            destRec.height = srcH * scale;
+        }
+
+        DrawTexturePro(levelBackground, sourceRec, destRec, origin, 0.0f, WHITE);
     }
 
 
@@ -175,6 +218,7 @@ void UnloadBackground(Background *bg)
 {
     UnloadTexture(bg->floor);
     UnloadTexture(bg->bossHairyLeg);
+    UnloadTexture(bg->bossMidnightMan);
     UnloadAnimation(&bg->water);
     UnloadTexture(bg->barFrame);
     UnloadTexture(bg->barBackground);
