@@ -15,7 +15,13 @@ typedef struct {
     float scrollX;
     Texture2D floor;
     Texture2D bossHairyLeg;
-    Animation water;
+    Texture2D waterFrames[38];
+    int waterFrameCount;
+    int waterCurrentFrame;
+    float waterFrameTimer;
+    float waterFrameTime;
+    Texture2D waterStatic;
+    float waterScrollX;
     Texture2D barFrame;
     Texture2D barBackground;
     Texture2D barFill;

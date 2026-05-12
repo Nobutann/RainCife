@@ -9,7 +9,6 @@
 #include "enemy_caller.h"
 #include "gameplay/levels.h"
 #include "core/cursor.h"
-
 #define MAX_ACTIVE_ENEMIES 12
 #define HAIRY_LEG_DEATH_ADVANCE_DELAY 1.0f
 
