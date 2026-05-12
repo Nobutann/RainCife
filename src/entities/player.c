@@ -1,12 +1,13 @@
 #include <raylib.h>
 #include "entities/player.h"
 #include "gameplay/weapon.h"
+#include "core/screens.h"
 
 #define BOSS_INTRO_PLAYER_GAP 220.0f
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {
-    LoadPlayerSprites(&player->sprites);
+    LoadPlayerSprites(&player->sprites, GetSelectedClothingId());
     player->position = initialPos;
     player->velocity = (Vector2) {0, 0};
     player->speed = speed;
@@ -40,7 +41,7 @@ static void DrawLayeredAnimationLayer(LayeredAnimation *layeredAnimation, int la
     DrawAnimationFrame(&layeredAnimation->layers[layerIndex], layerPos, scale, flipX, tint);
 }
 
-void UpdatePlayer(Player *player, float dt, float groundY, float scale)
+void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Config *config)
 {
     float spriteH = player->sprites.walkFront.layers[0].sheet.height * scale;
     float feetOffset = spriteH * 1.1f;
@@ -58,7 +59,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         player->position.x -= (hitbox.x + hitbox.width - screenWidth);
     }
 
-    if (IsKeyDown(KEY_D))
+    if (IsKeyDown(config->teclaFrente))
     {
         player->velocity.x = player->speed;
         player->facingRight = false;
@@ -76,7 +77,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
             player->sprites.attack.layers[2].frameCount = player->sprites.walkFront.layers[2].frameCount;
         }
     }
-    else if (IsKeyDown(KEY_A))
+    else if (IsKeyDown(config->teclaTras))
     {
         player->velocity.x = -player->speed;
         if (player->isBossFighting)
@@ -123,7 +124,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         }
     }
 
-    if ((IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_W)) && player->onGround)
+    if (IsKeyPressed(config->teclaPular) && player->onGround)
     {
         player->velocity.y = JUMP_FORCE_MIN;
         player->isJumping = true;
@@ -135,7 +136,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         }
     }
 
-    if (player->isJumping && (IsKeyDown(KEY_SPACE) || IsKeyDown(KEY_W)))
+    if (player->isJumping && IsKeyDown(config->teclaPular))
     {
         if (player->jumpHoldTimer < JUMP_HOLD_MAX)
         {
@@ -153,7 +154,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
         }
     }
 
-    if (IsKeyReleased(KEY_SPACE) || IsKeyReleased(KEY_W))
+    if (IsKeyReleased(config->teclaPular))
     {
         player->isJumping = false;
     }
@@ -217,7 +218,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale)
     {
         player->velocity.y += GRAVITY * dt;
         
-        if (IsKeyDown(KEY_S))
+        if (IsKeyDown(config->teclaAgachar))
         {
             player->velocity.y += GRAVITY * 2.0f * dt;
         }

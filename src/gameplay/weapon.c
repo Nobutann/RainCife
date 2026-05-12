@@ -2,6 +2,7 @@
 #include "gameplay/weapon.h"
 #include "entities/player.h"
 #include "graphics/sprites.h"
+#include "core/screens.h"
 #include <stdio.h>
 
 static void UseRunningAttackPose(Player *player)
@@ -99,14 +100,28 @@ void EquipWeapon(Player *player, WeaponType type)
             }
             player->weapon.breakPower = 1;
             player->weapon.attack = UseBat;
-            player->weapon.attackDuration = LoadAttackAnimation(&player->sprites, "assets/sprites/Player/attack/melee/Attack_sword-Sheet.png", 5, 0.08f);
+            player->weapon.attackDuration = LoadAttackAnimation(
+                &player->sprites,
+                GetSelectedClothingId() == 2
+                    ? "assets/sprites/Player/Spr_rat/Attack_sword_cesar-Sheet.png"
+                    : "assets/sprites/Player/attack/melee/Attack_sword-Sheet.png",
+                5,
+                0.08f
+            );
             break;
         case WEAPON_HAMMER:
             player->weapon.damage = 5.0f;
             player->weapon.cooldown = 1.5f;
             player->weapon.breakPower = 3;
             player->weapon.attack = UseHammer;
-            player->weapon.attackDuration = LoadAttackAnimation(&player->sprites, "assets/sprites/Player/attack/melee/Attack_hammer-Sheet.png", 5, 0.15f);
+            player->weapon.attackDuration = LoadAttackAnimation(
+                &player->sprites,
+                GetSelectedClothingId() == 2
+                    ? "assets/sprites/Player/Spr_rat/Attack_hammer_cesar-Sheet.png"
+                    : "assets/sprites/Player/attack/melee/Attack_hammer-Sheet.png",
+                5,
+                0.15f
+            );
             break;
         case WEAPON_PISTOL:
             break;

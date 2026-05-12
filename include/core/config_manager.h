@@ -5,6 +5,11 @@ typedef struct {
     int idioma;
     int telaCheia;
     float volume;
+    float musica;
+    int teclaFrente;
+    int teclaTras;
+    int teclaPular;
+    int teclaAgachar;
 } Config;
 
 void SalvarConfig(Config config);

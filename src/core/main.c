@@ -1,4 +1,5 @@
 #include <raylib.h>
+#include <stddef.h>
 #include "core/screens.h"
 #include "core/config_manager.h"
 #include "entities/player.h"
@@ -9,6 +10,8 @@
 #include "enemy_caller.h"
 #include "gameplay/levels.h"
 #include "core/cursor.h"
+#include "core/window_mode.h"
+#include "utils.h"
 #define MAX_ACTIVE_ENEMIES 12
 #define HAIRY_LEG_DEATH_ADVANCE_DELAY 1.0f
 
@@ -45,23 +48,182 @@ static void StartLevel(
     player->isBossFighting = false;
 }
 
+static Level *FindLevelById(Level *levels, int levelId)
+{
+    Level *current = levels;
+    while (current != NULL)
+    {
+        if (current->id == levelId)
+        {
+            return current;
+        }
+        current = current->next;
+    }
+    return levels;
+}
+
+static void ResetPlayerForRunningRetry(Player *player, float groundY, float playerScale)
+{
+    player->position = (Vector2){100.0f, groundY};
+    player->velocity = (Vector2){0.0f, 0.0f};
+    player->onGround = true;
+    player->isBossFighting = false;
+    player->isJumping = false;
+    player->jumpHoldTimer = 0.0f;
+    player->weapon.attacking = false;
+    player->weapon.attackTimer = 0.0f;
+    player->weapon.hitConnected = false;
+    player->facingRight = false;
+
+    if (player->sprites.walkFront.layerCount > 0)
+    {
+        player->currentAnim = &player->sprites.walkFront;
+        float spriteH = player->sprites.walkFront.layers[0].sheet.height * playerScale;
+        player->position.y = groundY - spriteH * 1.1f;
+    }
+}
+
+static void RestartCurrentEncounter(
+    Level *currentLevel,
+    GamePhase retryPhase,
+    GamePhase *phase,
+    float *progressTimer,
+    bool *autoSpawn,
+    float *spawnTimer,
+    Enemy enemies[],
+    Player *player,
+    HairyLeg *pernaCabeluda,
+    Shark *shark,
+    int currentWidth,
+    int currentHeight,
+    float groundY,
+    float bossScale,
+    float playerStandingY,
+    float playerScale
+)
+{
+    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+    {
+        enemies[i].active = false;
+    }
+
+    *spawnTimer = 0.0f;
+
+    if (retryPhase == PHASE_BOSS && currentLevel->bossId != 0)
+    {
+        *phase = PHASE_BOSS;
+        *progressTimer = currentLevel->duration;
+        *autoSpawn = false;
+
+        if (currentLevel->bossId == 1)
+        {
+            InitHairyLeg(pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
+            PlacePlayerForBossIntro(player, pernaCabeluda->rect, playerStandingY, playerScale);
+        }
+        else if (currentLevel->bossId == 2)
+        {
+            InitShark(shark, currentWidth, currentHeight);
+            PlacePlayerForBossIntro(player, GetSharkHitbox(shark), playerStandingY, playerScale);
+        }
+        return;
+    }
+
+    *phase = PHASE_RUNNING;
+    *progressTimer = 0.0f;
+    *autoSpawn = true;
+    InitHairyLeg(pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+    InitShark(shark, currentWidth, currentHeight);
+    ResetPlayerForRunningRetry(player, playerStandingY, playerScale);
+}
+
+static void EnterBossPhase(
+    Level *currentLevel,
+    GamePhase *phase,
+    float *progressTimer,
+    bool *autoSpawn,
+    float *safePosteFollowUpTimer,
+    Enemy enemies[],
+    Player *player,
+    HairyLeg *pernaCabeluda,
+    Shark *shark,
+    int currentWidth,
+    int currentHeight,
+    float groundY,
+    float bossScale,
+    float playerStandingY,
+    float playerScale
+)
+{
+    *phase = PHASE_BOSS;
+    *progressTimer = currentLevel->duration;
+    *autoSpawn = false;
+    *safePosteFollowUpTimer = -1.0f;
+
+    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+    {
+        enemies[i].active = false;
+    }
+
+    player->isBossFighting = currentLevel->bossId != 0;
+
+    if (currentLevel->bossId == 1)
+    {
+        InitHairyLeg(pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
+        PlacePlayerForBossIntro(player, pernaCabeluda->rect, playerStandingY, playerScale);
+    }
+    else if (currentLevel->bossId == 2)
+    {
+        InitShark(shark, currentWidth, currentHeight);
+        PlacePlayerForBossIntro(player, GetSharkHitbox(shark), playerStandingY, playerScale);
+    }
+}
+
+static void DrawDeathScreenOverlay(int currentWidth, int currentHeight, Rectangle optionRects[], const char **options, int optionCount, bool hoveringButton)
+{
+    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.78f));
+
+    const char *title = "Voce morreu";
+    int titleSize = currentHeight / 11;
+    int subtitleSize = currentHeight / 28;
+    const char *subtitle = "Escolha como continuar";
+
+    DrawText(
+        title,
+        (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
+        currentHeight / 4,
+        titleSize,
+        RAYWHITE
+    );
+
+    DrawText(
+        subtitle,
+        (currentWidth / 2) - (MeasureText(subtitle, subtitleSize) / 2),
+        currentHeight / 4 + titleSize + 14,
+        subtitleSize,
+        LIGHTGRAY
+    );
+
+    Vector2 mouse = GetMousePosition();
+    for (int i = 0; i < optionCount; i++)
+    {
+        bool hover = CheckCollisionPointRec(mouse, optionRects[i]);
+        Color color = hover ? YELLOW : RAYWHITE;
+        DrawText(options[i], optionRects[i].x, optionRects[i].y, currentHeight / 20, color);
+    }
+
+    DrawMenuCursor(hoveringButton);
+}
+
 int main(void)
 {
     Config config = CarregarConfig();
-
-    config.telaCheia = 1;
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(800, 600, "RainCife");
     HideCursor();
     InitCustomCursor();
 
-    if (config.telaCheia)
-    {
-        int monitor = GetCurrentMonitor();
-        SetWindowSize(GetMonitorWidth(monitor), GetMonitorHeight(monitor));
-        ToggleFullscreen();
-    }
+    ApplyWindowMode(config.telaCheia != 0);
 
     SetTargetFPS(60);
     SetExitKey(KEY_DELETE);
@@ -72,25 +234,41 @@ int main(void)
     {
         if (IsKeyPressed(KEY_F11))
         {
-            ToggleFullscreen();
+            bool fullscreen = config.telaCheia != 0;
+            ToggleWindowMode(&fullscreen);
+            config.telaCheia = fullscreen ? 1 : 0;
+            SalvarConfig(config);
         }
 
         if (currentScreen == SCREEN_START)
         {
             currentScreen = RunStart();
         }
-
-        if (currentScreen == SCREEN_OPTIONS)
+        else if (currentScreen == SCREEN_OPTIONS)
         {
             currentScreen = RunOptions(&config);
         }
-
-        if (currentScreen == SCREEN_CREDITS)
+        else if (currentScreen == SCREEN_CHARACTER_SELECT)
+        {
+            currentScreen = RunCharacterSelect();
+        }
+        else if (currentScreen == SCREEN_LEVEL_SELECT)
+        {
+            currentScreen = RunLevelSelect();
+        }
+        else if (currentScreen == SCREEN_ITEMS)
+        {
+            currentScreen = RunItems();
+        }
+        else if (currentScreen == SCREEN_INFINITE_SOON)
+        {
+            currentScreen = RunInfiniteSoon();
+        }
+        else if (currentScreen == SCREEN_CREDITS)
         {
             currentScreen = RunCredits();
         }
-
-        if (currentScreen == SCREEN_GAME)
+        else if (currentScreen == SCREEN_GAME)
         {
             Background bg;
             InitBackground(&bg);
@@ -111,7 +289,7 @@ int main(void)
             InitShark(&shark, initW, initH);
 
             Level *levels = InitGameLevels();
-            Level *currentLevel = levels;
+            Level *currentLevel = FindLevelById(levels, GetSelectedStoryLevelId());
 
             Enemy enemies[MAX_ACTIVE_ENEMIES] = {0};
             EnemyAssets enemyAssets = {0};
@@ -139,6 +317,8 @@ int main(void)
             float spawnTimer = 0.0f;
             // const float spawnInterval = 1.5f;
             float safePosteFollowUpTimer = -1.0f;
+            bool deathScreenActive = false;
+            GamePhase retryPhase = PHASE_RUNNING;
 
             while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
             {
@@ -157,34 +337,115 @@ int main(void)
                 float standingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * -0.2f);
                 float playerStandingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * 0.1f);
 
+                if (deathScreenActive)
+                {
+                    const char *deathOptions[] =
+                    {
+                        "Continuar",
+                        "Menu"
+                    };
+                    int deathOptionCount = sizeof(deathOptions) / sizeof(deathOptions[0]);
+                    int deathFontSize = currentHeight / 20;
+                    int deathSpacing = deathFontSize + 22;
+                    int deathStartY = currentHeight / 2;
+                    Rectangle deathOptionRects[deathOptionCount];
+                    BuildOptionRects(deathOptionRects, deathOptions, deathOptionCount, deathFontSize, currentWidth / 2, deathStartY, deathSpacing);
+
+                    Vector2 mouse = GetMousePosition();
+                    bool hoveringButton = false;
+                    for (int i = 0; i < deathOptionCount; i++)
+                    {
+                        if (CheckCollisionPointRec(mouse, deathOptionRects[i]))
+                        {
+                            hoveringButton = true;
+                            break;
+                        }
+                    }
+
+                    int clickedDeathOption = GetClickedOption(deathOptionRects, deathOptionCount);
+                    if (clickedDeathOption == 0)
+                    {
+                        RestartCurrentEncounter(
+                            currentLevel,
+                            retryPhase,
+                            &phase,
+                            &progressTimer,
+                            &autoSpawn,
+                            &spawnTimer,
+                            enemies,
+                            &player,
+                            &pernaCabeluda,
+                            &shark,
+                            currentWidth,
+                            currentHeight,
+                            groundY,
+                            bossScale,
+                            playerStandingY,
+                            playerScale
+                        );
+                        safePosteFollowUpTimer = -1.0f;
+                        deathScreenActive = false;
+                    }
+                    else if (clickedDeathOption == 1)
+                    {
+                        currentScreen = SCREEN_START;
+                    }
+
+                    BeginDrawing();
+                        ClearBackground(BLACK);
+                        DrawBackground(&bg, currentWidth, currentHeight, groundY);
+
+                        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                        {
+                            if (enemies[i].active)
+                            {
+                                DrawEnemy(&enemies[i], &enemyAssets);
+                            }
+                        }
+
+                        DrawPlayer(&player, playerScale);
+
+                        if (phase == PHASE_BOSS)
+                        {
+                            if (currentLevel->bossId == 1)
+                            {
+                                DrawHairyLeg(&pernaCabeluda, bossScale);
+                            }
+
+                            if (currentLevel->bossId == 2)
+                            {
+                                DrawShark(&shark);
+                            }
+                        }
+
+                        DrawDeathScreenOverlay(currentWidth, currentHeight, deathOptionRects, deathOptions, deathOptionCount, hoveringButton);
+                    EndDrawing();
+                    continue;
+                }
+
                 if (phase == PHASE_RUNNING)
                 {
                     progressTimer += dt;
 
                     if (progressTimer >= currentLevel->duration)
                     {
-                        phase = PHASE_BOSS;
-                        progressTimer = currentLevel->duration;
-                        autoSpawn = false;
-                        
-                        for ( int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
-                        {
-                            enemies[i].active = false;
-                        }
-
-                        player.isBossFighting = (currentLevel)->bossId != 0;
-
-                        if (currentLevel->bossId == 1)
-                        {
-                            InitHairyLeg(&pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
-                            PlacePlayerForBossIntro(&player, pernaCabeluda.rect, playerStandingY, playerScale);
-                        }
-
-                        if (currentLevel->bossId == 2)
-                        {
-                            InitShark(&shark, currentWidth, currentHeight);
-                            PlacePlayerForBossIntro(&player, GetSharkHitbox(&shark), playerStandingY, playerScale);
-                        }
+                        EnterBossPhase(
+                            currentLevel,
+                            &phase,
+                            &progressTimer,
+                            &autoSpawn,
+                            &safePosteFollowUpTimer,
+                            enemies,
+                            &player,
+                            &pernaCabeluda,
+                            &shark,
+                            currentWidth,
+                            currentHeight,
+                            groundY,
+                            bossScale,
+                            playerStandingY,
+                            playerScale
+                        );
                     }
 
                     spawnTimer -= dt;
@@ -256,20 +517,75 @@ int main(void)
                     {
                         if (CheckCollisionRecs(playerHitbox, GetEnemyHitbox(&enemies[i])))
                         {
-                            currentScreen = SCREEN_START;
+                            deathScreenActive = true;
+                            retryPhase = phase;
                         }
                     }
                 }
 
                 UpdateBackground(&bg, dt, phase);
-                UpdatePlayer(&player, dt, playerStandingY, playerScale);
+                UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 
-                if (IsKeyPressed(KEY_RIGHT) && currentLevel->next) {
-                    StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
+                if (IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
+                    EnterBossPhase(
+                        currentLevel,
+                        &phase,
+                        &progressTimer,
+                        &autoSpawn,
+                        &safePosteFollowUpTimer,
+                        enemies,
+                        &player,
+                        &pernaCabeluda,
+                        &shark,
+                        currentWidth,
+                        currentHeight,
+                        groundY,
+                        bossScale,
+                        playerStandingY,
+                        playerScale
+                    );
+                }
+                else if (IsKeyPressed(KEY_RIGHT) && phase == PHASE_BOSS && currentLevel->next) {
+                    UnlockStoryLevel(currentLevel->next->id);
+                    StartLevel(
+                        &currentLevel,
+                        currentLevel->next,
+                        &phase,
+                        &progressTimer,
+                        &autoSpawn,
+                        &spawnTimer,
+                        enemies,
+                        &player,
+                        &pernaCabeluda,
+                        &shark,
+                        currentWidth,
+                        currentHeight,
+                        groundY,
+                        bossScale
+                    );
+                    safePosteFollowUpTimer = -1.0f;
+                    ResetPlayerForRunningRetry(&player, playerStandingY, playerScale);
                 }
                 if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
-                    StartLevel(&currentLevel, currentLevel->prev, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
+                    StartLevel(
+                        &currentLevel,
+                        currentLevel->prev,
+                        &phase,
+                        &progressTimer,
+                        &autoSpawn,
+                        &spawnTimer,
+                        enemies,
+                        &player,
+                        &pernaCabeluda,
+                        &shark,
+                        currentWidth,
+                        currentHeight,
+                        groundY,
+                        bossScale
+                    );
+                    safePosteFollowUpTimer = -1.0f;
+                    ResetPlayerForRunningRetry(&player, playerStandingY, playerScale);
                 }
 
                 if (phase == PHASE_BOSS)
@@ -283,6 +599,7 @@ int main(void)
 
                         if (pernaCabeluda.state == HL_DEAD && pernaCabeluda.timer >= HAIRY_LEG_DEATH_ADVANCE_DELAY && currentLevel->next)
                         {
+                            UnlockStoryLevel(currentLevel->next->id);
                             StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
                             bossDefeatedThisFrame = true;
                         }
@@ -297,22 +614,26 @@ int main(void)
                     {
                         if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect))
                         {
-                            currentScreen = SCREEN_START;
+                            deathScreenActive = true;
+                            retryPhase = PHASE_BOSS;
                         }
 
                         if (IsHairyLegKickColliding(&pernaCabeluda, playerHitbox))
                         {
-                            currentScreen = SCREEN_START;
+                            deathScreenActive = true;
+                            retryPhase = PHASE_BOSS;
                         }
 
                         if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect))
                         {
-                            currentScreen = SCREEN_START;
+                            deathScreenActive = true;
+                            retryPhase = PHASE_BOSS;
                         }
 
                         if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect))
                         {
-                            currentScreen = SCREEN_START;
+                            deathScreenActive = true;
+                            retryPhase = PHASE_BOSS;
                         }
                     }
 
@@ -320,14 +641,16 @@ int main(void)
                     {
                         if (CheckCollisionRecs(playerHitbox, GetSharkHitbox(&shark)))
                         {
-                            currentScreen = SCREEN_START;
+                            deathScreenActive = true;
+                            retryPhase = PHASE_BOSS;
                         }
 
                         for (int i = 0; i < MAX_WATER_BALLS; i++)
                         {
                             if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect))
                             {
-                                currentScreen = SCREEN_START;
+                                deathScreenActive = true;
+                                retryPhase = PHASE_BOSS;
                             }
                         }
                     }

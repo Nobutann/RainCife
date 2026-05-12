@@ -51,7 +51,7 @@ $(TARGET): $(OBJ)
 	$(CC) $(OBJ) -o $@ $(LIBS) $(LDFLAGS)
 
 obj/%.o: src/%.c
-	$(MKDIR) $(dir $@)
+	-$(MKDIR) $(dir $@)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 run: all

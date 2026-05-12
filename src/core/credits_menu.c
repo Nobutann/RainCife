@@ -28,7 +28,7 @@ GameScreen RunCredits()
             const char* nomes[] = 
             { 
                 "Bruno Augusto", 
-                "Gustavo Torres", 
+                "Gustavo Castro", 
                 "Igor Gabriel", 
                 "Luiz Gonzaga", 
                 "Marco Aurélio" 

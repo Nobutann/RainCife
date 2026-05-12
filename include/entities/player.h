@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include <raylib.h>
+#include "core/config_manager.h"
 #include "graphics/sprites.h"
 #include "gameplay/weapon.h"
 
@@ -29,7 +30,7 @@ typedef struct Player
 } Player;
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed);
-void UpdatePlayer(Player *player, float dt, float groundY, float scale);
+void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Config *config);
 void DrawPlayer(Player *player, float scale);
 void UnloadPlayer(Player *player);
 Rectangle GetPlayerHitbox(Player *player, float scale);

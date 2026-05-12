@@ -51,7 +51,7 @@ void UnloadAnimation(Animation *animation);
 void UpdateLayeredAnimation(LayeredAnimation *layredAnimation, float dt);
 void DrawLayeredAnimation(LayeredAnimation *layeredAnimation, Vector2 position, float scale, bool flipX, Color tint);
 void UnloadLayeredAnimation(LayeredAnimation *layeredAnimation);
-void LoadPlayerSprites(PlayerSprites *playerSprites);
+void LoadPlayerSprites(PlayerSprites *playerSprites, int clothingId);
 void UnloadPlayerSprites(PlayerSprites *playerSprites);
 float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime);
 void UnloadAttackAnimation(PlayerSprites *playerSprites);

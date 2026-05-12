@@ -43,10 +43,31 @@ void DrawSlider(Rectangle bounds, float value)
     DrawRectangleRec(fill, BLUE);
 }
 
-float UpdateSlider(Rectangle bounds, float value)
+float UpdateSlider(Rectangle bounds, float value, bool *isDragging)
 {
     Vector2 mouse = GetMousePosition();
-    if (CheckCollisionPointRec(mouse, bounds) && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+    Rectangle hitbox =
+    {
+        bounds.x,
+        bounds.y - 10.0f,
+        bounds.width,
+        bounds.height + 20.0f
+    };
+
+    if (CheckCollisionPointRec(mouse, hitbox) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        *isDragging = true;
+        value = (mouse.x - bounds.x) / bounds.width;
+        if (value < 0.0f) value = 0.0f;
+        if (value > 1.0f) value = 1.0f;
+    }
+
+    if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+    {
+        *isDragging = false;
+    }
+
+    if (*isDragging && IsMouseButtonDown(MOUSE_BUTTON_LEFT))
     {
         value = (mouse.x - bounds.x) / bounds.width;
         if (value < 0.0f) value = 0.0f;
