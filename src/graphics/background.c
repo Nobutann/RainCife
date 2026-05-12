@@ -17,6 +17,7 @@ void InitBackground(Background *bg)
     bg->floor = LoadTexture("assets/sprites/background/Floor.png");
     bg->bossHairyLeg = LoadTexture("assets/sprites/fundo/Background_1Boss.png");
     bg->bossMidnightMan = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Homem_da_meia_noite_background.png");
+    bg->water = LoadAnimation("assets/sprites/background/Water_movement_blue-Sheet.png", 76, 1.0f);
     bg->waterFrameCount = 38;
     bg->waterCurrentFrame = 0;
     bg->waterFrameTimer = 0.0f;
@@ -258,6 +259,7 @@ void UnloadBackground(Background *bg)
     UnloadTexture(bg->floor);
     UnloadTexture(bg->bossHairyLeg);
     UnloadTexture(bg->bossMidnightMan);
+    UnloadAnimation(&bg->water);
     for (int i = 0; i < bg->waterFrameCount; i++)
     {
         UnloadTexture(bg->waterFrames[i]);
