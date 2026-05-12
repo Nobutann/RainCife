@@ -2,6 +2,7 @@
 #include "graphics/background.h"
 #include "entities/player.h"
 #include <math.h>
+#include <stdio.h>
 
 #define FLOOR_SCROLL_SPEED 600.0f
 #define BAR_WIDTH_RATIO 0.5f
@@ -12,10 +13,21 @@ void InitBackground(Background *bg)
 {
     bg->time = 0.0f;
     bg->scrollX = 0.0f;
+    bg->waterScrollX = 0.0f;
     bg->floor = LoadTexture("assets/sprites/background/Floor.png");
     bg->bossHairyLeg = LoadTexture("assets/sprites/fundo/Background_1Boss.png");
     bg->bossMidnightMan = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Homem_da_meia_noite_background.png");
-    bg->water = LoadAnimation("assets/sprites/background/Water_movement_blue-Sheet.png", 76, 1.0f);
+    bg->waterFrameCount = 38;
+    bg->waterCurrentFrame = 0;
+    bg->waterFrameTimer = 0.0f;
+    bg->waterFrameTime = 0.05f;
+    for (int i = 0; i < bg->waterFrameCount; i++)
+    {
+        char path[64];
+        snprintf(path, sizeof(path), "assets/sprites/background/Water_frame_%02d.png", i);
+        bg->waterFrames[i] = LoadTexture(path);
+    }
+    bg->waterStatic = LoadTexture("assets/sprites/background/Water.png");
     bg->barFrame = LoadTexture("assets/sprites/background/Barra_Boss.png");
     bg->barBackground = LoadTexture("assets/sprites/background/Fundo_Barra_Boss.png");
     bg->barFill = LoadTexture("assets/sprites/background/Porcentagem_Barra_Boss.png");
@@ -25,9 +37,17 @@ void UpdateBackground(Background *bg, float dt, GamePhase phase)
 {
     bg->time += dt;
 
+    bg->waterFrameTimer += dt;
+    if (bg->waterFrameTimer >= bg->waterFrameTime)
+    {
+        bg->waterFrameTimer = 0.0f;
+        bg->waterCurrentFrame = (bg->waterCurrentFrame + 1) % bg->waterFrameCount;
+    }
+
     if (phase == PHASE_RUNNING)
     {
         bg->scrollX += FLOOR_SCROLL_SPEED * dt;
+        bg->waterScrollX += FLOOR_SCROLL_SPEED * dt;
     }
 }
 
@@ -107,21 +127,43 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
         }
     }
 
-    if (bg->water.sheet.id > 0)
-    {
-        int frameW = bg->water.frameWidth;
-        int frameH = bg->water.sheet.height;
-        float waterY = groundY;
-        float waterH = screenHeight - waterY;
+    DrawRectangleGradientV(0, 0, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 180 }, (Color){ 0, 0, 0, 0 });
+    DrawRectangleGradientV(0, screenHeight * 3 / 4, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 0 }, (Color){ 0, 0, 0, 180 });
 
+    if (bg->waterStatic.id > 0)
+    {
+        float tileW = (float)bg->waterStatic.width;
+        float tileH = (float)bg->waterStatic.height;
+        float scale = (float)screenWidth / tileW;
+        float scaledW = tileW * scale;
+        float scaledH = tileH * scale;
+        float waterY = groundY;
+        float offset = fmodf(bg->waterScrollX, scaledW);
+        float startX = -offset;
+        if (startX > 0)
+        {
+            startX -= scaledW;
+        }
+
+        for (float x = startX; x < screenWidth + scaledW; x += scaledW)
+        {
+            DrawTextureEx(bg->waterStatic, (Vector2){x, waterY}, 0.0f, scale, WHITE);
+        }
+    }
+
+    Texture2D wTex = bg->waterFrames[bg->waterCurrentFrame];
+    if (wTex.id > 0)
+    {
+        float waterY = groundY + (screenHeight * -0.2f);
+        float waterH = screenHeight - waterY;
         if (waterH > 0)
         {
             Rectangle src = 
             {
-                (float)(bg->water.currentFrame * frameW),
                 0,
-                (float)frameW,
-                (float)frameH
+                0,
+                (float)wTex.width,
+                (float)wTex.height
             };
 
             Rectangle dest = 
@@ -132,12 +174,9 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
                 waterH
             };
 
-            DrawTexturePro(bg->water.sheet, src, dest, (Vector2){0, 0}, 0.0f, WHITE);
+            DrawTexturePro(wTex, src, dest, (Vector2){0, 0}, 0.0f, WHITE);
         }
     }
-
-    DrawRectangleGradientV(0, 0, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 180 }, (Color){ 0, 0, 0, 0 });
-    DrawRectangleGradientV(0, screenHeight * 3 / 4, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 0 }, (Color){ 0, 0, 0, 180 });
 }
 
 void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight)
@@ -219,7 +258,11 @@ void UnloadBackground(Background *bg)
     UnloadTexture(bg->floor);
     UnloadTexture(bg->bossHairyLeg);
     UnloadTexture(bg->bossMidnightMan);
-    UnloadAnimation(&bg->water);
+    for (int i = 0; i < bg->waterFrameCount; i++)
+    {
+        UnloadTexture(bg->waterFrames[i]);
+    }
+    UnloadTexture(bg->waterStatic);
     UnloadTexture(bg->barFrame);
     UnloadTexture(bg->barBackground);
     UnloadTexture(bg->barFill);

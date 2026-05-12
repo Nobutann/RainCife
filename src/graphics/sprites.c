@@ -52,26 +52,58 @@ void UnloadLayeredAnimation(LayeredAnimation *layeredAnimation)
     }
 }
 
-void LoadPlayerSprites(PlayerSprites *playerSprites)
+void LoadPlayerSprites(PlayerSprites *playerSprites, int clothingId)
 {
+    bool clothed = clothingId == 2;
+
     playerSprites->walkFront.layerCount = 3;
     playerSprites->walkFront.layers[0] = LoadAnimation("assets/sprites/Player/walkFront/Running_legs_forward-Sheet.png", 8, FRAME_TIME);
-    playerSprites->walkFront.layers[1] = LoadAnimation("assets/sprites/Player/walkFront/Running_body_foward-Sheet.png", 8, FRAME_TIME);
+    playerSprites->walkFront.layers[1] = LoadAnimation(
+        clothed
+            ? "assets/sprites/Player/Spr_rat/Running_body_foward_cesar-Sheet.png"
+            : "assets/sprites/Player/walkFront/Running_body_foward-Sheet.png",
+        8,
+        FRAME_TIME
+    );
     playerSprites->walkFront.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
 
     playerSprites->walkBackwards.layerCount = 3;
     playerSprites->walkBackwards.layers[0] = LoadAnimation("assets/sprites/Player/walkBack/Running_legs_backwards-Sheet.png", 8, FRAME_TIME);
-    playerSprites->walkBackwards.layers[1] = LoadAnimation("assets/sprites/Player/walkBack/Running_body_backward.png", 1, FRAME_TIME);
+    playerSprites->walkBackwards.layers[1] = LoadAnimation(
+        clothed
+            ? "assets/sprites/Player/Spr_rat/Running_body_backward_cesar.png"
+            : "assets/sprites/Player/walkBack/Running_body_backward.png",
+        1,
+        FRAME_TIME
+    );
     playerSprites->walkBackwards.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
 
     playerSprites->jumpUp.layerCount = 1;
-    playerSprites->jumpUp.layers[0] = LoadAnimation("assets/sprites/Player/jump/Jump_up.png", 1, FRAME_TIME);
+    playerSprites->jumpUp.layers[0] = LoadAnimation(
+        clothed
+            ? "assets/sprites/Player/Spr_rat/Jump_up_cesar.png"
+            : "assets/sprites/Player/jump/Jump_up.png",
+        1,
+        FRAME_TIME
+    );
 
     playerSprites->jumpDown.layerCount = 1;
-    playerSprites->jumpDown.layers[0] = LoadAnimation("assets/sprites/Player/jump/Jump_down.png", 1, FRAME_TIME);
+    playerSprites->jumpDown.layers[0] = LoadAnimation(
+        clothed
+            ? "assets/sprites/Player/Spr_rat/Jump_down_cesar.png"
+            : "assets/sprites/Player/jump/Jump_down.png",
+        1,
+        FRAME_TIME
+    );
 
     playerSprites->idle.layerCount = 1;
-    playerSprites->idle.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_complete-Sheet.png", 6, FRAME_TIME);
+    playerSprites->idle.layers[0] = LoadAnimation(
+        clothed
+            ? "assets/sprites/Player/idle/Idle_complete_cesar-Sheet.png"
+            : "assets/sprites/Player/idle/Idle_complete-Sheet.png",
+        6,
+        FRAME_TIME
+    );
 
     playerSprites->idleLegs.layerCount = 1;
     playerSprites->idleLegs.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_legs_attack.png", 1, FRAME_TIME);
@@ -130,20 +162,26 @@ void UpdateAnimation(Animation *animation, float dt)
     }
 }
 
+Rectangle GetAnimationFrameSource(const Animation *animation, bool flipX)
+{
+    float fw = (float)animation->frameWidth;
+    float fh = (float)animation->sheet.height;
+
+    return (Rectangle){
+        animation->currentFrame * fw,
+        0.0f,
+        flipX ? -fw : fw,
+        fh
+    };
+}
+
 void DrawAnimationFrame(Animation *animation, Vector2 position, float scale, bool flipX, Color tint)
 {
     if (animation->sheet.id > 0 && animation->frameCount > 0)
     {
         float fw = animation->frameWidth;
         float fh = animation->sheet.height;
-
-        Rectangle source =
-        {
-            animation->currentFrame * fw + (flipX ? fw : 0),
-            0,
-            flipX ? -fw : fw,
-            fh
-        };
+        Rectangle source = GetAnimationFrameSource(animation, flipX);
 
         Rectangle dest =
         {

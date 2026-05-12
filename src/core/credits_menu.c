@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include "core/screens.h"
+#include "core/cursor.h"
 
 GameScreen RunCredits()
 {
@@ -27,7 +28,7 @@ GameScreen RunCredits()
             const char* nomes[] = 
             { 
                 "Bruno Augusto", 
-                "Gustavo Torres", 
+                "Gustavo Castro", 
                 "Igor Gabriel", 
                 "Luiz Gonzaga", 
                 "Marco Aurélio" 
@@ -38,6 +39,9 @@ GameScreen RunCredits()
                 int textWidth = MeasureText(nomes[i], nameFontSize);
                 DrawText(nomes[i], (currentWidth / 2) - (textWidth / 2), startY + (i * spacing), nameFontSize, DARKGRAY);
             }
+            DrawMenuCursor(false);
         EndDrawing();
     }
+
+    return SCREEN_EXIT;
 }

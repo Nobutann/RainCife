@@ -2,7 +2,27 @@
 #include "gameplay/weapon.h"
 #include "entities/player.h"
 #include "graphics/sprites.h"
+#include "core/screens.h"
 #include <stdio.h>
+
+static void UseRunningAttackPose(Player *player)
+{
+    LayeredAnimation *runningAnim = player->currentAnim;
+
+    if (!player->isBossFighting && player->onGround && player->velocity.x != 0 && runningAnim && runningAnim->layerCount >= 3)
+    {
+        player->sprites.attack.layers[0] = runningAnim->layers[0];
+        player->sprites.attack.layers[2] = runningAnim->layers[2];
+        return;
+    }
+
+    player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
+    player->sprites.attack.layers[0].currentFrame = 0;
+    player->sprites.attack.layers[0].timer = 0.0f;
+    player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
+    player->sprites.attack.layers[2].currentFrame = 0;
+    player->sprites.attack.layers[2].timer = 0.0f;
+}
 
 void UseBat(Player *player)
 {
@@ -19,12 +39,7 @@ void UseBat(Player *player)
     }
     else
     {
-        player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
-        player->sprites.attack.layers[0].currentFrame = 0;
-        player->sprites.attack.layers[0].timer = 0.0f;
-        player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
-        player->sprites.attack.layers[2].currentFrame = 0;
-        player->sprites.attack.layers[2].timer = 0.0f;
+        UseRunningAttackPose(player);
     }
 
     player->currentAnim = &player->sprites.attack;
@@ -34,7 +49,7 @@ void UseBat(Player *player)
 
 void UseHammer(Player *player)
 {
-    
+
     bool isIdle = (player->isBossFighting && player->velocity.x == 0);
 
     if (isIdle)
@@ -48,14 +63,9 @@ void UseHammer(Player *player)
     }
     else
     {
-        player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
-        player->sprites.attack.layers[0].currentFrame = 0;
-        player->sprites.attack.layers[0].timer = 0.0f;
-        player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
-        player->sprites.attack.layers[2].currentFrame = 0;
-        player->sprites.attack.layers[2].timer = 0.0f;
+        UseRunningAttackPose(player);
     }
-    
+
     player->currentAnim = &player->sprites.attack;
     player->sprites.attack.layers[1].currentFrame = 0;
     player->sprites.attack.layers[1].timer = 0.0f;
@@ -74,14 +84,15 @@ void EquipWeapon(Player *player, WeaponType type)
 
     player->weapon.type = type;
     player->weapon.cooldownTimer = 0.0f;
+    player->weapon.hitConnected = false;
 
     switch (type)
     {
         case WEAPON_BAT:
-            player->weapon.damage = 30.0f;
+            player->weapon.damage = 2.0f;
             if (player->isBossFighting)
             {
-               player->weapon.cooldown = 0.5f; 
+               player->weapon.cooldown = 0.5f;
             }
             else
             {
@@ -89,14 +100,28 @@ void EquipWeapon(Player *player, WeaponType type)
             }
             player->weapon.breakPower = 1;
             player->weapon.attack = UseBat;
-            player->weapon.attackDuration = LoadAttackAnimation(&player->sprites, "assets/sprites/Player/attack/melee/Attack_sword-Sheet.png", 5, 0.08f);
+            player->weapon.attackDuration = LoadAttackAnimation(
+                &player->sprites,
+                GetSelectedClothingId() == 2
+                    ? "assets/sprites/Player/Spr_rat/Attack_sword_cesar-Sheet.png"
+                    : "assets/sprites/Player/attack/melee/Attack_sword-Sheet.png",
+                5,
+                0.08f
+            );
             break;
         case WEAPON_HAMMER:
-            player->weapon.damage = 30.0f;
+            player->weapon.damage = 5.0f;
             player->weapon.cooldown = 1.5f;
             player->weapon.breakPower = 3;
             player->weapon.attack = UseHammer;
-            player->weapon.attackDuration = LoadAttackAnimation(&player->sprites, "assets/sprites/Player/attack/melee/Attack_hammer-Sheet.png", 5, 0.15f);
+            player->weapon.attackDuration = LoadAttackAnimation(
+                &player->sprites,
+                GetSelectedClothingId() == 2
+                    ? "assets/sprites/Player/Spr_rat/Attack_hammer_cesar-Sheet.png"
+                    : "assets/sprites/Player/attack/melee/Attack_hammer-Sheet.png",
+                5,
+                0.15f
+            );
             break;
         case WEAPON_PISTOL:
             break;
@@ -114,6 +139,7 @@ void UseWeapon(Player *player)
 
     player->weapon.cooldownTimer = player->weapon.cooldown;
     player->weapon.attacking = true;
+    player->weapon.hitConnected = false;
     player->weapon.attackTimer = player->weapon.attackDuration;
     player->weapon.attack(player);
 }

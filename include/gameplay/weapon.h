@@ -19,6 +19,7 @@ typedef struct
     float cooldownTimer;
     int breakPower;
     bool attacking;
+    bool hitConnected;
     float attackDuration;
     float attackTimer;
     void (*attack) (struct Player *player);
