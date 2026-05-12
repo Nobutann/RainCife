@@ -5,6 +5,8 @@
 #include <stdio.h>
 
 #define FLOOR_SCROLL_SPEED 600.0f
+#define FLOOR_VISIBLE_TOP_RATIO 0.85f
+#define FLOOR_WATER_START_Y 317.0f
 #define BAR_WIDTH_RATIO 0.5f
 #define BAR_Y_RATIO 0.03f
 #define LEVEL6_BOTTOM_TRIM_RATIO 0.030f
@@ -110,7 +112,7 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
         float scale = (float)screenWidth / bg->floor.width;
         float tileW = bg->floor.width * scale;
         float tileH = bg->floor.height * scale;
-        float visibleTopOff = tileH * 0.85f;
+        float visibleTopOff = tileH * FLOOR_VISIBLE_TOP_RATIO;
         float posY = groundY - visibleTopOff;
 
         float offset = fmodf(bg->scrollX, tileW);
@@ -134,11 +136,17 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
     if (bg->waterStatic.id > 0)
     {
         float tileW = (float)bg->waterStatic.width;
-        float tileH = (float)bg->waterStatic.height;
         float scale = (float)screenWidth / tileW;
         float scaledW = tileW * scale;
-        float scaledH = tileH * scale;
         float waterY = groundY;
+
+        if (bg->floor.id > 0)
+        {
+            float floorScale = (float)screenWidth / bg->floor.width;
+            float floorY = groundY - (bg->floor.height * floorScale * FLOOR_VISIBLE_TOP_RATIO);
+            waterY = floorY + (FLOOR_WATER_START_Y * floorScale);
+        }
+
         float offset = fmodf(bg->waterScrollX, scaledW);
         float startX = -offset;
         if (startX > 0)
