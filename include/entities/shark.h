@@ -15,6 +15,7 @@ typedef enum {
 
 typedef struct {
     Rectangle rect;
+    Rectangle hitbox;
     Vector2 direction;
     float speed;
     bool active;

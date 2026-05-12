@@ -5,6 +5,7 @@
 #include "entities/player.h"
 #include "entities/hairy_leg.h"
 #include "entities/shark.h"
+#include "entities/midnight_man.h"
 #include "entities/enemy.h"
 #include "graphics/background.h"
 #include "enemy_caller.h"
@@ -13,6 +14,7 @@
 #include "core/window_mode.h"
 #include "utils.h"
 #define MAX_ACTIVE_ENEMIES 12
+#define LEVEL6_INTRO_DURATION 2.5f
 #define HAIRY_LEG_DEATH_ADVANCE_DELAY 1.0f
 
 static void StartLevel(
@@ -288,6 +290,9 @@ int main(void)
             Shark shark;
             InitShark(&shark, initW, initH);
 
+            MidnightMan midnightMan;
+            InitMidnightMan(&midnightMan, initW, initH, initGroundY);
+
             Level *levels = InitGameLevels();
             Level *currentLevel = FindLevelById(levels, GetSelectedStoryLevelId());
 
@@ -309,6 +314,8 @@ int main(void)
 
             GamePhase phase = PHASE_RUNNING;
             float progressTimer = 0.0f;
+            bool level6IntroActive = false;
+            float level6IntroTimer = 0.0f;
 
             // player.isBossFighting = (currentLevel->bossId != 0);
             player.isBossFighting = false;
@@ -336,6 +343,21 @@ int main(void)
                 float bossScale = (float)currentHeight * 0.65f / 252.0f;
                 float standingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * -0.2f);
                 float playerStandingY = groundY + (currentHeight * SIDEWALK_THICKNESS_RATIO * 0.1f);
+                float level6IntroProgress = 1.0f;
+
+                if (currentLevel->id == 6)
+                {
+                    if (level6IntroActive)
+                    {
+                        level6IntroTimer += dt;
+                        if (level6IntroTimer >= LEVEL6_INTRO_DURATION)
+                        {
+                            level6IntroTimer = LEVEL6_INTRO_DURATION;
+                            level6IntroActive = false;
+                        }
+                    }
+                    level6IntroProgress = level6IntroTimer / LEVEL6_INTRO_DURATION;
+                }
 
                 if (deathScreenActive)
                 {
@@ -393,7 +415,7 @@ int main(void)
 
                     BeginDrawing();
                         ClearBackground(BLACK);
-                        DrawBackground(&bg, currentWidth, currentHeight, groundY);
+                        DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY);
 
                         for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                         {
@@ -446,6 +468,10 @@ int main(void)
                             playerStandingY,
                             playerScale
                         );
+                        if (currentLevel->bossId == 3)
+                        {
+                            InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                        }
                     }
 
                     spawnTimer -= dt;
@@ -545,6 +571,10 @@ int main(void)
                         playerStandingY,
                         playerScale
                     );
+                    if (currentLevel->bossId == 3)
+                    {
+                        InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                    }
                 }
                 else if (IsKeyPressed(KEY_RIGHT) && phase == PHASE_BOSS && currentLevel->next) {
                     UnlockStoryLevel(currentLevel->next->id);
@@ -566,6 +596,12 @@ int main(void)
                     );
                     safePosteFollowUpTimer = -1.0f;
                     ResetPlayerForRunningRetry(&player, playerStandingY, playerScale);
+                    if (currentLevel->bossId == 3)
+                    {
+                        InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                    }
+                    level6IntroActive = (currentLevel->id == 6);
+                    level6IntroTimer = 0.0f;
                 }
                 if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
                     StartLevel(
@@ -586,6 +622,12 @@ int main(void)
                     );
                     safePosteFollowUpTimer = -1.0f;
                     ResetPlayerForRunningRetry(&player, playerStandingY, playerScale);
+                    if (currentLevel->bossId == 3)
+                    {
+                        InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                    }
+                    level6IntroActive = (currentLevel->id == 6);
+                    level6IntroTimer = 0.0f;
                 }
 
                 if (phase == PHASE_BOSS)
@@ -608,6 +650,11 @@ int main(void)
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 2)
                     {
                         UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
+                    }
+
+                    if (currentLevel->bossId == 3)
+                    {
+                        UpdateMidnightMan(&midnightMan, playerHitbox, dt, currentWidth, currentHeight, groundY);
                     }
 
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 1 && pernaCabeluda.state != HL_DEAD)
@@ -647,13 +694,14 @@ int main(void)
 
                         for (int i = 0; i < MAX_WATER_BALLS; i++)
                         {
-                            if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].rect))
+                            if (shark.balls[i].active && CheckCollisionRecs(playerHitbox, shark.balls[i].hitbox))
                             {
                                 deathScreenActive = true;
                                 retryPhase = PHASE_BOSS;
                             }
                         }
                     }
+
                 }
 
                 float barValue = 1.0f;
@@ -675,7 +723,7 @@ int main(void)
 
                 BeginDrawing();
                     ClearBackground(BLACK);
-                    DrawBackground(&bg, currentWidth, currentHeight, groundY);
+                    DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY);
 
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -685,7 +733,10 @@ int main(void)
                         }
                     }
 
-                    DrawPlayer(&player, playerScale);
+                    if (!(currentLevel->id == 6 && level6IntroActive))
+                    {
+                        DrawPlayer(&player, playerScale);
+                    }
 
                     if (phase == PHASE_BOSS)
                     {
@@ -698,6 +749,12 @@ int main(void)
                         {
                             DrawShark(&shark);
                         }
+
+                        if (currentLevel->bossId == 3)
+                        {
+                            DrawMidnightMan(&midnightMan);
+                        }
+
                     }
 
                     DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
@@ -719,6 +776,7 @@ int main(void)
             UnloadTexture(enemyAssets.bikeSkin2);
             UnloadTexture(enemyAssets.bikeSkinItau);
             UnloadShark(&shark);
+            UnloadMidnightMan(&midnightMan);
             FreeLevels(levels);
         }
     }

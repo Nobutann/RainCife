@@ -18,7 +18,7 @@ if exist C:\msys64\mingw64\bin\gcc.exe (
 echo Compilando com %GCC_PATH%...
 if not exist libs mkdir libs
 
-%GCC_PATH% src\core\main.c src\core\start_menu.c src\core\character_select.c src\core\level_select.c src\core\options_menu.c src\core\credits_menu.c src\core\config_manager.c src\core\cursor.c src\core\window_mode.c src\entities\player.c src\entities\hairy_leg.c src\entities\shark.c src\entities\enemy.c src\gameplay\weapon.c src\gameplay\levels.c src\graphics\background.c src\graphics\sprites.c src\utils.c src\enemy_caller.c -o libs\jogo.exe %INC% %LIB% -lraylib -lopengl32 -lgdi32 -lwinmm
+%GCC_PATH% src\core\main.c src\core\start_menu.c src\core\character_select.c src\core\level_select.c src\core\options_menu.c src\core\credits_menu.c src\core\config_manager.c src\core\cursor.c src\core\window_mode.c src\entities\player.c src\entities\hairy_leg.c src\entities\shark.c src\entities\midnight_man.c src\entities\enemy.c src\gameplay\weapon.c src\gameplay\levels.c src\graphics\background.c src\graphics\sprites.c src\utils.c src\enemy_caller.c -o libs\jogo.exe %INC% %LIB% -lraylib -lopengl32 -lgdi32 -lwinmm
 
 if %errorlevel% neq 0 (
     echo.

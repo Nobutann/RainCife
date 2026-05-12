@@ -38,7 +38,7 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
             enemy->hitboxSize  = (Vector2){275, 225};
             break;
         case ENEMY_POSTE:
-            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 600};
+            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 640};
             enemy->position = enemy->basePosition;
             enemy->size = (Vector2){200, 200};
             enemy->headDetached = false;
@@ -58,7 +58,7 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
             enemy->hitboxSize  = (Vector2){84, 68};
             break;
         case ENEMY_SAFE_POSTE:
-            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 600};
+            enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 640};
             enemy->position = enemy->basePosition;
             enemy->size = (Vector2){200, 600};
             enemy->hitboxOffset = (Vector2){56, 53};
