@@ -7,6 +7,7 @@
 typedef struct {
     int faseId;
     bool inimigosPermitidos[ENEMY_COUNT];
+    int pesos[ENEMY_COUNT];
 } ConfiguracaoFase;
 
 ConfiguracaoFase ObterConfiguracaoFase(int faseId);

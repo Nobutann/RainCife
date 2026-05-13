@@ -42,12 +42,12 @@ Level* InitGameLevels() {
 
     AddLevel(&head, CreateLevel(1, 1, 1.2f, 30.0f, 1));
     AddLevel(&head, CreateLevel(2, 2, 1.0f, 45.0f, 2));
-    AddLevel(&head, CreateLevel(3, 1, 0.8f, 60.0f, 0));
+    AddLevel(&head, CreateLevel(3, 3, 0.8f, 60.0f, 3));
 
     // debug levels: duration=0 pula direto ao boss
     AddLevel(&head, CreateLevel(4, 1, 1.0f, 0.0f, 1));
     AddLevel(&head, CreateLevel(5, 2, 1.0f, 0.0f, 2));
-    AddLevel(&head, CreateLevel(6, 1, 1.0f, 0.0f, 3));
+    AddLevel(&head, CreateLevel(6, 3, 1.0f, 0.0f, 3));
 
     return head;
 }
