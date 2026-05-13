@@ -560,7 +560,18 @@ int main(void)
                         if (!CanWeaponBreakEnemy(player.weapon.type, enemies[i].type)) continue;
                         if (CheckCollisionRecs(attackHitbox, GetEnemyHitbox(&enemies[i])))
                         {
-                            enemies[i].active = false;
+                            if (enemies[i].type == ENEMY_POSTE)
+                            {
+                                enemies[i].headDetached = true;
+                                enemies[i].headDestroyed = true;
+                                enemies[i].headLanded = false;
+                                enemies[i].position = enemies[i].basePosition;
+                                enemies[i].velocity = (Vector2){0.0f, 0.0f};
+                            }
+                            else
+                            {
+                                enemies[i].active = false;
+                            }
                         }
                     }
                 }

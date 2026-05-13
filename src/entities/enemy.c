@@ -8,6 +8,7 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
     enemy->state = 0;
     enemy->velocity.x = 0;
     enemy->velocity.y = 0;
+    enemy->headDestroyed = false;
 
     switch (type)
     {
@@ -64,11 +65,18 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
             enemy->hitboxOffset = (Vector2){56, 53};
             enemy->hitboxSize  = (Vector2){87, 520};
             break;
+        case ENEMY_COUNT:
+            break;
     }
 }
 
 Rectangle GetEnemyHitbox(Enemy *enemy)
 {
+    if (enemy->type == ENEMY_POSTE && enemy->headDestroyed)
+    {
+        return (Rectangle){0.0f, 0.0f, 0.0f, 0.0f};
+    }
+
     return (Rectangle){
         enemy->position.x + enemy->hitboxOffset.x,
         enemy->position.y + enemy->hitboxOffset.y,
@@ -79,6 +87,8 @@ Rectangle GetEnemyHitbox(Enemy *enemy)
 
 void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed, Rectangle playerHitbox)
 {
+    (void)screenWidth;
+
     if (!enemy->active)
     {
         return;
@@ -128,7 +138,11 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
 
         case ENEMY_POSTE:
             enemy->basePosition.x -= (10 + baseSpeed);
-            if (!enemy->headDetached)
+            if (enemy->headDestroyed)
+            {
+                enemy->position = enemy->basePosition;
+            }
+            else if (!enemy->headDetached)
             {
                 enemy->position = enemy->basePosition;
                 if (enemy->position.x - playerHitbox.x < 350.0f && enemy->position.x > playerHitbox.x)
@@ -158,7 +172,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                 enemy->position.x += enemy->velocity.x;
             }
 
-            if (enemy->headLanded ? enemy->position.x < -enemy->size.x : enemy->basePosition.x < -enemy->size.x)
+            if (enemy->headLanded && !enemy->headDestroyed ? enemy->position.x < -enemy->size.x : enemy->basePosition.x < -enemy->size.x)
             {
                 enemy->active = false;
             }
@@ -196,6 +210,8 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                 enemy->active = false;
             }
             break;
+        case ENEMY_COUNT:
+            break;
     }
 }
 
@@ -208,7 +224,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
 
     if (enemy->type == ENEMY_POSTE)
     {
-        if (!enemy->headDetached)
+        if (!enemy->headDetached && !enemy->headDestroyed)
         {
             if (assets->textures[ENEMY_POSTE].id > 0)
             {
@@ -228,7 +244,7 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
                 DrawTexturePro(assets->posteSemCabeca, source, dest, origin, 0.0f, WHITE);
             }
 
-            if (assets->posteCabecas.id > 0)
+            if (!enemy->headDestroyed && assets->posteCabecas.id > 0)
             {
                 float halfW = (float)assets->posteCabecas.width / 2.0f;
                 float srcX = enemy->headLanded ? halfW : 0.0f;

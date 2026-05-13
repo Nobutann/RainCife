@@ -28,6 +28,7 @@ typedef struct
     Vector2 basePosition;
     bool headDetached;
     bool headLanded;
+    bool headDestroyed;
     float animationTimer;
     int currentFrame;
     Vector2 hitboxOffset;

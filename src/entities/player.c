@@ -16,7 +16,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->isBossFighting = true;
     player->facingRight = false;
     player->sprites.attack = (LayeredAnimation){0};
-    EquipWeapon(player, WEAPON_HAMMER);
+    EquipWeapon(player, WEAPON_BAT);
     player->weapon.cooldownTimer = player->weapon.cooldown;
     player->isJumping = false;
 }
@@ -320,13 +320,21 @@ bool IsPlayerAttackHitboxActive(const Player *player)
     return player->weapon.attacking;
 }
 
-Rectangle GetPlayerAttackHitbox(Player *player, float scale)
+static Vector2 GetLayeredAnimationLayerPosition(const LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX)
 {
-    if (!IsPlayerAttackHitboxActive(player))
-    {
-        return (Rectangle){0};
-    }
+    float refWidth = layeredAnimation->layers[0].frameWidth * scale;
+    float fw = layeredAnimation->layers[layerIndex].frameWidth * scale;
+    float offsetX = flipX ? 0.0f : (refWidth - fw);
+    float manualOffsetX = layeredAnimation->layers[layerIndex].offsetX;
 
+    return (Vector2){
+        position.x + offsetX + (flipX ? manualOffsetX : -manualOffsetX) * scale,
+        position.y + layeredAnimation->layers[layerIndex].offsetY * scale
+    };
+}
+
+static Rectangle GetDefaultAttackHitbox(Player *player, float scale)
+{
     Rectangle bodyHitbox = GetPlayerHitbox(player, scale);
     float attackWidth = 90.0f * scale;
     float attackHeight = bodyHitbox.height * 0.85f;
@@ -335,6 +343,94 @@ Rectangle GetPlayerAttackHitbox(Player *player, float scale)
     float attackX = attacksRight ? bodyHitbox.x + bodyHitbox.width : bodyHitbox.x - attackWidth;
 
     return (Rectangle){ attackX, attackY, attackWidth, attackHeight };
+}
+
+static Rectangle GetWeaponLayerHitbox(Player *player, float scale, Rectangle localHitbox)
+{
+    Animation *weapon = &player->sprites.attack.layers[1];
+    bool flipX = !player->facingRight;
+    Vector2 layerPos = GetLayeredAnimationLayerPosition(&player->sprites.attack, 1, player->position, scale, flipX);
+    float localX = flipX
+        ? (weapon->frameWidth - localHitbox.x - localHitbox.width)
+        : localHitbox.x;
+
+    return (Rectangle){
+        layerPos.x + localX * scale,
+        layerPos.y + localHitbox.y * scale,
+        localHitbox.width * scale,
+        localHitbox.height * scale
+    };
+}
+
+static Rectangle GetHammerTipHitbox(Player *player, float scale)
+{
+    static const Rectangle hammerTipFrames[] = {
+        {139.0f,   7.0f,  78.0f,  77.0f},
+        { 94.0f,   7.0f,  79.0f,  56.0f},
+        {  3.0f,  45.0f, 156.0f,  93.0f},
+        {  3.0f,  82.0f, 151.0f, 132.0f},
+        {  3.0f,  82.0f, 151.0f, 132.0f}
+    };
+
+    Animation *hammer = &player->sprites.attack.layers[1];
+    int frame = hammer->currentFrame;
+    if (frame < 0)
+    {
+        frame = 0;
+    }
+    if (frame >= (int)(sizeof(hammerTipFrames) / sizeof(hammerTipFrames[0])))
+    {
+        frame = (int)(sizeof(hammerTipFrames) / sizeof(hammerTipFrames[0])) - 1;
+    }
+
+    return GetWeaponLayerHitbox(player, scale, hammerTipFrames[frame]);
+}
+
+static Rectangle GetSwordTipHitbox(Player *player, float scale)
+{
+    static const Rectangle swordTipFrames[] = {
+        { 22.0f,  56.0f,  78.0f,  86.0f},
+        { 85.0f,  50.0f,  32.0f, 100.0f},
+        { 28.0f,  49.0f, 111.0f,  91.0f},
+        { 27.0f,  62.0f, 111.0f,  76.0f}
+    };
+
+    Animation *sword = &player->sprites.attack.layers[1];
+    int frame = sword->currentFrame;
+    if (frame < 0)
+    {
+        frame = 0;
+    }
+    if (frame >= sword->frameCount - 1)
+    {
+        return GetDefaultAttackHitbox(player, scale);
+    }
+    if (frame >= (int)(sizeof(swordTipFrames) / sizeof(swordTipFrames[0])))
+    {
+        frame = (int)(sizeof(swordTipFrames) / sizeof(swordTipFrames[0])) - 1;
+    }
+
+    return GetWeaponLayerHitbox(player, scale, swordTipFrames[frame]);
+}
+
+Rectangle GetPlayerAttackHitbox(Player *player, float scale)
+{
+    if (!IsPlayerAttackHitboxActive(player))
+    {
+        return (Rectangle){0};
+    }
+
+    if (player->weapon.type == WEAPON_HAMMER)
+    {
+        return GetHammerTipHitbox(player, scale);
+    }
+
+    if (player->weapon.type == WEAPON_BAT)
+    {
+        return GetSwordTipHitbox(player, scale);
+    }
+
+    return GetDefaultAttackHitbox(player, scale);
 }
 
 void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY, float scale)
