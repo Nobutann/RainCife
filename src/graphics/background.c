@@ -250,7 +250,7 @@ void DrawProgressBar(Background *bg, float progress, int screenWidth, int screen
 
     if (bg->barFrame.id > 0)
     {
-        Rectangle src = 
+        Rectangle src =
         {
             0,
             0,
@@ -258,7 +258,8 @@ void DrawProgressBar(Background *bg, float progress, int screenWidth, int screen
             (float)bg->barFrame.height
         };
 
-        DrawTexturePro(bg->barFrame, src, dest, (Vector2){0, 0}, 0.0f, WHITE);
+        Rectangle frameDest = { dest.x, dest.y, dest.width + barW * 0.05f, dest.height };
+        DrawTexturePro(bg->barFrame, src, frameDest, (Vector2){0, 0}, 0.0f, WHITE);
     }
 }
 

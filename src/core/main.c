@@ -549,6 +549,22 @@ int main(void)
                     }
                 }
 
+                if (IsPlayerAttackHitboxActive(&player))
+                {
+                    Rectangle hammerHitbox = GetPlayerAttackHitbox(&player, playerScale);
+                    Rectangle otherHitbox  = GetPlayerAttackHitbox(&player, playerScale);
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                    {
+                        if (!enemies[i].active) continue;
+                        Rectangle attackHitbox = (player.weapon.type == WEAPON_HAMMER) ? hammerHitbox : otherHitbox;
+                        if (!CanWeaponBreakEnemy(player.weapon.type, enemies[i].type)) continue;
+                        if (CheckCollisionRecs(attackHitbox, GetEnemyHitbox(&enemies[i])))
+                        {
+                            enemies[i].active = false;
+                        }
+                    }
+                }
+
                 UpdateBackground(&bg, dt, phase);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
@@ -650,6 +666,14 @@ int main(void)
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 2)
                     {
                         UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
+                        TryDamageSharkFromPlayerAttack(&shark, &player, playerScale);
+
+                        if (!shark.active && currentLevel->next)
+                        {
+                            UnlockStoryLevel(currentLevel->next->id);
+                            StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
+                            bossDefeatedThisFrame = true;
+                        }
                     }
 
                     if (currentLevel->bossId == 3)
@@ -717,7 +741,7 @@ int main(void)
                     }
                     else if (currentLevel->bossId == 2)
                     {
-                        barValue = (float)shark.health / 200.0f;
+                        barValue = (float)shark.health / 100.0f;
                     }
                 }
 

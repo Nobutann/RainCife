@@ -3,6 +3,9 @@
 
 #include "raylib.h"
 
+struct Player;
+typedef struct Player Player;
+
 typedef enum {
     SHARK_IDLE,
     SHARK_PREP_LEFT,
@@ -52,5 +55,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
 void DrawShark(Shark *shark);
 void UnloadShark(Shark *shark);
 Rectangle GetSharkHitbox(Shark *shark);
+void DamageShark(Shark *shark, int damage);
+bool TryDamageSharkFromPlayerAttack(Shark *shark, struct Player *player, float playerScale);
 
 #endif
