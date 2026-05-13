@@ -89,7 +89,7 @@ void EquipWeapon(Player *player, WeaponType type)
     switch (type)
     {
         case WEAPON_BAT:
-            player->weapon.damage = 2.0f;
+            player->weapon.damage = 4.0f;
             if (player->isBossFighting)
             {
                player->weapon.cooldown = 0.5f;
@@ -110,7 +110,7 @@ void EquipWeapon(Player *player, WeaponType type)
             );
             break;
         case WEAPON_HAMMER:
-            player->weapon.damage = 5.0f;
+            player->weapon.damage = 8.0f;
             player->weapon.cooldown = 1.5f;
             player->weapon.breakPower = 3;
             player->weapon.attack = UseHammer;
@@ -142,4 +142,16 @@ void UseWeapon(Player *player)
     player->weapon.hitConnected = false;
     player->weapon.attackTimer = player->weapon.attackDuration;
     player->weapon.attack(player);
+}
+
+bool CanWeaponBreakEnemy(WeaponType weaponType, EnemyType enemyType)
+{
+    if (enemyType == ENEMY_SAFE_POSTE)
+        return false;
+    if (weaponType == WEAPON_HAMMER)
+        return true;
+    return enemyType == ENEMY_BIRD1 ||
+           enemyType == ENEMY_BIRD2 ||
+           enemyType == ENEMY_FISH  ||
+           enemyType == ENEMY_POSTE;
 }

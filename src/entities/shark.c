@@ -1,4 +1,5 @@
 #include "entities/shark.h"
+#include "entities/player.h"
 #include "raymath.h"
 
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
@@ -48,7 +49,7 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     shark->shootCount = 0;
     shark->arcDrops = 0;
     shark->active = true;
-    shark->health = 200;
+    shark->health = 100;
 
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         shark->balls[i].active = false;
@@ -292,6 +293,27 @@ void UnloadShark(Shark *shark) {
     UnloadTexture(shark->texDashRight);
     UnloadTexture(shark->texJump);
     UnloadTexture(shark->texBubble);
+}
+
+void DamageShark(Shark *shark, int damage) {
+    if (damage <= 0) return;
+    shark->health -= damage;
+    if (shark->health <= 0) {
+        shark->health = 0;
+        shark->active = false;
+    }
+}
+
+bool TryDamageSharkFromPlayerAttack(Shark *shark, Player *player, float playerScale) {
+    if (!shark->active) return false;
+    if (!IsPlayerAttackHitboxActive(player) || player->weapon.hitConnected) return false;
+
+    Rectangle attackHitbox = GetPlayerAttackHitbox(player, playerScale);
+    if (!CheckCollisionRecs(attackHitbox, GetSharkHitbox(shark))) return false;
+
+    DamageShark(shark, (int)player->weapon.damage);
+    player->weapon.hitConnected = true;
+    return true;
 }
 
 Rectangle GetSharkHitbox(Shark *shark) {
