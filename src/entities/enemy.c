@@ -102,7 +102,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
         if (enemy->type == ENEMY_WOOD || enemy->type == ENEMY_BIKE || enemy->type == ENEMY_POSTE)
         {
             if (enemy->type == ENEMY_POSTE)
-                enemy->basePosition.x -= (10 + baseSpeed);
+                enemy->basePosition.x -= (15 + baseSpeed);
 
             enemy->animationTimer += 1.0f;
             if (enemy->animationTimer >= 6.0f)
@@ -137,7 +137,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             {
                 enemy->position.y = landY;
                 enemy->velocity.y = 0.0f;
-                enemy->velocity.x = -(10 + baseSpeed);
+                enemy->velocity.x = -(15 + baseSpeed);
             }
         }
         else
@@ -156,7 +156,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
     switch(enemy->type)
     {
         case ENEMY_BIRD1:
-            enemy->position.x -= (10 + baseSpeed);
+            enemy->position.x -= (15 + baseSpeed);
             if (enemy->position.x < -enemy->size.x)
             {
                 enemy->active = false;
@@ -164,7 +164,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             break;
 
         case ENEMY_BIRD2:
-            enemy->position.x -= (8 + baseSpeed);
+            enemy->position.x -= (12 + baseSpeed);
             enemy->position.y += enemy->velocity.y;
             if (enemy->position.y < screenHeight * 0.20f) 
             {
@@ -181,14 +181,14 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             break;
 
         case ENEMY_BIKE:
-            enemy->position.x -= (10 + baseSpeed);
+            enemy->position.x -= (15 + baseSpeed);
         if (enemy->position.x < -enemy->size.x) 
         {
             enemy->active = false;
         }
             break;
         case ENEMY_WOOD:
-            enemy->position.x -= (10 + baseSpeed);
+            enemy->position.x -= (15 + baseSpeed);
             if (enemy->position.x < -enemy->size.x)
             {
                 enemy->active = false;
@@ -196,7 +196,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             break;
 
         case ENEMY_POSTE:
-            enemy->basePosition.x -= (10 + baseSpeed);
+            enemy->basePosition.x -= (15 + baseSpeed);
             if (enemy->headDestroyed)
             {
                 enemy->position = enemy->basePosition;
@@ -208,7 +208,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                 {
                     enemy->headDetached = true;
                     enemy->velocity.x = -8.0f;
-                    enemy->velocity.y = -5.0f;
+                    enemy->velocity.y = -2.0f;
                 }
             }
             else if (!enemy->headLanded)
@@ -222,7 +222,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                 {
                     enemy->position.y = landY;
                     enemy->velocity.y = 0;
-                    enemy->velocity.x = -(10 + baseSpeed);
+                    enemy->velocity.x = -(15 + baseSpeed);
                     enemy->headLanded = true;
                 }
             }
@@ -240,13 +240,14 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
         case ENEMY_FISH:
             if (enemy->state == 0)
             {
-                enemy->basePosition.x -= (10 + baseSpeed);
+                enemy->basePosition.x -= (15 + baseSpeed);
                 enemy->position.x = enemy->basePosition.x;
-                if (GetTime() - enemy->stateTimer > 1.6)
+                if (GetTime() - enemy->stateTimer > 1.1)
                 {
                     enemy->state = 1;
                     enemy->position.y = enemy->basePosition.y;
                     enemy->velocity.y = -26.0f;
+                    enemy->jumpOrigin = enemy->basePosition;
                 }
             }
             else if (enemy->state == 1)
@@ -267,7 +268,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             break;
 
         case ENEMY_SAFE_POSTE:
-            enemy->position.x -= (10 + baseSpeed);
+            enemy->position.x -= (15 + baseSpeed);
             if (enemy->position.x < -enemy->size.x)
             {
                 enemy->active = false;
@@ -379,13 +380,6 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
                 DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
             }
             
-            if (enemy->velocity.y < -5.0f && assets->fishWaterJump.id > 0)
-            {
-                Rectangle sSrc = { 0.0f, 0.0f, (float)assets->fishWaterJump.width, (float)assets->fishWaterJump.height };
-                Rectangle sDst = { enemy->position.x + 20, enemy->position.y + 80, 76.0f, 76.0f };
-                Vector2 sOrg = { 0.0f, 0.0f };
-                DrawTexturePro(assets->fishWaterJump, sSrc, sDst, sOrg, 0.0f, WHITE);
-            }
         }
         DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;

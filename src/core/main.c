@@ -309,6 +309,9 @@ int main(void)
             enemyAssets.posteCabecas = LoadTexture("assets/sprites/Enemys_obstacles/Poste_mal_cabecas.png");
             enemyAssets.fishWaterJump = LoadTexture("assets/sprites/Enemys_obstacles/Fish_water_jump.png");
             enemyAssets.fishAnticipation = LoadAnimation("assets/sprites/Enemys_obstacles/Fish_antecipation_water-Sheet.png", 3, 0.2f);
+            enemyAssets.birdDeath = LoadTexture("assets/sprites/Enemys_obstacles/Bird_death.png");
+            enemyAssets.fishDeath = LoadTexture("assets/sprites/Enemys_obstacles/Fish_death.png");
+            enemyAssets.destroyedSheet = LoadTexture("assets/sprites/Enemys_obstacles/Destroyed-Sheet.png");
             enemyAssets.bikeSkin2 = LoadTexture("assets/sprites/Enemys_obstacles/Bike_2.png");
             enemyAssets.bikeSkinItau = LoadTexture("assets/sprites/Enemys_obstacles/Bike_itau.png");
 
@@ -415,7 +418,7 @@ int main(void)
 
                     BeginDrawing();
                         ClearBackground(BLACK);
-                        DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY);
+                        DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
                         for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                         {
@@ -560,17 +563,15 @@ int main(void)
                         if (!CanWeaponBreakEnemy(player.weapon.type, enemies[i].type)) continue;
                         if (CheckCollisionRecs(attackHitbox, GetEnemyHitbox(&enemies[i])))
                         {
+                            enemies[i].dying = true;
+                            enemies[i].velocity.x = -8.0f;
+                            enemies[i].velocity.y = -5.0f;
+                            enemies[i].animationTimer = 0.0f;
+                            enemies[i].currentFrame = 0;
                             if (enemies[i].type == ENEMY_POSTE)
                             {
                                 enemies[i].headDetached = true;
-                                enemies[i].headDestroyed = true;
                                 enemies[i].headLanded = false;
-                                enemies[i].position = enemies[i].basePosition;
-                                enemies[i].velocity = (Vector2){0.0f, 0.0f};
-                            }
-                            else
-                            {
-                                enemies[i].active = false;
                             }
                         }
                     }
@@ -758,7 +759,7 @@ int main(void)
 
                 BeginDrawing();
                     ClearBackground(BLACK);
-                    DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY);
+                    DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -810,6 +811,9 @@ int main(void)
             UnloadAnimation(&enemyAssets.birdAnimation);
             UnloadTexture(enemyAssets.bikeSkin2);
             UnloadTexture(enemyAssets.bikeSkinItau);
+            UnloadTexture(enemyAssets.birdDeath);
+            UnloadTexture(enemyAssets.fishDeath);
+            UnloadTexture(enemyAssets.destroyedSheet);
             UnloadShark(&shark);
             UnloadMidnightMan(&midnightMan);
             FreeLevels(levels);

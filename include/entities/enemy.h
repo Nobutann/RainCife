@@ -23,6 +23,7 @@ typedef struct
     Vector2 size;
     Vector2 velocity;
     bool active;
+    bool dying;
     int state;
     double stateTimer;
     Vector2 basePosition;
@@ -33,6 +34,7 @@ typedef struct
     int currentFrame;
     Vector2 hitboxOffset;
     Vector2 hitboxSize;
+    Vector2 jumpOrigin;
 } Enemy;
 
 typedef struct {
@@ -44,6 +46,9 @@ typedef struct {
     Animation birdAnimation;
     Texture2D bikeSkin2;
     Texture2D bikeSkinItau;
+    Texture2D birdDeath;
+    Texture2D fishDeath;
+    Texture2D destroyedSheet;
 } EnemyAssets;
 
 void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed);

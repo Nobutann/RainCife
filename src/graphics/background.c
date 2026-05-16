@@ -4,7 +4,8 @@
 #include <math.h>
 #include <stdio.h>
 
-#define FLOOR_SCROLL_SPEED 600.0f
+#define FLOOR_SCROLL_SPEED 900.0f
+#define RUNNING_BG_SCROLL_SPEED 375.0f
 #define FLOOR_VISIBLE_TOP_RATIO 0.85f
 #define FLOOR_WATER_START_Y 317.0f
 #define BAR_WIDTH_RATIO 0.5f
@@ -34,6 +35,14 @@ void InitBackground(Background *bg)
     bg->barFrame = LoadTexture("assets/sprites/background/Barra_Boss.png");
     bg->barBackground = LoadTexture("assets/sprites/background/Fundo_Barra_Boss.png");
     bg->barFill = LoadTexture("assets/sprites/background/Porcentagem_Barra_Boss.png");
+
+    bg->runningPhase2[0] = LoadTexture("assets/sprites/fundo/Fase_2_fundos/Fase2_background_1.png");
+    bg->runningPhase2[1] = LoadTexture("assets/sprites/fundo/Fase_2_fundos/Fase2_background_2.png");
+    bg->runningPhase2[2] = LoadTexture("assets/sprites/fundo/Fase_2_fundos/Fase2_background_3.png");
+    bg->runningPhase3[0] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_1.png");
+    bg->runningPhase3[1] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_2.png");
+    bg->runningPhase3[2] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_3.png");
+    bg->runningBgScrollX = 0.0f;
 }
 
 void UpdateBackground(Background *bg, float dt, GamePhase phase)
@@ -51,11 +60,55 @@ void UpdateBackground(Background *bg, float dt, GamePhase phase)
     {
         bg->scrollX += FLOOR_SCROLL_SPEED * dt;
         bg->waterScrollX += FLOOR_SCROLL_SPEED * dt;
+        bg->runningBgScrollX += RUNNING_BG_SCROLL_SPEED * dt;
     }
 }
 
-void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY)
+static void DrawBgStrip(Texture2D *frames, int count, float scrollX, int screenWidth, int screenHeight)
 {
+    float scales[3];
+    float widths[3];
+    float totalW = 0.0f;
+    for (int i = 0; i < count; i++)
+    {
+        scales[i] = (float)screenHeight / (float)frames[i].height;
+        widths[i] = (float)frames[i].width * scales[i];
+        totalW += widths[i];
+    }
+
+    float offset = fmodf(scrollX, totalW);
+    if (offset < 0.0f) offset += totalW;
+
+    float x = -offset;
+    while (x < (float)screenWidth)
+    {
+        for (int i = 0; i < count && x < (float)screenWidth; i++)
+        {
+            if (frames[i].id > 0)
+                DrawTextureEx(frames[i], (Vector2){x, 0.0f}, 0.0f, scales[i], WHITE);
+            x += widths[i];
+        }
+    }
+}
+
+void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase)
+{
+    Texture2D *runningFrames = NULL;
+    if (phase == PHASE_RUNNING)
+    {
+        if (levelId == 2 || levelId == 5)
+            runningFrames = bg->runningPhase2;
+        else if (levelId == 3 || levelId == 6)
+            runningFrames = bg->runningPhase3;
+    }
+
+    if (runningFrames != NULL)
+    {
+        DrawBgStrip(runningFrames, 3, bg->runningBgScrollX, screenWidth, screenHeight);
+    }
+    else
+    {
+
     Texture2D levelBackground;
     if (levelId == 6)
     {
@@ -106,6 +159,7 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
         DrawTexturePro(levelBackground, sourceRec, destRec, origin, 0.0f, WHITE);
     }
 
+    }
 
     if (bg->floor.id > 0)
     {
@@ -277,4 +331,9 @@ void UnloadBackground(Background *bg)
     UnloadTexture(bg->barFrame);
     UnloadTexture(bg->barBackground);
     UnloadTexture(bg->barFill);
+    for (int i = 0; i < 3; i++)
+    {
+        UnloadTexture(bg->runningPhase2[i]);
+        UnloadTexture(bg->runningPhase3[i]);
+    }
 }

@@ -9,8 +9,8 @@ static void FireProjectile(Shark *shark, Rectangle playerRect) {
             float hitboxSize = 60.0f;
             float spawnX = shark->rect.x + shark->rect.width - 360;
             float spawnY = shark->rect.y - 150;
-            shark->balls[i].rect    = (Rectangle){ spawnX, spawnY, visualSize, visualSize };
-            shark->balls[i].hitbox  = (Rectangle){ spawnX + (visualSize - hitboxSize) / 2, spawnY + (visualSize - hitboxSize) / 2, hitboxSize, hitboxSize };
+            shark->balls[i].rect = (Rectangle){ spawnX, spawnY, visualSize, visualSize };
+            shark->balls[i].hitbox = (Rectangle){ spawnX + (visualSize - hitboxSize) / 2, spawnY + (visualSize - hitboxSize) / 2, hitboxSize, hitboxSize };
             
             Vector2 playerCenter = { playerRect.x + playerRect.width / 2, playerRect.y + playerRect.height / 2 };
             Vector2 shootPos = { shark->balls[i].rect.x, shark->balls[i].rect.y };
@@ -132,8 +132,17 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             break;
 
         case SHARK_PREP_LEFT:
-            shark->rect.x -= 1500.0f * deltaTime; 
+            shark->rect.x -= 1500.0f * deltaTime;
             if (shark->rect.x < -shark->rect.width) {
+                shark->rect.x = -1050.0f;
+                shark->state = SHARK_DASH_WAIT;
+                shark->timer = 0.0f;
+            }
+            break;
+
+        case SHARK_DASH_WAIT:
+            shark->timer += deltaTime;
+            if (shark->timer >= 1.0f) {
                 shark->state = SHARK_DASH_RIGHT;
                 shark->timer = 0.0f;
             }

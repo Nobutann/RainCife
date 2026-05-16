@@ -9,6 +9,7 @@ typedef struct Player Player;
 typedef enum {
     SHARK_IDLE,
     SHARK_PREP_LEFT,
+    SHARK_DASH_WAIT,
     SHARK_DASH_RIGHT,
     SHARK_DASH_LEFT,
     SHARK_SHOOTING,
