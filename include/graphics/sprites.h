@@ -44,6 +44,7 @@ typedef struct {
     Animation kick;
     Animation rasteira;
     Animation death;
+    Animation shadow;
 } HairyLegSprites;
 
 Animation LoadAnimation(const char* path, int frameCount, float frameTime);

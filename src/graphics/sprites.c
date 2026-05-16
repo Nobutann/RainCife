@@ -202,6 +202,7 @@ void LoadHairyLegSprites(HairyLegSprites *sprites)
     sprites->kick = LoadAnimation("assets/sprites/Boss/Perna_kick-Sheet.png", 4, FRAME_TIME);
     sprites->rasteira = LoadAnimation("assets/sprites/Boss/Perna_rasteira-Sheet.png", 4, FRAME_TIME);
     sprites->death = LoadAnimation("assets/sprites/Boss/Perna_death.png", 1, FRAME_TIME);
+    sprites->shadow = LoadAnimation("assets/sprites/Boss/Shadow-Sheet.png", 4, FRAME_TIME);
 }
 
 void UnloadHairyLegSprites(HairyLegSprites *sprites)
@@ -212,6 +213,7 @@ void UnloadHairyLegSprites(HairyLegSprites *sprites)
     UnloadAnimation(&sprites->kick);
     UnloadAnimation(&sprites->rasteira);
     UnloadAnimation(&sprites->death);
+    UnloadAnimation(&sprites->shadow);
 }
 
 void ResetAnimation(Animation *animation) {

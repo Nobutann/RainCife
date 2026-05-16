@@ -46,6 +46,7 @@ bool IsHairyLegKickColliding(const HairyLeg *leg, Rectangle playerHitbox);
 void DamageHairyLeg(HairyLeg *leg, int damage);
 bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect, float screenWidth);
 bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float playerScale);
+void DrawHairyLegShadowWarning(HairyLeg *leg, float scale);
 void DrawHairyLeg(HairyLeg *leg, float scale);
 void UnloadHairyLeg(HairyLeg *leg);
 

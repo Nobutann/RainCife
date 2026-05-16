@@ -10,6 +10,8 @@
 #define HAIRY_LEG_LEFT_CORNER_PLAYER_MARGIN 300.0f
 #define HAIRY_LEG_RIGHT_CORNER_PLAYER_MARGIN 420.0f
 #define HAIRY_LEG_CORNER_LEG_MARGIN 500.0f
+#define HAIRY_LEG_HANGING_WARNING_TIME 2.0f
+#define HAIRY_LEG_SHADOW_GROUND_OFFSET 42.0f
 
 static Animation *GetHairyLegAnimationForState(HairyLeg *leg) {
     switch (leg->state) {
@@ -36,6 +38,34 @@ static Animation *GetHairyLegAnimationForState(HairyLeg *leg) {
 
 static void SyncHairyLegAnimation(HairyLeg *leg) {
     leg->currentAnim = GetHairyLegAnimationForState(leg);
+}
+
+static void ResetHairyLegShadowWarning(HairyLeg *leg) {
+    leg->sprites.shadow.currentFrame = 0;
+    leg->sprites.shadow.timer = 0.0f;
+}
+
+static void UpdateHairyLegShadowWarning(HairyLeg *leg) {
+    Animation *shadow = &leg->sprites.shadow;
+    if (shadow->frameCount <= 0) {
+        return;
+    }
+
+    float progress = leg->timer / HAIRY_LEG_HANGING_WARNING_TIME;
+    if (progress < 0.0f) {
+        progress = 0.0f;
+    }
+    if (progress >= 1.0f) {
+        progress = 1.0f;
+    }
+
+    int frame = (int)(progress * shadow->frameCount);
+    if (frame >= shadow->frameCount) {
+        frame = shadow->frameCount - 1;
+    }
+
+    shadow->currentFrame = frame;
+    shadow->timer = 0.0f;
 }
 
 float GetHairyLegSpriteOffsetX(const HairyLeg *leg, float scale) {
@@ -218,6 +248,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
                 leg->state = HL_HANGING;
                 leg->rect.x = playerRect.x;
                 leg->timer = 0.0f;
+                ResetHairyLegShadowWarning(leg);
             }
             break;
 
@@ -237,11 +268,14 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             leg->timer += deltaTime;
             leg->rect.x = playerRect.x;
 
-            if(leg->timer > 2.0f){
+            if(leg->timer > HAIRY_LEG_HANGING_WARNING_TIME){
                 leg->state = HL_FALLING;
                 leg->sprites.fall.currentFrame = 0;
                 leg->sprites.fall.timer = 0.0f;
                 leg->timer = 0.0f;
+                ResetHairyLegShadowWarning(leg);
+            } else {
+                UpdateHairyLegShadowWarning(leg);
             }
 
             break;
@@ -396,6 +430,19 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
         if (isAttack && leg->currentAnim->currentFrame >= leg->currentAnim->frameCount) {
             leg->currentAnim->currentFrame = leg->currentAnim->frameCount - 1;
         }
+    }
+}
+
+void DrawHairyLegShadowWarning(HairyLeg *leg, float scale) {
+    if (leg->state == HL_HANGING) {
+        Animation *shadow = &leg->sprites.shadow;
+        float shadowW = (float)shadow->frameWidth * scale;
+        float shadowH = (float)shadow->sheet.height * scale;
+        Vector2 warningPosition = {
+            leg->rect.x + (leg->rect.width * 0.5f) - (shadowW * 0.5f),
+            leg->groundY - shadowH - (HAIRY_LEG_SHADOW_GROUND_OFFSET * scale)
+        };
+        DrawAnimationFrame(shadow, warningPosition, scale, false, WHITE);
     }
 }
 

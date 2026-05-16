@@ -428,6 +428,14 @@ int main(void)
                             }
                         }
 
+                        if (phase == PHASE_BOSS)
+                        {
+                            if (currentLevel->bossId == 1)
+                            {
+                                DrawHairyLegShadowWarning(&pernaCabeluda, bossScale);
+                            }
+                        }
+
                         DrawPlayer(&player, playerScale);
 
                         if (phase == PHASE_BOSS)
@@ -766,6 +774,14 @@ int main(void)
                         if (enemies[i].active)
                         {
                             DrawEnemy(&enemies[i], &enemyAssets);
+                        }
+                    }
+
+                    if (phase == PHASE_BOSS)
+                    {
+                        if (currentLevel->bossId == 1)
+                        {
+                            DrawHairyLegShadowWarning(&pernaCabeluda, bossScale);
                         }
                     }
 

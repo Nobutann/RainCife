@@ -54,6 +54,11 @@ static HairyLeg MakeFallingLeg(void)
     leg.sprites.fall.sheet = (Texture2D){0};
     leg.sprites.fall.sheet.width = 504;
     leg.sprites.fall.sheet.height = 294;
+    leg.sprites.shadow.frameCount = 4;
+    leg.sprites.shadow.frameTime = 0.01f;
+    leg.sprites.shadow.sheet = (Texture2D){0};
+    leg.sprites.shadow.sheet.width = 564;
+    leg.sprites.shadow.sheet.height = 281;
     leg.currentAnim = &leg.sprites.idle;
 
     return leg;
@@ -186,6 +191,25 @@ int main(void)
     UpdateHairyLeg(&rightFacingFall, unusedPlayer, 0.01f, rightFacingFall.groundY, 1.0f);
     assert(rightFacingFall.state == HL_FALLING);
     assert(rightFacingFall.sprites.fall.currentFrame == 0);
+    assert(rightFacingFall.sprites.shadow.currentFrame == 0);
+
+    HairyLeg shadowWarning = MakeFallingLeg();
+    shadowWarning.timer = 0.0f;
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.01f, shadowWarning.groundY, 1.0f);
+    assert(shadowWarning.state == HL_HANGING);
+    assert(shadowWarning.sprites.shadow.currentFrame == 0);
+
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 1.0f, shadowWarning.groundY, 1.0f);
+    assert(shadowWarning.state == HL_HANGING);
+    assert(shadowWarning.sprites.shadow.currentFrame == 2);
+
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.98f, shadowWarning.groundY, 1.0f);
+    assert(shadowWarning.state == HL_HANGING);
+    assert(shadowWarning.sprites.shadow.currentFrame == 3);
+
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.02f, shadowWarning.groundY, 1.0f);
+    assert(shadowWarning.state == HL_FALLING);
+    assert(shadowWarning.sprites.shadow.currentFrame == 0);
 
     rightFacingFall.rect.y = 260.0f;
     UpdateHairyLeg(&rightFacingFall, unusedPlayer, 0.01f, rightFacingFall.groundY, 1.0f);
