@@ -27,11 +27,14 @@ typedef struct {
     Texture2D barFrame;
     Texture2D barBackground;
     Texture2D barFill;
+    Texture2D runningPhase2[3];
+    Texture2D runningPhase3[3];
+    float runningBgScrollX;
 } Background;
 
 void InitBackground(Background *bg);
 void UpdateBackground(Background *bg, float dt, GamePhase phase);
-void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY);
+void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight);
 void UnloadBackground(Background *bg);
 
