@@ -33,5 +33,6 @@ void UnlockStoryLevel(int levelId);
 int GetSelectedCharacterId(void);
 void SetSelectedCharacterId(int characterId);
 int GetSelectedClothingId(void);
+int GetSelectedWeaponId(void);
 
 #endif

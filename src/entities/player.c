@@ -8,6 +8,18 @@
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {
+    static const WeaponType menuWeaponTypes[] =
+    {
+        WEAPON_HAMMER,
+        WEAPON_BAT,
+        WEAPON_PISTOL
+    };
+    int selectedWeaponIndex = GetSelectedWeaponId() - 1;
+    if (selectedWeaponIndex < 0 || selectedWeaponIndex >= (int)(sizeof(menuWeaponTypes) / sizeof(menuWeaponTypes[0])))
+    {
+        selectedWeaponIndex = 0;
+    }
+
     LoadPlayerSprites(&player->sprites, GetSelectedCharacterId(), GetSelectedClothingId());
     player->position = initialPos;
     player->velocity = (Vector2) {0, 0};
@@ -17,7 +29,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->isBossFighting = true;
     player->facingRight = false;
     player->sprites.attack = (LayeredAnimation){0};
-    EquipWeapon(player, WEAPON_BAT);
+    EquipWeapon(player, menuWeaponTypes[selectedWeaponIndex]);
     player->weapon.cooldownTimer = player->weapon.cooldown;
     player->isJumping = false;
 }

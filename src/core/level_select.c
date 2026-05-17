@@ -27,6 +27,63 @@ static void DrawRatPreview(Animation *animation, Rectangle bounds, float widthRa
     DrawTexturePro(animation->sheet, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
 }
 
+static void DrawWeaponPreview(Texture2D texture, Rectangle bounds, int frameCount, int frameIndex)
+{
+    if (texture.id <= 0 || frameCount <= 0)
+    {
+        return;
+    }
+
+    if (frameIndex < 0)
+    {
+        frameIndex = 0;
+    }
+    if (frameIndex >= frameCount)
+    {
+        frameIndex = frameCount - 1;
+    }
+
+    float frameWidth = (float)texture.width / frameCount;
+    Rectangle source =
+    {
+        frameWidth * frameIndex,
+        0.0f,
+        frameWidth,
+        (float)texture.height
+    };
+    float maxWidth = bounds.width * 0.92f;
+    float maxHeight = bounds.height * 0.92f;
+    float scaleX = maxWidth / source.width;
+    float scaleY = maxHeight / source.height;
+    float scale = scaleX < scaleY ? scaleX : scaleY;
+    Rectangle dest =
+    {
+        bounds.x + (bounds.width - source.width * scale) * 0.5f,
+        bounds.y + (bounds.height - source.height * scale) * 0.5f,
+        source.width * scale,
+        source.height * scale
+    };
+
+    DrawTexturePro(texture, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
+}
+
+static const char *GetPlayerGunSpritePath(int characterId)
+{
+    static const char *gunSpritePaths[ITEMS_CHARACTER_SLOT_COUNT] =
+    {
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Arm_gun.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Arm_gun.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Arm_gun.png"
+    };
+
+    int index = characterId - 1;
+    if (index < 0 || index >= ITEMS_CHARACTER_SLOT_COUNT)
+    {
+        index = 0;
+    }
+    return gunSpritePaths[index];
+}
+
 static int selectedStoryLevelId = 1;
 static int maxUnlockedStoryLevelId = 1;
 static int selectedClothingId = 1;
@@ -35,6 +92,11 @@ static int selectedWeaponId = 1;
 int GetSelectedClothingId(void)
 {
     return selectedClothingId;
+}
+
+int GetSelectedWeaponId(void)
+{
+    return selectedWeaponId;
 }
 
 int GetSelectedStoryLevelId(void)
@@ -280,17 +342,27 @@ GameScreen RunLevelSelect()
 
 GameScreen RunItems()
 {
+    const char *weaponNames[ITEMS_EQUIPMENT_SLOT_COUNT] =
+    {
+        "Martelo",
+        "Espada",
+        "Arma"
+    };
     Rectangle characterSlots[ITEMS_CHARACTER_SLOT_COUNT];
     Rectangle clothingSlots[ITEMS_CLOTHING_SLOT_COUNT];
     Rectangle weaponSlots[ITEMS_EQUIPMENT_SLOT_COUNT];
     bool acceptClick = false;
     Animation idleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
     Animation clothedIdleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
+    Texture2D weaponTextures[ITEMS_CHARACTER_SLOT_COUNT][ITEMS_EQUIPMENT_SLOT_COUNT];
     for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
     {
         const PlayerSpriteSet *sprites = GetPlayerSpriteSet(i + 1);
         idleAnimations[i] = LoadAnimation(sprites->idle, 6, 0.10f);
         clothedIdleAnimations[i] = LoadAnimation(sprites->idleClothed, 6, 0.10f);
+        weaponTextures[i][0] = LoadTexture(sprites->attackHammer);
+        weaponTextures[i][1] = LoadTexture(sprites->attackSword);
+        weaponTextures[i][2] = LoadTexture(GetPlayerGunSpritePath(i + 1));
     }
 
     while (!WindowShouldClose())
@@ -301,7 +373,6 @@ GameScreen RunItems()
         int titleSize = currentHeight / 14;
         int sectionSize = currentHeight / 27;
         int slotLabelSize = currentHeight / 38;
-        int bodySize = currentHeight / 42;
         float frameMargin = currentWidth * 0.035f;
         Rectangle outerFrame =
         {
@@ -348,6 +419,10 @@ GameScreen RunItems()
                 {
                     UnloadAnimation(&idleAnimations[i]);
                     UnloadAnimation(&clothedIdleAnimations[i]);
+                    for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
+                    {
+                        UnloadTexture(weaponTextures[i][j]);
+                    }
                 }
                 return SCREEN_LEVEL_SELECT;
             }
@@ -359,6 +434,10 @@ GameScreen RunItems()
             {
                 UnloadAnimation(&idleAnimations[i]);
                 UnloadAnimation(&clothedIdleAnimations[i]);
+                for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
+                {
+                    UnloadTexture(weaponTextures[i][j]);
+                }
             }
             return SCREEN_LEVEL_SELECT;
         }
@@ -560,12 +639,22 @@ GameScreen RunItems()
                 }
                 DrawRectangleRec(weaponSlots[i], fill);
                 DrawRectangleLinesEx(weaponSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
+                int currentCharacterIndex = GetSelectedCharacterId() - 1;
+                int frameCount = i == 2 ? 1 : 5;
+                int frameIndex = i == 2 ? 0 : 2;
+                DrawWeaponPreview(weaponTextures[currentCharacterIndex][i], weaponSlots[i], frameCount, frameIndex);
+
+                int weaponNameSize = slotLabelSize;
+                while (weaponNameSize > 10 && MeasureText(weaponNames[i], weaponNameSize) > weaponSlots[i].width - 8.0f)
+                {
+                    weaponNameSize--;
+                }
                 DrawText(
-                    "arma",
-                    (int)(weaponSlots[i].x + (weaponSlots[i].width - MeasureText("arma", bodySize)) * 0.5f),
-                    (int)(weaponSlots[i].y + weaponSlots[i].height * 0.43f),
-                    bodySize,
-                    GRAY
+                    weaponNames[i],
+                    (int)(weaponSlots[i].x + (weaponSlots[i].width - MeasureText(weaponNames[i], weaponNameSize)) * 0.5f),
+                    (int)(weaponSlots[i].y + weaponSlots[i].height + 6.0f),
+                    weaponNameSize,
+                    DARKGRAY
                 );
             }
 
@@ -577,6 +666,10 @@ GameScreen RunItems()
     {
         UnloadAnimation(&idleAnimations[i]);
         UnloadAnimation(&clothedIdleAnimations[i]);
+        for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
+        {
+            UnloadTexture(weaponTextures[i][j]);
+        }
     }
     return SCREEN_EXIT;
 }

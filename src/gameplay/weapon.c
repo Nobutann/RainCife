@@ -3,7 +3,24 @@
 #include "entities/player.h"
 #include "graphics/sprites.h"
 #include "core/screens.h"
-#include <stdio.h>
+
+static const char *GetPlayerGunSpritePath(int characterId)
+{
+    static const char *gunSpritePaths[] =
+    {
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Arm_gun.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Arm_gun.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Arm_gun.png"
+    };
+    int count = (int)(sizeof(gunSpritePaths) / sizeof(gunSpritePaths[0]));
+    int index = characterId - 1;
+
+    if (index < 0 || index >= count)
+    {
+        index = 0;
+    }
+    return gunSpritePaths[index];
+}
 
 static void UseRunningAttackPose(Player *player)
 {
@@ -73,6 +90,22 @@ void UseHammer(Player *player)
 
 void UsePistol(Player *player)
 {
+    bool isIdle = (player->isBossFighting && player->velocity.x == 0);
+
+    if (isIdle)
+    {
+        player->sprites.attack.layers[0] = player->sprites.idleLegs.layers[0];
+        player->sprites.attack.layers[0].currentFrame = 0;
+        player->sprites.attack.layers[0].timer = 0.0f;
+        player->sprites.attack.layers[2] = player->sprites.idleHead.layers[0];
+        player->sprites.attack.layers[2].currentFrame = 0;
+        player->sprites.attack.layers[2].timer = 0.0f;
+    }
+    else
+    {
+        UseRunningAttackPose(player);
+    }
+
     player->currentAnim = &player->sprites.attack;
     player->sprites.attack.layers[1].currentFrame = 0;
     player->sprites.attack.layers[1].timer = 0.0f;
@@ -114,7 +147,7 @@ void EquipWeapon(Player *player, WeaponType type)
             break;
         case WEAPON_HAMMER:
             player->weapon.damage = 8.0f;
-            player->weapon.cooldown = 1.5f;
+            player->weapon.cooldown = 0.85f;
             player->weapon.breakPower = 3;
             player->weapon.attack = UseHammer;
             player->weapon.attackDuration = LoadAttackAnimation(
@@ -122,10 +155,21 @@ void EquipWeapon(Player *player, WeaponType type)
                 characterId,
                 clothed ? sprites->attackHammerClothed : sprites->attackHammer,
                 5,
-                0.15f
+                0.09f
             );
             break;
         case WEAPON_PISTOL:
+            player->weapon.damage = 3.0f;
+            player->weapon.cooldown = 0.45f;
+            player->weapon.breakPower = 1;
+            player->weapon.attack = UsePistol;
+            player->weapon.attackDuration = LoadAttackAnimation(
+                &player->sprites,
+                characterId,
+                GetPlayerGunSpritePath(characterId),
+                1,
+                0.12f
+            );
             break;
         default:
             break;
