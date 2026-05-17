@@ -16,6 +16,7 @@ typedef struct {
     Texture2D floor;
     Texture2D bossHairyLeg;
     Texture2D bossMidnightMan;
+    Texture2D bossShark;
     Animation water;
     Texture2D waterFrames[38];
     int waterFrameCount;
@@ -34,7 +35,8 @@ typedef struct {
 
 void InitBackground(Background *bg);
 void UpdateBackground(Background *bg, float dt, GamePhase phase);
-void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
+void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
+void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY);
 void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight);
 void UnloadBackground(Background *bg);
 

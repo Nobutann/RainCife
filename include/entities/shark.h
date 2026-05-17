@@ -41,11 +41,11 @@ typedef struct {
     int health;
     WaterBall balls[MAX_WATER_BALLS];
 
-    Texture2D texShoot;   // Shark_attack_bubble.png — spritesheet 3 frames
-    Texture2D texDash;      // Shark_dash.png       — prep e retorno (esquerda)
-    Texture2D texDashRight; // Shark_vermelho.png   — dash da esquerda para direita
-    Texture2D texJump;    // tubarao_flying-Sheet.png — spritesheet 12 frames
-    Texture2D texBubble;  // bubble.png — projétil
+    Texture2D texShoot;      // Shark_attack_bubble.png — spritesheet 3 frames
+    Texture2D texDashLeft;   // Shark_dash.png — static texture (prep e retorno esquerda)
+    Texture2D texDashRight;  // Angry_shark-sheet.png — spritesheet 4 frames (dash direita)
+    Texture2D texJump;       // tubarao_flying-Sheet.png — spritesheet 12 frames
+    Texture2D texBubble;     // bubble.png — projétil
 
     float animTimer;
     int animFrame;

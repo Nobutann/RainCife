@@ -56,8 +56,8 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     }
 
     shark->texShoot = LoadTexture("assets/sprites/Boss/Shark_attack_bubble.png");
-    shark->texDash = LoadTexture("assets/sprites/Boss/Shark_dash.png");
-    shark->texDashRight = LoadTexture("assets/sprites/Boss/Shark_vermelho.png");
+    shark->texDashLeft = LoadTexture("assets/sprites/Boss/Shark_dash.png");
+    shark->texDashRight = LoadTexture("assets/sprites/Boss/Angry_shark-sheet.png");
     shark->texJump = LoadTexture("assets/sprites/Boss/tubarao_flying-Sheet.png");
     shark->texBubble = LoadTexture("assets/sprites/Boss/bubble.png");
     shark->animTimer = 0.0f;
@@ -94,6 +94,12 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         if (shark->animTimer >= 0.08f) {
             shark->animTimer = 0.0f;
             shark->animFrame = (shark->animFrame + 1) % 12;
+        }
+    } else if (shark->state == SHARK_DASH_RIGHT) {
+        shark->animTimer += deltaTime;
+        if (shark->animTimer >= 0.06f) {
+            shark->animTimer = 0.0f;
+            shark->animFrame = (shark->animFrame + 1) % 4;
         }
     }
 
@@ -145,11 +151,13 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             if (shark->timer >= 1.0f) {
                 shark->state = SHARK_DASH_RIGHT;
                 shark->timer = 0.0f;
+                shark->animFrame = 0;
+                shark->animTimer = 0.0f;
             }
             break;
 
         case SHARK_DASH_RIGHT:
-            shark->rect.x += 2000.0f * deltaTime; 
+            shark->rect.x += 2000.0f * deltaTime;
             if (shark->rect.x > (float)screenWidth + 100.0f) {
                 shark->state = SHARK_DASH_LEFT;
                 shark->timer = 0.0f;
@@ -273,15 +281,15 @@ void DrawShark(Shark *shark) {
             break;
 
         case SHARK_PREP_LEFT:
-            DrawSharkTexture(shark->texDash, destDash, true);
+            DrawSharkTexture(shark->texDashLeft, destDash, true);
             break;
 
         case SHARK_DASH_RIGHT:
-            DrawSharkTexture(shark->texDashRight, destDash, false);
+            DrawSharkFrame(shark->texDashRight, shark->animFrame, 4, destDash, false);
             break;
 
         case SHARK_DASH_LEFT:
-            DrawSharkTexture(shark->texDash, destDash, true);
+            DrawSharkTexture(shark->texDashLeft, destDash, true);
             break;
 
         case SHARK_SHOOTING:
@@ -298,7 +306,7 @@ void DrawShark(Shark *shark) {
 
 void UnloadShark(Shark *shark) {
     UnloadTexture(shark->texShoot);
-    UnloadTexture(shark->texDash);
+    UnloadTexture(shark->texDashLeft);
     UnloadTexture(shark->texDashRight);
     UnloadTexture(shark->texJump);
     UnloadTexture(shark->texBubble);
