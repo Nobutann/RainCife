@@ -418,7 +418,7 @@ int main(void)
 
                     BeginDrawing();
                         ClearBackground(BLACK);
-                        DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
+                        DrawBackground(&bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
                         for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                         {
@@ -450,6 +450,8 @@ int main(void)
                                 DrawShark(&shark);
                             }
                         }
+
+                        DrawWater(&bg, currentWidth, currentHeight, groundY);
 
                         DrawDeathScreenOverlay(currentWidth, currentHeight, deathOptionRects, deathOptions, deathOptionCount, hoveringButton);
                     EndDrawing();
@@ -767,7 +769,7 @@ int main(void)
 
                 BeginDrawing();
                     ClearBackground(BLACK);
-                    DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
+                    DrawBackground(&bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
@@ -809,6 +811,7 @@ int main(void)
 
                     }
 
+                    DrawWater(&bg, currentWidth, currentHeight, groundY);
                     DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
                     DrawGameplayCursor(player.weapon.attacking);
                 EndDrawing();
