@@ -217,7 +217,7 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
     Texture2D wTex = bg->waterFrames[bg->waterCurrentFrame];
     if (wTex.id > 0)
     {
-        float waterY = groundY + (screenHeight * -0.2f);
+        float waterY = groundY + (screenHeight * -0.14f);
         float waterH = screenHeight - waterY;
         if (waterH > 0)
         {
