@@ -20,11 +20,10 @@ void InitBackground(Background *bg)
     bg->floor = LoadTexture("assets/sprites/background/Floor.png");
     bg->bossHairyLeg = LoadTexture("assets/sprites/fundo/Background_1Boss.png");
     bg->bossMidnightMan = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Homem_da_meia_noite_background.png");
-    bg->water = LoadAnimation("assets/sprites/background/Water_movement_blue-Sheet.png", 76, 1.0f);
     bg->waterFrameCount = 38;
     bg->waterCurrentFrame = 0;
     bg->waterFrameTimer = 0.0f;
-    bg->waterFrameTime = 0.05f;
+    bg->waterFrameTime = 0.01f;
     for (int i = 0; i < bg->waterFrameCount; i++)
     {
         char path[64];
@@ -50,6 +49,7 @@ void UpdateBackground(Background *bg, float dt, GamePhase phase)
     bg->time += dt;
 
     bg->waterFrameTimer += dt;
+    
     if (bg->waterFrameTimer >= bg->waterFrameTime)
     {
         bg->waterFrameTimer = 0.0f;
@@ -215,29 +215,41 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
     }
 
     Texture2D wTex = bg->waterFrames[bg->waterCurrentFrame];
+    int nextFrame = (bg->waterCurrentFrame + 1) % bg->waterFrameCount;
+    Texture2D wTexNext = bg->waterFrames[nextFrame];
+
     if (wTex.id > 0)
     {
-        float waterY = groundY + (screenHeight * -0.2f);
+        float waterY = groundY + (screenHeight * -0.14f);
         float waterH = screenHeight - waterY;
         if (waterH > 0)
         {
             Rectangle src = 
-            {
-                0,
-                0,
-                (float)wTex.width,
-                (float)wTex.height
+            { 
+                0, 
+                0, 
+                (float)wTex.width, 
+                (float)wTex.height 
             };
 
             Rectangle dest = 
-            {
-                0,
-                waterY,
-                (float)screenWidth,
-                waterH
+            { 
+                0, 
+                waterY, 
+                (float)screenWidth, 
+                waterH 
             };
 
-            DrawTexturePro(wTex, src, dest, (Vector2){0, 0}, 0.0f, WHITE);
+            float alpha = bg->waterFrameTimer / bg->waterFrameTime;
+
+            BeginBlendMode(BLEND_ALPHA);
+                DrawTexturePro(wTex, src, dest, (Vector2){0, 0}, 0.0f, WHITE);
+                if (wTexNext.id > 0)
+                {
+                    Color tint = {255, 255, 255, (unsigned char)(255 * alpha)};
+                    DrawTexturePro(wTexNext, src, dest, (Vector2){0, 0}, 0.0f, tint);
+                }
+            EndBlendMode();
         }
     }
 }
@@ -322,7 +334,6 @@ void UnloadBackground(Background *bg)
     UnloadTexture(bg->floor);
     UnloadTexture(bg->bossHairyLeg);
     UnloadTexture(bg->bossMidnightMan);
-    UnloadAnimation(&bg->water);
     for (int i = 0; i < bg->waterFrameCount; i++)
     {
         UnloadTexture(bg->waterFrames[i]);
