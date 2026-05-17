@@ -66,7 +66,7 @@ GameScreen RunStart()
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            const char* title = "RatTsunami";
+            const char* title = "RainCife";
             int titleSize = currentHeight / 10;
             DrawText(title, (currentWidth / 2) - (MeasureText(title, titleSize) / 2), currentHeight / 6, titleSize, DARKBLUE);
 

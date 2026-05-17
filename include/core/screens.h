@@ -22,7 +22,7 @@ GameScreen RunCharacterSelect();
 GameScreen RunLevelSelect();
 GameScreen RunItems();
 GameScreen RunInfiniteSoon();
-GameScreen RunOptions(Config *config);
+GameScreen RunOptions(Config *config, GameScreen returnScreen);
 GameScreen RunCredits();
 GameScreen RunGame(Config *config);
 

@@ -82,6 +82,10 @@ void EquipWeapon(Player *player, WeaponType type)
 {
     UnloadAttackAnimation(&player->sprites);
 
+    int characterId = GetSelectedCharacterId();
+    const PlayerSpriteSet *sprites = GetPlayerSpriteSet(characterId);
+    bool clothed = GetSelectedClothingId() == 2;
+
     player->weapon.type = type;
     player->weapon.cooldownTimer = 0.0f;
     player->weapon.hitConnected = false;
@@ -102,9 +106,8 @@ void EquipWeapon(Player *player, WeaponType type)
             player->weapon.attack = UseBat;
             player->weapon.attackDuration = LoadAttackAnimation(
                 &player->sprites,
-                GetSelectedClothingId() == 2
-                    ? "assets/sprites/Player/Spr_rat/Attack_sword_cesar-Sheet.png"
-                    : "assets/sprites/Player/attack/melee/Attack_sword-Sheet.png",
+                characterId,
+                clothed ? sprites->attackSwordClothed : sprites->attackSword,
                 5,
                 0.08f
             );
@@ -116,9 +119,8 @@ void EquipWeapon(Player *player, WeaponType type)
             player->weapon.attack = UseHammer;
             player->weapon.attackDuration = LoadAttackAnimation(
                 &player->sprites,
-                GetSelectedClothingId() == 2
-                    ? "assets/sprites/Player/Spr_rat/Attack_hammer_cesar-Sheet.png"
-                    : "assets/sprites/Player/attack/melee/Attack_hammer-Sheet.png",
+                characterId,
+                clothed ? sprites->attackHammerClothed : sprites->attackHammer,
                 5,
                 0.15f
             );

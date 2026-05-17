@@ -161,10 +161,11 @@ GameScreen RunLevelSelect()
     {
         "Play",
         "Itens",
-        "Opcoes",
+        "Opções",
         "Menu"
     };
     bool acceptClick = false;
+    bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
     Vector2 lastMousePosition = GetMousePosition();
 
     while (!WindowShouldClose())
@@ -184,7 +185,12 @@ GameScreen RunLevelSelect()
         BuildStageRects(stageRects, currentWidth, currentHeight);
         BuildOptionRects(optionRects, menuOptions, 4, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
 
-        if (IsKeyPressed(KEY_ESCAPE))
+        if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
+        {
+            acceptEscape = true;
+        }
+
+        if (acceptEscape && IsKeyPressed(KEY_ESCAPE))
         {
             return SCREEN_CHARACTER_SELECT;
         }
@@ -278,8 +284,14 @@ GameScreen RunItems()
     Rectangle clothingSlots[ITEMS_CLOTHING_SLOT_COUNT];
     Rectangle weaponSlots[ITEMS_EQUIPMENT_SLOT_COUNT];
     bool acceptClick = false;
-    Animation ratIdleAnimation = LoadAnimation("assets/sprites/Player/idle/Idle_complete-Sheet.png", 6, 0.10f);
-    Animation ratCesarIdleAnimation = LoadAnimation("assets/sprites/Player/idle/Idle_complete_cesar-Sheet.png", 6, 0.10f);
+    Animation idleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
+    Animation clothedIdleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
+    for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+    {
+        const PlayerSpriteSet *sprites = GetPlayerSpriteSet(i + 1);
+        idleAnimations[i] = LoadAnimation(sprites->idle, 6, 0.10f);
+        clothedIdleAnimations[i] = LoadAnimation(sprites->idleClothed, 6, 0.10f);
+    }
 
     while (!WindowShouldClose())
     {
@@ -321,24 +333,33 @@ GameScreen RunItems()
         float weaponSlotsWidth = equipmentSlotW * ITEMS_EQUIPMENT_SLOT_COUNT + equipmentSlotGap * (ITEMS_EQUIPMENT_SLOT_COUNT - 1);
         Rectangle backButton = { 28.0f, 26.0f, 70.0f, 54.0f };
         bool hoveringInteractive = false;
-        UpdateAnimation(&ratIdleAnimation, GetFrameTime());
-        UpdateAnimation(&ratCesarIdleAnimation, GetFrameTime());
+        for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+        {
+            UpdateAnimation(&idleAnimations[i], GetFrameTime());
+            UpdateAnimation(&clothedIdleAnimations[i], GetFrameTime());
+        }
 
         if (CheckCollisionPointRec(mouse, backButton))
         {
             hoveringInteractive = true;
             if (acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
-                UnloadAnimation(&ratIdleAnimation);
-                UnloadAnimation(&ratCesarIdleAnimation);
+                for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+                {
+                    UnloadAnimation(&idleAnimations[i]);
+                    UnloadAnimation(&clothedIdleAnimations[i]);
+                }
                 return SCREEN_LEVEL_SELECT;
             }
         }
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
-            UnloadAnimation(&ratIdleAnimation);
-            UnloadAnimation(&ratCesarIdleAnimation);
+            for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+            {
+                UnloadAnimation(&idleAnimations[i]);
+                UnloadAnimation(&clothedIdleAnimations[i]);
+            }
             return SCREEN_LEVEL_SELECT;
         }
 
@@ -352,7 +373,7 @@ GameScreen RunItems()
             characterSlots[i] = (Rectangle)
             {
                 rightPanel.x + (rightPanel.width - characterSlotsWidth) * 0.5f + i * (characterSlotW + characterSlotGap),
-                rightPanel.y + rightPanel.height * 0.16f,
+                rightPanel.y + rightPanel.height * 0.12f,
                 characterSlotW,
                 characterSlotW
             };
@@ -420,9 +441,7 @@ GameScreen RunItems()
                 DARKBLUE
             );
 
-            const char *previewLabel = GetSelectedCharacterId() == 1
-                ? "Rato"
-                : TextFormat("Personagem %d", GetSelectedCharacterId());
+            const char *previewLabel = GetPlayerCharacterName(GetSelectedCharacterId());
             int previewLabelWidth = MeasureText(previewLabel, sectionSize);
             DrawText(
                 previewLabel,
@@ -446,13 +465,11 @@ GameScreen RunItems()
                 stage.height * 0.10f,
                 BLACK
             );
-            if (GetSelectedCharacterId() == 1)
-            {
-                Animation *previewAnimation = selectedClothingId == 2
-                    ? &ratCesarIdleAnimation
-                    : &ratIdleAnimation;
-                DrawRatPreview(previewAnimation, stage, 1.18f, 1.18f, -0.10f);
-            }
+            int selectedCharacterIndex = GetSelectedCharacterId() - 1;
+            Animation *previewAnimation = selectedClothingId == 2
+                ? &clothedIdleAnimations[selectedCharacterIndex]
+                : &idleAnimations[selectedCharacterIndex];
+            DrawRatPreview(previewAnimation, stage, 1.18f, 1.18f, -0.10f);
 
             const char *charactersTitle = "Personagens";
             DrawText(
@@ -475,31 +492,21 @@ GameScreen RunItems()
                 DrawRectangleRec(characterSlots[i], fill);
                 DrawRectangleLinesEx(characterSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
 
-                if (i > 0)
+                DrawRatPreview(&idleAnimations[i], characterSlots[i], 1.08f, 1.00f, 0.02f);
+
+                const char *slotTitle = GetPlayerCharacterName(i + 1);
+                int slotTitleSize = slotLabelSize;
+                while (slotTitleSize > 10 && MeasureText(slotTitle, slotTitleSize) > characterSlots[i].width - 8.0f)
                 {
-                    const char *slotTitle = TextFormat("%d", i + 1);
-                    DrawText(
-                        slotTitle,
-                        (int)(characterSlots[i].x + (characterSlots[i].width - MeasureText(slotTitle, slotLabelSize + 8)) * 0.5f),
-                        (int)(characterSlots[i].y + characterSlots[i].height * 0.22f),
-                        slotLabelSize + 8,
-                        DARKBLUE
-                    );
+                    slotTitleSize--;
                 }
-                if (i == 0)
-                {
-                    DrawRatPreview(&ratIdleAnimation, characterSlots[i], 1.08f, 1.00f, 0.02f);
-                }
-                else
-                {
-                    DrawText(
-                        "agente",
-                        (int)(characterSlots[i].x + (characterSlots[i].width - MeasureText("agente", bodySize)) * 0.5f),
-                        (int)(characterSlots[i].y + characterSlots[i].height * 0.62f),
-                        bodySize,
-                        GRAY
-                    );
-                }
+                DrawText(
+                    slotTitle,
+                    (int)(characterSlots[i].x + (characterSlots[i].width - MeasureText(slotTitle, slotTitleSize)) * 0.5f),
+                    (int)(characterSlots[i].y + characterSlots[i].height + 6.0f),
+                    slotTitleSize,
+                    DARKGRAY
+                );
             }
 
             const char *clothingTitle = "Roupas";
@@ -531,13 +538,14 @@ GameScreen RunItems()
                 }
                 DrawRectangleRec(clothingSlots[i], fill);
                 DrawRectangleLinesEx(clothingSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
+                int currentCharacterIndex = GetSelectedCharacterId() - 1;
                 if (i == 0)
                 {
-                    DrawRatPreview(&ratIdleAnimation, clothingSlots[i], 0.96f, 0.96f, 0.00f);
+                    DrawRatPreview(&idleAnimations[currentCharacterIndex], clothingSlots[i], 0.96f, 0.96f, 0.00f);
                 }
                 else if (i == 1)
                 {
-                    DrawRatPreview(&ratCesarIdleAnimation, clothingSlots[i], 0.96f, 0.96f, 0.00f);
+                    DrawRatPreview(&clothedIdleAnimations[currentCharacterIndex], clothingSlots[i], 0.96f, 0.96f, 0.00f);
                 }
             }
 
@@ -565,7 +573,10 @@ GameScreen RunItems()
         EndDrawing();
     }
 
-    UnloadAnimation(&ratIdleAnimation);
-    UnloadAnimation(&ratCesarIdleAnimation);
+    for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+    {
+        UnloadAnimation(&idleAnimations[i]);
+        UnloadAnimation(&clothedIdleAnimations[i]);
+    }
     return SCREEN_EXIT;
 }
