@@ -73,9 +73,8 @@ void UseHammer(Player *player)
 
 void UsePistol(Player *player)
 {
-    player->currentAnim = &player->sprites.attack;
-    player->sprites.attack.layers[1].currentFrame = 0;
-    player->sprites.attack.layers[1].timer = 0.0f;
+    float knockback = player->speed * 0.4f;
+    player->velocity.x += player->facingRight ? knockback : -knockback;
 }
 
 void EquipWeapon(Player *player, WeaponType type)
@@ -124,6 +123,12 @@ void EquipWeapon(Player *player, WeaponType type)
             );
             break;
         case WEAPON_PISTOL:
+            player->weapon.damage = 15.0f;
+            player->weapon.cooldown = 0.3f;
+            player->weapon.breakPower = 0;
+            player->weapon.attackDuration = 0.15f;
+            player->weapon.attack = UsePistol;
+            LoadPistolAnimation(&player->sprites, GetSelectedClothingId());
             break;
         default:
             break;

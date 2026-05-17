@@ -35,6 +35,11 @@ typedef struct
     LayeredAnimation jumpUpLegs;
     LayeredAnimation jumpDownLegs;
     LayeredAnimation attack;
+    Texture2D armGun;
+    LayeredAnimation walkBackwardsGun;
+    LayeredAnimation jumpUpGun;
+    LayeredAnimation jumpDownGun;
+    LayeredAnimation idleGun;
 } PlayerSprites;
 
 typedef struct {
@@ -55,6 +60,7 @@ void UnloadLayeredAnimation(LayeredAnimation *layeredAnimation);
 void LoadPlayerSprites(PlayerSprites *playerSprites, int clothingId);
 void UnloadPlayerSprites(PlayerSprites *playerSprites);
 float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime);
+void LoadPistolAnimation(PlayerSprites *playerSprites, int clothingId);
 void UnloadAttackAnimation(PlayerSprites *playerSprites);
 void UpdateAnimation(Animation *animation, float dt);
 Rectangle GetAnimationFrameSource(const Animation *animation, bool flipX);

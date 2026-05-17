@@ -2,6 +2,7 @@
 #include "entities/player.h"
 #include "gameplay/weapon.h"
 #include "core/screens.h"
+#include <raymath.h>
 
 #define BOSS_INTRO_PLAYER_GAP 220.0f
 
@@ -13,10 +14,10 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->speed = speed;
     player->onGround = true;
     player->currentAnim = &player->sprites.walkFront;
-    player->isBossFighting = true;
+    player->isBossFighting = false;
     player->facingRight = false;
     player->sprites.attack = (LayeredAnimation){0};
-    EquipWeapon(player, WEAPON_BAT);
+    EquipWeapon(player, WEAPON_PISTOL);
     player->weapon.cooldownTimer = player->weapon.cooldown;
     player->isJumping = false;
 }
@@ -63,9 +64,13 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     {
         player->velocity.x = player->speed;
         player->facingRight = false;
-        if (player->onGround && !player->weapon.attacking)
+        if (player->onGround && !player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
         {
             player->currentAnim = &player->sprites.walkFront;
+        }
+        else if (player->weapon.type == WEAPON_PISTOL)
+        {
+            player->currentAnim = &player->sprites.attack;
         }
         else if (player->weapon.attacking)
         {
@@ -83,9 +88,13 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         if (player->isBossFighting)
         {
             player->facingRight = true;
-            if (player->onGround && !player->weapon.attacking)
+            if (player->onGround && !player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
             {
                 player->currentAnim = &player->sprites.walkFront;
+            }
+            else if (player->weapon.type == WEAPON_PISTOL)
+            {
+                player->currentAnim = &player->sprites.attack;
             }
             else if (player->weapon.attacking)
             {
@@ -99,9 +108,13 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         }
         else
         {
-            if (player->onGround && !player->weapon.attacking)
+            if (player->onGround && !player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
             {
                 player->currentAnim = &player->sprites.walkBackwards;
+            }
+            else if (player->weapon.type == WEAPON_PISTOL)
+            {
+                player->currentAnim = &player->sprites.walkBackwardsGun;
             }
         }
     }
@@ -110,16 +123,24 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         player->velocity.x = 0;
         if (player->isBossFighting)
         {
-            if (player->onGround && !player->weapon.attacking)
+            if (player->onGround && !player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
             {
                 player->currentAnim = &player->sprites.idle;
+            }
+            else if (player->weapon.type == WEAPON_PISTOL)
+            {
+                player->currentAnim = &player->sprites.attack;
             }
         }
         else
         {
-            if (player->onGround && !player->weapon.attacking)
+            if (player->onGround && !player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
             {
                 player->currentAnim = &player->sprites.walkFront;
+            }
+            else if (player->weapon.type == WEAPON_PISTOL)
+            {
+                player->currentAnim = &player->sprites.attack;
             }
         }
     }
@@ -130,7 +151,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         player->isJumping = true;
         player->onGround = false;
         player->jumpHoldTimer = 0.0f;
-        if (!player->weapon.attacking)
+        if (!player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
         {
             player->currentAnim = &player->sprites.jumpUp;
         }
@@ -223,13 +244,13 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
             player->velocity.y += GRAVITY * 2.0f * dt;
         }
         
-        if (player->velocity.y > 0 && !player->weapon.attacking)
+        if (player->velocity.y > 0 && !player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
         {
             player->currentAnim = &player->sprites.jumpDown;
         }
     }
 
-    if (player->weapon.attacking)
+    if (player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
     {
         player->weapon.attackTimer -= dt;
         if (player->weapon.attackTimer <= 0)
@@ -287,6 +308,58 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     if (player->weapon.cooldownTimer > 0)
     {
         player->weapon.cooldownTimer -= dt;
+    }
+
+    if (player->weapon.type == WEAPON_PISTOL)
+    {
+        Vector2 mousePos = GetMousePosition();
+        Rectangle hitbox = GetPlayerHitbox(player, scale);
+        player->armPivot = (Vector2)
+        {
+            hitbox.x + hitbox.width * (!player->onGround ? 0.05f : 0.5f),
+            hitbox.y + hitbox.height * (!player->onGround ? 0.01f : 0.3f)
+        };
+
+        float dx = mousePos.x - player->armPivot.x;
+        float dy = mousePos.y - player->armPivot.y;
+        player->armAngle = atan2f(dy, dx) * RAD2DEG;
+
+        if (player->facingRight)
+        {
+            player->armAngle = 180.0f - player->armAngle;
+            player->armAngle = Clamp(player->armAngle, 90.0f, 270.0f);
+        }
+        else
+        {
+            player->armAngle = Clamp(player->armAngle, -90.0f, 90.0f);
+        }
+
+        if (!player->onGround)
+        {
+            if (player->velocity.y <= 0)
+            {
+                player->currentAnim = &player->sprites.jumpUpGun;
+            }
+            else
+            {
+                player->currentAnim = &player->sprites.jumpDownGun;
+            }
+        }
+        else if (player->velocity.x != 0)
+        {
+            if (player->velocity.x < 0 && !player->isBossFighting)
+            {
+                player->currentAnim = &player->sprites.walkBackwardsGun;
+            }
+            else
+            {
+                player->currentAnim = &player->sprites.attack;
+            }
+        }
+        else
+        {
+            player->currentAnim = &player->sprites.attack;
+        }
     }
 
     UpdateLayeredAnimation(player->currentAnim, dt);
@@ -480,7 +553,31 @@ void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY
 }
 
 void DrawPlayer(Player *player, float scale)
-{   
+{
+    if (player->weapon.type == WEAPON_PISTOL && player->sprites.armGun.id > 0)
+    {
+        Texture2D arm = player->sprites.armGun;
+        float armScale = scale;
+        Rectangle src = 
+        {
+            !player->facingRight ? (float)arm.width : 0,
+            0,
+            !player->facingRight ? -(float)arm.width : (float)arm.width,
+            (float)arm.height
+        };
+
+        Rectangle dest = 
+        {
+            player->armPivot.x,
+            player->armPivot.y,
+            arm.width * armScale,
+            arm.height * armScale
+        };
+
+        Vector2 origin = {(arm.width - 113.0f) * armScale, 130.0f * armScale};
+        DrawTexturePro(arm, src, dest, origin, player->armAngle, WHITE);
+    }
+
     if (IsHammerAirAttack(player))
     {
         bool flipX = !player->facingRight;
