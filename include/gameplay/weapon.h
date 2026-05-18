@@ -2,6 +2,7 @@
 #define WEAPON_H
 
 #include "entities/enemy.h"
+#include "gameplay/projectile.h"
 
 struct Player;
 typedef struct Player Player;
@@ -33,5 +34,7 @@ void UsePistol(struct Player *player);
 void EquipWeapon(struct Player *player, WeaponType type);
 void UseWeapon(struct Player *player);
 bool CanWeaponBreakEnemy(WeaponType weaponType, EnemyType enemyType);
+void SetProjectileSystem(ProjectileSystem *ps);
+void SpawnPistolProjectile(Player *player);
 
 #endif

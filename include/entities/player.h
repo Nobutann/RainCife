@@ -27,6 +27,8 @@ typedef struct Player
     Weapon weapon;
     bool isJumping;
     float jumpHoldTimer;
+    float armAngle;
+    Vector2 armPivot;
 } Player;
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed);
