@@ -3,6 +3,98 @@
 
 #define FRAME_TIME 0.08f
 
+static const PlayerSpriteSet PLAYER_SPRITE_SETS[] =
+{
+    {
+        "Rato",
+        "assets/sprites/Player/Spr_Mouse/idle/Mouse_Idle_complete-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/idle/Mouse_Idle_complete_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/walkFront/Mouse_Running_legs_forward-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/walkFront/Mouse_Running_body_foward-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_body_foward_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/Mouse_Head_running-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/walkBack/Mouse_Running_legs_backwards-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/walkBack/Mouse_Running_body_backward.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_body_backward_cesar.png",
+        "assets/sprites/Player/Spr_Mouse/jump/Mouse_Jump_up.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Jump_up_cesar.png",
+        "assets/sprites/Player/Spr_Mouse/jump/Mouse_Jump_down.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Jump_down_cesar.png",
+        "assets/sprites/Player/Spr_Mouse/idle/Mouse_Idle_legs_attack.png",
+        "assets/sprites/Player/Spr_Mouse/idle/Mouse_Idle_head_attack.png",
+        "assets/sprites/Player/Spr_Mouse/attack/Mouse_Legs_jump_up.png",
+        "assets/sprites/Player/Spr_Mouse/attack/Mouse_Legs_jump_down.png",
+        "assets/sprites/Player/Spr_Mouse/attack/melee/Mouse_Attack_sword-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Attack_sword_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/attack/melee/Mouse_Attack_hammer-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Attack_hammer_cesar-Sheet.png"
+    },
+    {
+        "Capivara",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Idle_complete-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Idle_complete_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_legs_forward-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_body_foward-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_body_foward_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Head_running-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_legs_backwards-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_body_backward.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_body_backward_cesar.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_up.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_up_cesar.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_down.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_down_cesar.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Idle_legs_attack.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Idle_head_attack.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Leg_jump_up.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Leg_jump_down.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Attack_sword-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Attack_sword_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Attack_hammer-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Attack_hammer_cesar-Sheet.png"
+    },
+    {
+        "Guaiamum",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Idle_complete-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Idle_complete_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_legs_forward-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_body_foward-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_body_foward_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Head_running-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_legs_backwards-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_body_backward.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_body_backward_cesar.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_up.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_up_cesar.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_down.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_down_cesar.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Idle_legs_attack.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Idle_head_attack.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Leg_jump_up.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Leg_jump_down.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_sword-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_sword_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_hammer-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_hammer_cesar-Sheet.png"
+    }
+};
+
+const PlayerSpriteSet *GetPlayerSpriteSet(int characterId)
+{
+    int index = characterId - 1;
+    int count = (int)(sizeof(PLAYER_SPRITE_SETS) / sizeof(PLAYER_SPRITE_SETS[0]));
+    if (index < 0 || index >= count)
+    {
+        index = 0;
+    }
+    return &PLAYER_SPRITE_SETS[index];
+}
+
+const char *GetPlayerCharacterName(int characterId)
+{
+    return GetPlayerSpriteSet(characterId)->name;
+}
+
 Animation LoadAnimation(const char* path, int frameCount, float frameTime)
 {
     Animation animation = {0};
@@ -29,7 +121,10 @@ void UpdateLayeredAnimation(LayeredAnimation *layredAnimation, float dt)
 
 void DrawLayeredAnimation(LayeredAnimation *layeredAnimation, Vector2 position, float scale, bool flipX, Color tint)
 {
-    float refWidth = layeredAnimation->layers[0].frameWidth * scale;
+    float refFrameWidth = layeredAnimation->referenceFrameWidth > 0.0f
+        ? layeredAnimation->referenceFrameWidth
+        : (float)layeredAnimation->layers[0].frameWidth;
+    float refWidth = refFrameWidth * scale;
 
     for (int i = 0; i < layeredAnimation->layerCount; i++)
     {
@@ -52,37 +147,38 @@ void UnloadLayeredAnimation(LayeredAnimation *layeredAnimation)
     }
 }
 
-void LoadPlayerSprites(PlayerSprites *playerSprites, int clothingId)
+void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothingId)
 {
     bool clothed = clothingId == 2;
+    const PlayerSpriteSet *sprites = GetPlayerSpriteSet(characterId);
 
     playerSprites->walkFront.layerCount = 3;
-    playerSprites->walkFront.layers[0] = LoadAnimation("assets/sprites/Player/walkFront/Running_legs_forward-Sheet.png", 8, FRAME_TIME);
+    playerSprites->walkFront.layers[0] = LoadAnimation(sprites->walkFrontLegs, 8, FRAME_TIME);
     playerSprites->walkFront.layers[1] = LoadAnimation(
         clothed
-            ? "assets/sprites/Player/Spr_rat/Running_body_foward_cesar-Sheet.png"
-            : "assets/sprites/Player/walkFront/Running_body_foward-Sheet.png",
+            ? sprites->walkFrontBodyClothed
+            : sprites->walkFrontBody,
         8,
         FRAME_TIME
     );
-    playerSprites->walkFront.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
+    playerSprites->walkFront.layers[2] = LoadAnimation(sprites->headRunning, 8, FRAME_TIME);
 
     playerSprites->walkBackwards.layerCount = 3;
-    playerSprites->walkBackwards.layers[0] = LoadAnimation("assets/sprites/Player/walkBack/Running_legs_backwards-Sheet.png", 8, FRAME_TIME);
+    playerSprites->walkBackwards.layers[0] = LoadAnimation(sprites->walkBackLegs, 8, FRAME_TIME);
     playerSprites->walkBackwards.layers[1] = LoadAnimation(
         clothed
-            ? "assets/sprites/Player/Spr_rat/Running_body_backward_cesar.png"
-            : "assets/sprites/Player/walkBack/Running_body_backward.png",
+            ? sprites->walkBackBodyClothed
+            : sprites->walkBackBody,
         1,
         FRAME_TIME
     );
-    playerSprites->walkBackwards.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
+    playerSprites->walkBackwards.layers[2] = LoadAnimation(sprites->headRunning, 8, FRAME_TIME);
 
     playerSprites->jumpUp.layerCount = 1;
     playerSprites->jumpUp.layers[0] = LoadAnimation(
         clothed
-            ? "assets/sprites/Player/Spr_rat/Jump_up_cesar.png"
-            : "assets/sprites/Player/jump/Jump_up.png",
+            ? sprites->jumpUpClothed
+            : sprites->jumpUp,
         1,
         FRAME_TIME
     );
@@ -90,8 +186,8 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int clothingId)
     playerSprites->jumpDown.layerCount = 1;
     playerSprites->jumpDown.layers[0] = LoadAnimation(
         clothed
-            ? "assets/sprites/Player/Spr_rat/Jump_down_cesar.png"
-            : "assets/sprites/Player/jump/Jump_down.png",
+            ? sprites->jumpDownClothed
+            : sprites->jumpDown,
         1,
         FRAME_TIME
     );
@@ -99,20 +195,20 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int clothingId)
     playerSprites->idle.layerCount = 1;
     playerSprites->idle.layers[0] = LoadAnimation(
         clothed
-            ? "assets/sprites/Player/idle/Idle_complete_cesar-Sheet.png"
-            : "assets/sprites/Player/idle/Idle_complete-Sheet.png",
+            ? sprites->idleClothed
+            : sprites->idle,
         6,
         FRAME_TIME
     );
 
     playerSprites->idleLegs.layerCount = 1;
-    playerSprites->idleLegs.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_legs_attack.png", 1, FRAME_TIME);
+    playerSprites->idleLegs.layers[0] = LoadAnimation(sprites->idleLegsAttack, 1, FRAME_TIME);
 
     playerSprites->idleHead.layerCount = 1;
-    playerSprites->idleHead.layers[0] = LoadAnimation("assets/sprites/Player/idle/Idle_head_attack.png", 1, FRAME_TIME);
+    playerSprites->idleHead.layers[0] = LoadAnimation(sprites->idleHeadAttack, 1, FRAME_TIME);
 
     playerSprites->jumpUpLegs.layerCount = 1;
-    playerSprites->jumpUpLegs.layers[0] = LoadAnimation("assets/sprites/Player/attack/Legs_jump_up.png", 1, FRAME_TIME);
+    playerSprites->jumpUpLegs.layers[0] = LoadAnimation(sprites->jumpUpLegs, 1, FRAME_TIME);
 
     playerSprites->jumpDownLegs.layerCount = 1;
     playerSprites->jumpDownLegs.layers[0] = LoadAnimation("assets/sprites/Player/attack/Legs_jump_down.png", 1, FRAME_TIME);
@@ -132,14 +228,17 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int clothingId)
 
     playerSprites->idleGun.layerCount = 1;
     playerSprites->idleGun.layers[0] = LoadAnimation("assets/sprites/Player/Spr_rat/Idle_body_gun.png", 1, FRAME_TIME);
+    playerSprites->jumpDownLegs.layers[0] = LoadAnimation(sprites->jumpDownLegs, 1, FRAME_TIME);
 }
 
-float LoadAttackAnimation(PlayerSprites *playerSprites, const char *path, int frameCount, float frameTime)
+float LoadAttackAnimation(PlayerSprites *playerSprites, int characterId, const char *path, int frameCount, float frameTime)
 {
+    const PlayerSpriteSet *sprites = GetPlayerSpriteSet(characterId);
+
     playerSprites->attack.layerCount = 3;
-    playerSprites->attack.layers[0] = LoadAnimation("assets/sprites/Player/walkFront/Running_legs_forward-Sheet.png", 8, frameTime);
+    playerSprites->attack.layers[0] = LoadAnimation(sprites->walkFrontLegs, 8, frameTime);
     playerSprites->attack.layers[1] = LoadAnimation(path, frameCount, frameTime);
-    playerSprites->attack.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, frameTime);
+    playerSprites->attack.layers[2] = LoadAnimation(sprites->headRunning, 8, frameTime);
     return frameCount * frameTime;
 }
 

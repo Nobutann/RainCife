@@ -1,5 +1,6 @@
 #include <raylib.h>
 #include <stddef.h>
+#include <stdio.h>
 #include "core/screens.h"
 #include "core/config_manager.h"
 #include "entities/player.h"
@@ -16,6 +17,9 @@
 #define MAX_ACTIVE_ENEMIES 12
 #define LEVEL6_INTRO_DURATION 2.5f
 #define HAIRY_LEG_DEATH_ADVANCE_DELAY 1.0f
+#define INFINITE_METERS_PER_SECOND (5000.0f / 60.0f)
+#define INFINITE_SPEED_STEP_METERS 5000.0f
+#define INFINITE_SPEED_MULTIPLIER_STEP 1.05f
 
 static void StartLevel(
     Level **currentLevel,
@@ -184,7 +188,7 @@ static void DrawDeathScreenOverlay(int currentWidth, int currentHeight, Rectangl
 {
     DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.78f));
 
-    const char *title = "Voce morreu";
+    const char *title = "Você morreu";
     int titleSize = currentHeight / 11;
     int subtitleSize = currentHeight / 28;
     const char *subtitle = "Escolha como continuar";
@@ -216,6 +220,159 @@ static void DrawDeathScreenOverlay(int currentWidth, int currentHeight, Rectangl
     DrawMenuCursor(hoveringButton);
 }
 
+static void DrawPauseScreenOverlay(int currentWidth, int currentHeight, Rectangle optionRects[], const char **options, int optionCount, bool hoveringButton)
+{
+    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.62f));
+
+    const char *title = "Pausado";
+    int titleSize = currentHeight / 11;
+    int subtitleSize = currentHeight / 31;
+    const char *subtitle = "Aperte ESC ou P para continuar";
+
+    DrawText(
+        title,
+        (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
+        currentHeight / 4,
+        titleSize,
+        RAYWHITE
+    );
+
+    DrawText(
+        subtitle,
+        (currentWidth / 2) - (MeasureText(subtitle, subtitleSize) / 2),
+        currentHeight / 4 + titleSize + 12,
+        subtitleSize,
+        LIGHTGRAY
+    );
+
+    Vector2 mouse = GetMousePosition();
+    for (int i = 0; i < optionCount; i++)
+    {
+        bool hover = CheckCollisionPointRec(mouse, optionRects[i]);
+        Color color = hover ? YELLOW : RAYWHITE;
+        DrawText(options[i], optionRects[i].x, optionRects[i].y, currentHeight / 20, color);
+    }
+
+    DrawMenuCursor(hoveringButton);
+}
+
+static void DrawGameplayScene(
+    Background *bg,
+    Level *currentLevel,
+    GamePhase phase,
+    float level6IntroProgress,
+    int currentWidth,
+    int currentHeight,
+    float groundY,
+    Enemy enemies[],
+    EnemyAssets *enemyAssets,
+    Player *player,
+    float playerScale,
+    HairyLeg *pernaCabeluda,
+    float bossScale,
+    Shark *shark,
+    MidnightMan *midnightMan,
+    float barValue,
+    bool showProgressBar
+)
+{
+    ClearBackground(BLACK);
+    DrawBackground(bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
+
+    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+    {
+        if (enemies[i].active)
+        {
+            DrawEnemy(&enemies[i], enemyAssets);
+        }
+    }
+
+    if (phase == PHASE_BOSS && currentLevel->bossId == 1)
+    {
+        DrawHairyLegShadowWarning(pernaCabeluda, bossScale);
+    }
+
+    if (!(currentLevel->id == 6 && level6IntroProgress < 1.0f))
+    {
+        DrawPlayer(player, playerScale);
+    }
+
+    if (phase == PHASE_BOSS)
+    {
+        if (currentLevel->bossId == 1)
+        {
+            DrawHairyLeg(pernaCabeluda, bossScale);
+        }
+
+        if (currentLevel->bossId == 2)
+        {
+            DrawShark(shark);
+        }
+
+        if (currentLevel->bossId == 3)
+        {
+            DrawMidnightMan(midnightMan);
+        }
+    }
+
+    DrawWater(bg, currentWidth, currentHeight, groundY);
+    if (showProgressBar)
+    {
+        DrawProgressBar(bg, barValue, currentWidth, currentHeight);
+    }
+}
+
+static void DrawInfiniteMetersCounter(float meters, int currentWidth, int currentHeight)
+{
+    char text[32];
+    snprintf(text, sizeof(text), "%.0fm", meters);
+
+    int fontSize = currentHeight / 18;
+    int paddingX = currentWidth / 60;
+    int paddingY = currentHeight / 80;
+    int textW = MeasureText(text, fontSize);
+    int boxW = textW + paddingX * 2;
+    int boxH = fontSize + paddingY * 2;
+    int boxX = (currentWidth - boxW) / 2;
+    int boxY = currentHeight * 0.03f;
+
+    DrawRectangleRounded((Rectangle){boxX, boxY, boxW, boxH}, 0.18f, 8, Fade(BLACK, 0.48f));
+    DrawRectangleRoundedLines((Rectangle){boxX, boxY, boxW, boxH}, 0.18f, 8, WHITE);
+    DrawText(text, boxX + paddingX, boxY + paddingY, fontSize, RAYWHITE);
+}
+
+static int GetInfiniteEnemyBaseSpeed(float gameSpeedMultiplier)
+{
+    float bonus = 15.0f * (gameSpeedMultiplier - 1.0f);
+    if (bonus < 0.0f)
+    {
+        bonus = 0.0f;
+    }
+    return (int)(bonus + 0.5f);
+}
+
+static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float progressTimer, HairyLeg *pernaCabeluda, Shark *shark)
+{
+    float barValue = 1.0f;
+    if (phase == PHASE_RUNNING && currentLevel->duration > 0.0f)
+    {
+        barValue = progressTimer / currentLevel->duration;
+    }
+    else if (phase == PHASE_BOSS)
+    {
+        if (currentLevel->bossId == 1)
+        {
+            barValue = (float)pernaCabeluda->health / 100.0f;
+        }
+        else if (currentLevel->bossId == 2)
+        {
+            barValue = (float)shark->health / 100.0f;
+        }
+    }
+
+    return barValue;
+}
+
 int main(void)
 {
     Config config = CarregarConfig();
@@ -231,6 +388,7 @@ int main(void)
     SetExitKey(KEY_DELETE);
 
     GameScreen currentScreen = SCREEN_START;
+    GameScreen optionsReturnScreen = SCREEN_START;
 
     while (currentScreen != SCREEN_EXIT && !WindowShouldClose())
     {
@@ -244,11 +402,16 @@ int main(void)
 
         if (currentScreen == SCREEN_START)
         {
-            currentScreen = RunStart();
+            GameScreen nextScreen = RunStart();
+            if (nextScreen == SCREEN_OPTIONS)
+            {
+                optionsReturnScreen = SCREEN_START;
+            }
+            currentScreen = nextScreen;
         }
         else if (currentScreen == SCREEN_OPTIONS)
         {
-            currentScreen = RunOptions(&config);
+            currentScreen = RunOptions(&config, optionsReturnScreen);
         }
         else if (currentScreen == SCREEN_CHARACTER_SELECT)
         {
@@ -256,7 +419,21 @@ int main(void)
         }
         else if (currentScreen == SCREEN_LEVEL_SELECT)
         {
-            currentScreen = RunLevelSelect();
+            GameScreen nextScreen = RunLevelSelect();
+            if (nextScreen == SCREEN_OPTIONS)
+            {
+                optionsReturnScreen = SCREEN_LEVEL_SELECT;
+            }
+            currentScreen = nextScreen;
+        }
+        else if (currentScreen == SCREEN_INFINITE_MENU)
+        {
+            GameScreen nextScreen = RunInfiniteMenu();
+            if (nextScreen == SCREEN_OPTIONS)
+            {
+                optionsReturnScreen = SCREEN_INFINITE_MENU;
+            }
+            currentScreen = nextScreen;
         }
         else if (currentScreen == SCREEN_ITEMS)
         {
@@ -270,8 +447,9 @@ int main(void)
         {
             currentScreen = RunCredits();
         }
-        else if (currentScreen == SCREEN_GAME)
+        else if (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME)
         {
+            bool infiniteMode = currentScreen == SCREEN_INFINITE_GAME;
             Background bg;
             InitBackground(&bg);
 
@@ -297,8 +475,8 @@ int main(void)
             MidnightMan midnightMan;
             InitMidnightMan(&midnightMan, initW, initH, initGroundY);
 
-            Level *levels = InitGameLevels();
-            Level *currentLevel = FindLevelById(levels, GetSelectedStoryLevelId());
+            Level *levels = infiniteMode ? InitInfiniteLevels() : InitGameLevels();
+            Level *currentLevel = infiniteMode ? levels : FindLevelById(levels, GetSelectedStoryLevelId());
 
             Enemy enemies[MAX_ACTIVE_ENEMIES] = {0};
             EnemyAssets enemyAssets = {0};
@@ -332,13 +510,17 @@ int main(void)
             // const float spawnInterval = 1.5f;
             float safePosteFollowUpTimer = -1.0f;
             bool deathScreenActive = false;
+            bool gamePaused = false;
             GamePhase retryPhase = PHASE_RUNNING;
+            float infiniteMeters = 0.0f;
+            float infiniteNextSpeedStepMeters = INFINITE_SPEED_STEP_METERS;
+            float infiniteSpeedMultiplier = 1.0f;
 
-            while (!WindowShouldClose() && currentScreen == SCREEN_GAME)
+            while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
-                if (IsKeyPressed(KEY_ESCAPE))
+                if (!deathScreenActive && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)))
                 {
-                    currentScreen = SCREEN_START;
+                    gamePaused = !gamePaused;
                 }
 
                 float dt = GetFrameTime();
@@ -354,14 +536,64 @@ int main(void)
 
                 if (currentLevel->id == 6)
                 {
-                    if (level6IntroActive)
+                    level6IntroProgress = level6IntroTimer / LEVEL6_INTRO_DURATION;
+                }
+
+                if (gamePaused)
+                {
+                    const char *pauseOptions[] =
                     {
-                        level6IntroTimer += dt;
-                        if (level6IntroTimer >= LEVEL6_INTRO_DURATION)
+                        "Continuar",
+                        "Menu"
+                    };
+                    int pauseOptionCount = sizeof(pauseOptions) / sizeof(pauseOptions[0]);
+                    int pauseFontSize = currentHeight / 20;
+                    int pauseSpacing = pauseFontSize + 22;
+                    int pauseStartY = currentHeight / 2;
+                    Rectangle pauseOptionRects[pauseOptionCount];
+                    BuildOptionRects(pauseOptionRects, pauseOptions, pauseOptionCount, pauseFontSize, currentWidth / 2, pauseStartY, pauseSpacing);
+
+                    Vector2 mouse = GetMousePosition();
+                    bool hoveringButton = false;
+                    for (int i = 0; i < pauseOptionCount; i++)
+                    {
+                        if (CheckCollisionPointRec(mouse, pauseOptionRects[i]))
                         {
-                            level6IntroTimer = LEVEL6_INTRO_DURATION;
-                            level6IntroActive = false;
+                            hoveringButton = true;
+                            break;
                         }
+                    }
+
+                    int clickedPauseOption = GetClickedOption(pauseOptionRects, pauseOptionCount);
+                    if (clickedPauseOption == 0)
+                    {
+                        gamePaused = false;
+                    }
+                    else if (clickedPauseOption == 1)
+                    {
+                        currentScreen = SCREEN_START;
+                    }
+
+                    float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
+
+                    BeginDrawing();
+                        DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
+                        if (infiniteMode)
+                        {
+                            DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
+                        }
+                        DrawPauseScreenOverlay(currentWidth, currentHeight, pauseOptionRects, pauseOptions, pauseOptionCount, hoveringButton);
+                    EndDrawing();
+                    continue;
+                }
+
+                if (currentLevel->id == 6 && level6IntroActive)
+                {
+                    level6IntroTimer += dt;
+                    if (level6IntroTimer >= LEVEL6_INTRO_DURATION)
+                    {
+                        level6IntroTimer = LEVEL6_INTRO_DURATION;
+                        level6IntroActive = false;
                     }
                     level6IntroProgress = level6IntroTimer / LEVEL6_INTRO_DURATION;
                 }
@@ -394,24 +626,44 @@ int main(void)
                     int clickedDeathOption = GetClickedOption(deathOptionRects, deathOptionCount);
                     if (clickedDeathOption == 0)
                     {
-                        RestartCurrentEncounter(
-                            currentLevel,
-                            retryPhase,
-                            &phase,
-                            &progressTimer,
-                            &autoSpawn,
-                            &spawnTimer,
-                            enemies,
-                            &player,
-                            &pernaCabeluda,
-                            &shark,
-                            currentWidth,
-                            currentHeight,
-                            groundY,
-                            bossScale,
-                            playerStandingY,
-                            playerScale
-                        );
+                        if (infiniteMode)
+                        {
+                            currentLevel = levels;
+                            phase = PHASE_RUNNING;
+                            progressTimer = 0.0f;
+                            autoSpawn = true;
+                            spawnTimer = 0.0f;
+                            infiniteMeters = 0.0f;
+                            infiniteNextSpeedStepMeters = INFINITE_SPEED_STEP_METERS;
+                            infiniteSpeedMultiplier = 1.0f;
+                            for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                            {
+                                enemies[i].active = false;
+                                enemies[i].dying = false;
+                            }
+                            ResetPlayerForRunningRetry(&player, playerStandingY, playerScale);
+                        }
+                        else
+                        {
+                            RestartCurrentEncounter(
+                                currentLevel,
+                                retryPhase,
+                                &phase,
+                                &progressTimer,
+                                &autoSpawn,
+                                &spawnTimer,
+                                enemies,
+                                &player,
+                                &pernaCabeluda,
+                                &shark,
+                                currentWidth,
+                                currentHeight,
+                                groundY,
+                                bossScale,
+                                playerStandingY,
+                                playerScale
+                            );
+                        }
                         safePosteFollowUpTimer = -1.0f;
                         deathScreenActive = false;
                     }
@@ -422,7 +674,7 @@ int main(void)
 
                     BeginDrawing();
                         ClearBackground(BLACK);
-                        DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
+                        DrawBackground(&bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
                         for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                         {
@@ -455,16 +707,33 @@ int main(void)
                             }
                         }
 
+                        DrawWater(&bg, currentWidth, currentHeight, groundY);
+
                         DrawDeathScreenOverlay(currentWidth, currentHeight, deathOptionRects, deathOptions, deathOptionCount, hoveringButton);
                     EndDrawing();
                     continue;
                 }
 
+                int infiniteEnemyBaseSpeed = infiniteMode ? GetInfiniteEnemyBaseSpeed(infiniteSpeedMultiplier) : 0;
+
                 if (phase == PHASE_RUNNING)
                 {
                     progressTimer += dt;
 
-                    if (progressTimer >= currentLevel->duration)
+                    if (infiniteMode)
+                    {
+                        infiniteMeters += INFINITE_METERS_PER_SECOND * infiniteSpeedMultiplier * dt;
+                        while (infiniteMeters >= infiniteNextSpeedStepMeters)
+                        {
+                            infiniteSpeedMultiplier *= INFINITE_SPEED_MULTIPLIER_STEP;
+                            infiniteNextSpeedStepMeters += INFINITE_SPEED_STEP_METERS;
+                            if (currentLevel->next != NULL)
+                            {
+                                currentLevel = currentLevel->next;
+                            }
+                        }
+                    }
+                    else if (progressTimer >= currentLevel->duration)
                     {
                         EnterBossPhase(
                             currentLevel,
@@ -510,7 +779,14 @@ int main(void)
                         {
                             if (!enemies[i].active)
                             {
-                                InitEnemy(&enemies[i], chosen, currentWidth, currentHeight, 0);
+                                if (infiniteMode)
+                                {
+                                    InitEnemyTuned(&enemies[i], chosen, currentWidth, currentHeight, infiniteEnemyBaseSpeed, 0.55, -30.0f);
+                                }
+                                else
+                                {
+                                    InitEnemy(&enemies[i], chosen, currentWidth, currentHeight, infiniteEnemyBaseSpeed);
+                                }
                                 if (chosen == ENEMY_SAFE_POSTE)
                                 {
                                     safePosteFollowUpTimer = 0.5f;
@@ -539,7 +815,14 @@ int main(void)
                             {
                                 if (!enemies[i].active)
                                 {
-                                    InitEnemy(&enemies[i], followUp, currentWidth, currentHeight, 0);
+                                    if (infiniteMode)
+                                    {
+                                        InitEnemyTuned(&enemies[i], followUp, currentWidth, currentHeight, infiniteEnemyBaseSpeed, 0.55, -30.0f);
+                                    }
+                                    else
+                                    {
+                                        InitEnemy(&enemies[i], followUp, currentWidth, currentHeight, infiniteEnemyBaseSpeed);
+                                    }
                                     break;
                                 }
                             }
@@ -553,7 +836,7 @@ int main(void)
 
                 for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                 {
-                    UpdateEnemy(&enemies[i], currentWidth, currentHeight, 0, playerHitbox);
+                    UpdateEnemy(&enemies[i], currentWidth, currentHeight, infiniteEnemyBaseSpeed, playerHitbox);
                     if (enemies[i].active && enemies[i].type != ENEMY_SAFE_POSTE)
                     {
                         if (CheckCollisionRecs(playerHitbox, GetEnemyHitbox(&enemies[i])))
@@ -589,13 +872,13 @@ int main(void)
                     }
                 }
 
-                UpdateBackground(&bg, dt, phase);
+                UpdateBackground(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, phase);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
 
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 
-                if (IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
+                if (!infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
                     EnterBossPhase(
                         currentLevel,
                         &phase,
@@ -618,7 +901,7 @@ int main(void)
                         InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
                     }
                 }
-                else if (IsKeyPressed(KEY_RIGHT) && phase == PHASE_BOSS && currentLevel->next) {
+                else if (!infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_BOSS && currentLevel->next) {
                     UnlockStoryLevel(currentLevel->next->id);
                     StartLevel(
                         &currentLevel,
@@ -645,7 +928,7 @@ int main(void)
                     level6IntroActive = (currentLevel->id == 6);
                     level6IntroTimer = 0.0f;
                 }
-                if (IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
+                if (!infiniteMode && IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
                     StartLevel(
                         &currentLevel,
                         currentLevel->prev,
@@ -754,41 +1037,13 @@ int main(void)
 
                 }
 
-                float barValue = 1.0f;
-                if (phase == PHASE_RUNNING && currentLevel->duration > 0.0f)
-                {
-                    barValue = progressTimer / currentLevel->duration;
-                }
-                else if (phase == PHASE_BOSS)
-                {
-                    if (currentLevel->bossId == 1)
-                    {
-                        barValue = (float)pernaCabeluda.health / 100.0f;
-                    }
-                    else if (currentLevel->bossId == 2)
-                    {
-                        barValue = (float)shark.health / 100.0f;
-                    }
-                }
+                float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
 
                 BeginDrawing();
-                    ClearBackground(BLACK);
-                    DrawBackground(&bg, currentLevel->id, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
-
-                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                    DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
+                    if (infiniteMode)
                     {
-                        if (enemies[i].active)
-                        {
-                            DrawEnemy(&enemies[i], &enemyAssets);
-                        }
-                    }
-
-                    if (phase == PHASE_BOSS)
-                    {
-                        if (currentLevel->bossId == 1)
-                        {
-                            DrawHairyLegShadowWarning(&pernaCabeluda, bossScale);
-                        }
+                        DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
                     }
 
                     if (!(currentLevel->id == 6 && level6IntroActive))

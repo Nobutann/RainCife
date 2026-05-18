@@ -5,10 +5,26 @@
 #include <raymath.h>
 
 #define BOSS_INTRO_PLAYER_GAP 220.0f
+#define PLAYER_HITBOX_CENTER_RATIO 0.525f
+#define BOSS_LEFT_JUMP_UP_CENTER_X 85.5f
+#define BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X 107.5f
+#define MOUSE_JUMP_LEGS_MIN_WIDTH 150
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {
-    LoadPlayerSprites(&player->sprites, GetSelectedClothingId());
+    static const WeaponType menuWeaponTypes[] =
+    {
+        WEAPON_HAMMER,
+        WEAPON_BAT,
+        WEAPON_PISTOL
+    };
+    int selectedWeaponIndex = GetSelectedWeaponId() - 1;
+    if (selectedWeaponIndex < 0 || selectedWeaponIndex >= (int)(sizeof(menuWeaponTypes) / sizeof(menuWeaponTypes[0])))
+    {
+        selectedWeaponIndex = 0;
+    }
+
+    LoadPlayerSprites(&player->sprites, GetSelectedCharacterId(), GetSelectedClothingId());
     player->position = initialPos;
     player->velocity = (Vector2) {0, 0};
     player->speed = speed;
@@ -17,7 +33,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->isBossFighting = false;
     player->facingRight = false;
     player->sprites.attack = (LayeredAnimation){0};
-    EquipWeapon(player, WEAPON_PISTOL);
+    EquipWeapon(player, menuWeaponTypes[selectedWeaponIndex]);
     player->weapon.cooldownTimer = player->weapon.cooldown;
     player->isJumping = false;
 }
@@ -27,9 +43,77 @@ static bool IsHammerAirAttack(const Player *player)
     return !player->onGround && player->weapon.attacking && player->weapon.type == WEAPON_HAMMER;
 }
 
+void UpdatePlayerFacingForHorizontalInput(Player *player, float horizontalInput)
+{
+    if (horizontalInput > 0.0f)
+    {
+        player->facingRight = false;
+    }
+    else if (horizontalInput < 0.0f)
+    {
+        player->facingRight = player->isBossFighting;
+    }
+}
+
+Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
+{
+    Vector2 drawPosition = player->position;
+
+    if (player->facingRight)
+    {
+        if (player->currentAnim == &player->sprites.attack)
+        {
+            return drawPosition;
+        }
+
+        bool usingJumpUpPose = player->currentAnim == &player->sprites.jumpUp;
+        bool usingJumpDownPose = player->currentAnim == &player->sprites.jumpDown;
+
+        if (!usingJumpUpPose && !usingJumpDownPose)
+        {
+            return drawPosition;
+        }
+
+        const Animation *jumpUp = &player->sprites.jumpUp.layers[0];
+        float referenceFrameWidth = (float)jumpUp->frameWidth;
+        if (referenceFrameWidth <= 0.0f && player->currentAnim && player->currentAnim->layerCount > 0)
+        {
+            referenceFrameWidth = (float)player->currentAnim->layers[0].frameWidth;
+        }
+
+        if (referenceFrameWidth <= 0.0f)
+        {
+            return drawPosition;
+        }
+
+        float hitboxCenterX = referenceFrameWidth * PLAYER_HITBOX_CENTER_RATIO;
+
+        if (!usingJumpUpPose)
+        {
+            drawPosition.x += referenceFrameWidth * scale;
+            return drawPosition;
+        }
+
+        float spriteCenterX = BOSS_LEFT_JUMP_UP_CENTER_X;
+        bool usingMouseJumpSprites = player->sprites.jumpUpLegs.layers[0].frameWidth >= MOUSE_JUMP_LEGS_MIN_WIDTH;
+
+        if (usingMouseJumpSprites)
+        {
+            spriteCenterX = BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X;
+        }
+
+        drawPosition.x += (hitboxCenterX - spriteCenterX) * scale;
+    }
+
+    return drawPosition;
+}
+
 static void DrawLayeredAnimationLayer(LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX, Color tint)
 {
-    float refWidth = layeredAnimation->layers[0].frameWidth * scale;
+    float refFrameWidth = layeredAnimation->referenceFrameWidth > 0.0f
+        ? layeredAnimation->referenceFrameWidth
+        : (float)layeredAnimation->layers[0].frameWidth;
+    float refWidth = refFrameWidth * scale;
     float fw = layeredAnimation->layers[layerIndex].frameWidth * scale;
     float offsetX = flipX ? 0.0f : (refWidth - fw);
     float manualOffsetX = layeredAnimation->layers[layerIndex].offsetX;
@@ -65,6 +149,8 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         player->velocity.x = player->speed;
         player->facingRight = false;
         if (player->onGround && !player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
+        UpdatePlayerFacingForHorizontalInput(player, 1.0f);
+        if (player->onGround && !player->weapon.attacking)
         {
             player->currentAnim = &player->sprites.walkFront;
         }
@@ -85,6 +171,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     else if (IsKeyDown(config->teclaTras))
     {
         player->velocity.x = -player->speed;
+        UpdatePlayerFacingForHorizontalInput(player, -1.0f);
         if (player->isBossFighting)
         {
             player->facingRight = true;
@@ -197,17 +284,44 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         }
         else
         {
-            player->sprites.attack.layers[0].sheet = player->sprites.jumpDownLegs.layers[0].sheet;
-            player->sprites.attack.layers[0].frameWidth = player->sprites.jumpDownLegs.layers[0].frameWidth;
-            player->sprites.attack.layers[0].frameCount = player->sprites.jumpDownLegs.layers[0].frameCount;
+            Animation *jumpDownLegs = &player->sprites.jumpDownLegs.layers[0];
+            player->sprites.attack.layers[0].sheet = jumpDownLegs->sheet;
+            player->sprites.attack.layers[0].frameWidth = jumpDownLegs->frameWidth;
+            player->sprites.attack.layers[0].frameCount = jumpDownLegs->frameCount;
             player->sprites.attack.layers[0].offsetX = 0.0f;
             player->sprites.attack.layers[0].offsetY = 0.0f;
         }
 
+        Animation *jumpReference = player->velocity.y <= 0
+            ? &player->sprites.jumpUp.layers[0]
+            : &player->sprites.jumpDown.layers[0];
         float legsWidth = (float)player->sprites.attack.layers[0].frameWidth;
         float bodyWidth = (float)player->sprites.attack.layers[1].frameWidth;
+        float referenceWidth = (float)jumpReference->frameWidth;
         float legsHeight = (float)player->sprites.attack.layers[0].sheet.height;
+        float referenceHeight = (float)jumpReference->sheet.height;
         float bodyHeight = (float)player->sprites.attack.layers[1].sheet.height;
+        player->sprites.attack.referenceFrameWidth = referenceWidth;
+
+        if (legsHeight < referenceHeight * 0.75f)
+        {
+            if (player->velocity.y <= 0)
+            {
+                player->sprites.attack.layers[0].offsetX = 54.0f;
+                player->sprites.attack.layers[0].offsetY = 113.0f;
+            }
+            else
+            {
+                player->sprites.attack.layers[0].offsetX = 63.0f;
+                player->sprites.attack.layers[0].offsetY = 108.0f;
+            }
+        }
+        else
+        {
+            player->sprites.attack.layers[0].offsetX = (referenceWidth - legsWidth) * 0.5f;
+            player->sprites.attack.layers[0].offsetY = referenceHeight - legsHeight;
+        }
+
         if (player->weapon.type == WEAPON_HAMMER)
         {
             player->sprites.attack.layers[2] = player->sprites.idleHead.layers[0];
@@ -215,10 +329,10 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
 
         float headWidth = (float)player->sprites.attack.layers[2].frameWidth;
         float headHeight = (float)player->sprites.attack.layers[2].sheet.height;
-        player->sprites.attack.layers[1].offsetX = (legsWidth - bodyWidth) * 0.5f;
-        player->sprites.attack.layers[2].offsetX = (legsWidth - headWidth) * 0.5f;
-        player->sprites.attack.layers[1].offsetY = legsHeight - bodyHeight;
-        player->sprites.attack.layers[2].offsetY = legsHeight - headHeight;
+        player->sprites.attack.layers[1].offsetX = (referenceWidth - bodyWidth) * 0.5f;
+        player->sprites.attack.layers[2].offsetX = (referenceWidth - headWidth) * 0.5f;
+        player->sprites.attack.layers[1].offsetY = referenceHeight - bodyHeight;
+        player->sprites.attack.layers[2].offsetY = referenceHeight - headHeight;
 
         if (player->weapon.type == WEAPON_HAMMER)
         {
@@ -229,6 +343,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     }
     else if (player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
     {
+        player->sprites.attack.referenceFrameWidth = 0.0f;
         player->sprites.attack.layers[1].offsetX = 0.0f;
         player->sprites.attack.layers[2].offsetX = 0.0f;
         player->sprites.attack.layers[1].offsetY = 0.0f;
@@ -369,12 +484,40 @@ Rectangle GetPlayerHitbox(Player *player, float scale)
 {
     if (player->currentAnim && player->currentAnim->layerCount > 0)
     {
-        Animation *baseLayer = &player->currentAnim->layers[0];
+        Animation *currentLayer = &player->currentAnim->layers[0];
+        Animation *baseLayer = currentLayer;
+        bool usingJumpReference = false;
+        if (player->sprites.jumpUp.layerCount > 0)
+        {
+            baseLayer = &player->sprites.jumpUp.layers[0];
+            usingJumpReference = true;
+        }
+        float currentFrameWidth = (float)currentLayer->frameWidth;
+        float currentFrameHeight = (float)currentLayer->sheet.height;
+        if (player->currentAnim == &player->sprites.attack && player->onGround)
+        {
+            Animation *groundReference = player->velocity.x != 0.0f
+                ? &player->sprites.walkFront.layers[0]
+                : &player->sprites.idle.layers[0];
+            currentFrameWidth = (float)groundReference->frameWidth;
+            currentFrameHeight = (float)groundReference->sheet.height;
+        }
+        else if (player->currentAnim == &player->sprites.attack && usingJumpReference)
+        {
+            Animation *jumpReference = player->velocity.y <= 0.0f
+                ? &player->sprites.jumpUp.layers[0]
+                : &player->sprites.jumpDown.layers[0];
+            currentFrameWidth = (float)jumpReference->frameWidth;
+            currentFrameHeight = (float)jumpReference->sheet.height;
+            baseLayer = jumpReference;
+        }
+        float currentRenderWidth = currentFrameWidth * scale;
+        float currentRenderHeight = currentFrameHeight * scale;
         float frameRenderWidth = baseLayer->frameWidth * scale;
         float frameRenderHeight = baseLayer->sheet.height * scale;
 
-        float offsetX = frameRenderWidth * 0.45f;
-        float offsetY = frameRenderHeight * 0.40f;
+        float offsetX = (currentRenderWidth - frameRenderWidth) * 0.5f + frameRenderWidth * 0.45f;
+        float offsetY = (currentRenderHeight - frameRenderHeight) + frameRenderHeight * 0.40f;
         float hitboxW = frameRenderWidth * 0.15f;
         float hitboxH = frameRenderHeight * 0.40f;
 
@@ -395,7 +538,10 @@ bool IsPlayerAttackHitboxActive(const Player *player)
 
 static Vector2 GetLayeredAnimationLayerPosition(const LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX)
 {
-    float refWidth = layeredAnimation->layers[0].frameWidth * scale;
+    float refFrameWidth = layeredAnimation->referenceFrameWidth > 0.0f
+        ? layeredAnimation->referenceFrameWidth
+        : (float)layeredAnimation->layers[0].frameWidth;
+    float refWidth = refFrameWidth * scale;
     float fw = layeredAnimation->layers[layerIndex].frameWidth * scale;
     float offsetX = flipX ? 0.0f : (refWidth - fw);
     float manualOffsetX = layeredAnimation->layers[layerIndex].offsetX;
@@ -581,13 +727,13 @@ void DrawPlayer(Player *player, float scale)
     if (IsHammerAirAttack(player))
     {
         bool flipX = !player->facingRight;
-        DrawLayeredAnimationLayer(player->currentAnim, 1, player->position, scale, flipX, WHITE);
-        DrawLayeredAnimationLayer(player->currentAnim, 0, player->position, scale, flipX, WHITE);
-        DrawLayeredAnimationLayer(player->currentAnim, 2, player->position, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 1, drawPosition, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 0, drawPosition, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 2, drawPosition, scale, flipX, WHITE);
     }
     else
     {
-        DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
+        DrawLayeredAnimation(player->currentAnim, drawPosition, scale, !player->facingRight, WHITE);
     }
 
     Rectangle hitbox = GetPlayerHitbox(player, scale);

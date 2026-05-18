@@ -45,7 +45,7 @@ static const char *GetControlKeyLabel(int key)
         case KEY_SEVEN: return "7";
         case KEY_EIGHT: return "8";
         case KEY_NINE: return "9";
-        case KEY_SPACE: return "ESPACO";
+        case KEY_SPACE: return "ESPAÇO";
         case KEY_UP: return "CIMA";
         case KEY_DOWN: return "BAIXO";
         case KEY_LEFT: return "ESQ";
@@ -64,7 +64,7 @@ static int GetFittedFontSize(const char *text, int preferredSize, int maxWidth, 
     return fontSize;
 }
 
-GameScreen RunOptions(Config *config)
+GameScreen RunOptions(Config *config, GameScreen returnScreen)
 {
     bool draggingSom = false;
     bool draggingMusica = false;
@@ -181,7 +181,7 @@ GameScreen RunOptions(Config *config)
 
         if (aceitarClique && hoveringBack && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
-            return SCREEN_START;
+            return returnScreen;
         }
 
         if (aceitarClique)
@@ -211,7 +211,7 @@ GameScreen RunOptions(Config *config)
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
-            return SCREEN_START;
+            return returnScreen;
         }
         BeginDrawing();
             ClearBackground(RAYWHITE);
@@ -232,7 +232,7 @@ GameScreen RunOptions(Config *config)
             DrawSlider(barSom, config->volume);
             DrawText(TextFormat("%d%%", (int)(config->volume * 100 + 0.5f)), (int)barSom.x + (int)barSom.width + 18, (int)barSom.y - 1, smallFontSize, DARKGRAY);
 
-            const char *musicaLabel = "MUSICA";
+            const char *musicaLabel = "MÚSICA";
             DrawText(musicaLabel, (int)(centerX - MeasureText(musicaLabel, labelFontSize) / 2), musicaLabelY, labelFontSize, DARKGRAY);
             DrawSlider(barMusica, config->musica);
             DrawText(TextFormat("%d%%", (int)(config->musica * 100 + 0.5f)), (int)barMusica.x + (int)barMusica.width + 18, (int)barMusica.y - 1, smallFontSize, DARKGRAY);

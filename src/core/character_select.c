@@ -7,11 +7,12 @@
 #define CHARACTER_SLOT_COUNT 3
 
 static int selectedCharacterId = 1;
+static GameScreen characterSelectNextScreen = SCREEN_LEVEL_SELECT;
 
 typedef struct CharacterSlot
 {
     const char *name;
-    const char *futureTexturePath;
+    int characterId;
     Rectangle bounds;
 } CharacterSlot;
 
@@ -53,24 +54,11 @@ static void DrawCharacterSlot(const CharacterSlot *slot, bool hovered, int label
     );
 }
 
-static void DrawCharacterArtwork(const CharacterSlot *slot, Animation *ratIdleAnimation)
+static void DrawCharacterArtwork(const CharacterSlot *slot, Animation idleAnimations[])
 {
-    if (slot->futureTexturePath == NULL)
-    {
-        const char *placeholder = "em breve";
-        int placeholderSize = (int)(slot->bounds.height * 0.10f);
-        int placeholderWidth = MeasureText(placeholder, placeholderSize);
-        DrawText(
-            placeholder,
-            (int)(slot->bounds.x + (slot->bounds.width - placeholderWidth) * 0.5f),
-            (int)(slot->bounds.y + slot->bounds.height * 0.42f),
-            placeholderSize,
-            GRAY
-        );
-        return;
-    }
+    Animation *idleAnimation = &idleAnimations[slot->characterId - 1];
 
-    Rectangle source = GetAnimationFrameSource(ratIdleAnimation, false);
+    Rectangle source = GetAnimationFrameSource(idleAnimation, false);
     float maxWidth = slot->bounds.width * 0.72f;
     float maxHeight = slot->bounds.height * 0.72f;
     float scaleX = maxWidth / source.width;
@@ -83,7 +71,7 @@ static void DrawCharacterArtwork(const CharacterSlot *slot, Animation *ratIdleAn
         source.width * scale,
         source.height * scale
     };
-    DrawTexturePro(ratIdleAnimation->sheet, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
+    DrawTexturePro(idleAnimation->sheet, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
 }
 
 int GetSelectedCharacterId(void)
@@ -104,16 +92,27 @@ void SetSelectedCharacterId(int characterId)
     selectedCharacterId = characterId;
 }
 
+void SetCharacterSelectNextScreen(GameScreen nextScreen)
+{
+    characterSelectNextScreen = nextScreen;
+}
+
 GameScreen RunCharacterSelect()
 {
     CharacterSlot slots[CHARACTER_SLOT_COUNT] =
     {
-        {"Rato", "assets/sprites/Player/idle/Idle_complete-Sheet.png", {0}},
-        {"Personagem 2", NULL, {0}},
-        {"Personagem 3", NULL, {0}}
+        {NULL, 1, {0.0f, 0.0f, 0.0f, 0.0f}},
+        {NULL, 2, {0.0f, 0.0f, 0.0f, 0.0f}},
+        {NULL, 3, {0.0f, 0.0f, 0.0f, 0.0f}}
     };
     bool acceptCharacterClick = false;
-    Animation ratIdleAnimation = LoadAnimation("assets/sprites/Player/idle/Idle_complete-Sheet.png", 6, 0.10f);
+    Animation idleAnimations[CHARACTER_SLOT_COUNT];
+    for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
+    {
+        const PlayerSpriteSet *sprites = GetPlayerSpriteSet(i + 1);
+        slots[i].name = sprites->name;
+        idleAnimations[i] = LoadAnimation(sprites->idle, 6, 0.10f);
+    }
 
     while (!WindowShouldClose())
     {
@@ -125,11 +124,17 @@ GameScreen RunCharacterSelect()
         bool hoveringSlot = false;
 
         BuildCharacterSlots(slots, currentWidth, currentHeight);
-        UpdateAnimation(&ratIdleAnimation, GetFrameTime());
+        for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
+        {
+            UpdateAnimation(&idleAnimations[i], GetFrameTime());
+        }
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
-            UnloadAnimation(&ratIdleAnimation);
+            for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
+            {
+                UnloadAnimation(&idleAnimations[i]);
+            }
             return SCREEN_START;
         }
 
@@ -146,8 +151,11 @@ GameScreen RunCharacterSelect()
                 if (acceptCharacterClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 {
                     SetSelectedCharacterId(i + 1);
-                    UnloadAnimation(&ratIdleAnimation);
-                    return SCREEN_LEVEL_SELECT;
+                    for (int j = 0; j < CHARACTER_SLOT_COUNT; j++)
+                    {
+                        UnloadAnimation(&idleAnimations[j]);
+                    }
+                    return characterSelectNextScreen;
                 }
             }
         }
@@ -155,7 +163,7 @@ GameScreen RunCharacterSelect()
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            const char *title = "Selecao de personagens";
+            const char *title = "Seleção de personagens";
             int titleWidth = MeasureText(title, titleFontSize);
             DrawText(
                 title,
@@ -169,13 +177,16 @@ GameScreen RunCharacterSelect()
             {
                 bool hovered = CheckCollisionPointRec(mouse, slots[i].bounds);
                 DrawCharacterSlot(&slots[i], hovered, labelFontSize);
-                DrawCharacterArtwork(&slots[i], &ratIdleAnimation);
+                DrawCharacterArtwork(&slots[i], idleAnimations);
             }
 
             DrawMenuCursor(hoveringSlot);
         EndDrawing();
     }
 
-    UnloadAnimation(&ratIdleAnimation);
+    for (int i = 0; i < CHARACTER_SLOT_COUNT; i++)
+    {
+        UnloadAnimation(&idleAnimations[i]);
+    }
     return SCREEN_EXIT;
 }
