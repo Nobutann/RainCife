@@ -58,8 +58,21 @@ Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
 {
     Vector2 drawPosition = player->position;
 
-    if (player->facingRight && !player->onGround)
+    if (player->facingRight)
     {
+        if (player->currentAnim == &player->sprites.attack)
+        {
+            return drawPosition;
+        }
+
+        bool usingJumpUpPose = player->currentAnim == &player->sprites.jumpUp;
+        bool usingJumpDownPose = player->currentAnim == &player->sprites.jumpDown;
+
+        if (!usingJumpUpPose && !usingJumpDownPose)
+        {
+            return drawPosition;
+        }
+
         const Animation *jumpUp = &player->sprites.jumpUp.layers[0];
         float referenceFrameWidth = (float)jumpUp->frameWidth;
         if (referenceFrameWidth <= 0.0f && player->currentAnim && player->currentAnim->layerCount > 0)
@@ -73,8 +86,6 @@ Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
         }
 
         float hitboxCenterX = referenceFrameWidth * PLAYER_HITBOX_CENTER_RATIO;
-        bool usingJumpUpPose = player->currentAnim == &player->sprites.jumpUp ||
-            (player->currentAnim == &player->sprites.attack && player->velocity.y <= 0.0f);
 
         if (!usingJumpUpPose)
         {
