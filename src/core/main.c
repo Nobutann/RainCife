@@ -316,6 +316,7 @@ static void DrawGameplayScene(
     }
 
     DrawWater(bg, currentWidth, currentHeight, groundY);
+    DrawObjetos(bg, currentWidth, currentHeight, groundY);
     if (showProgressBar)
     {
         DrawProgressBar(bg, barValue, currentWidth, currentHeight);
@@ -704,6 +705,7 @@ int main(void)
                         }
 
                         DrawWater(&bg, currentWidth, currentHeight, groundY);
+                        DrawObjetos(&bg, currentWidth, currentHeight, groundY);
 
                         DrawDeathScreenOverlay(currentWidth, currentHeight, deathOptionRects, deathOptions, deathOptionCount, hoveringButton);
                     EndDrawing();
@@ -869,6 +871,7 @@ int main(void)
                 }
 
                 UpdateBackground(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, phase);
+                UpdateObjetos(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, currentWidth, currentHeight, groundY, phase);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 

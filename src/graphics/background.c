@@ -11,6 +11,7 @@
 #define BAR_WIDTH_RATIO 0.5f
 #define BAR_Y_RATIO 0.03f
 #define LEVEL6_BOTTOM_TRIM_RATIO 0.030f
+#define BUEIRO_INTERVAL 2000.0f
 
 void InitBackground(Background *bg)
 {
@@ -43,6 +44,11 @@ void InitBackground(Background *bg)
     bg->runningPhase3[1] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_2.png");
     bg->runningPhase3[2] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_3.png");
     bg->runningBgScrollX = 0.0f;
+    bg->bueiro = LoadTexture("assets/sprites/background/Bueiro.png");
+    bg->objetos = LoadTexture("assets/sprites/background/objetos.png");
+    for (int i = 0; i < MAX_OBJETOS; i++) bg->objetosList[i].active = false;
+    bg->objetoSpawnTimer = 0.0f;
+    bg->objetoSpawnInterval = 2.0f;
 }
 
 void UpdateBackground(Background *bg, float dt, GamePhase phase)
@@ -189,6 +195,27 @@ void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroPr
         }
     }
 
+    if (bg->bueiro.id > 0 && phase == PHASE_RUNNING && bg->floor.id > 0)
+    {
+        float floorScale = (float)screenWidth / bg->floor.width;
+        float floorY = groundY - (bg->floor.height * floorScale * FLOOR_VISIBLE_TOP_RATIO);
+        float bueiroBaseY = floorY + (FLOOR_WATER_START_Y * floorScale);
+
+        float bueiroScale = floorScale;
+        float bueiroW = bg->bueiro.width * bueiroScale;
+        float bueiroH = bg->bueiro.height * bueiroScale;
+
+        float offset = fmodf(bg->scrollX, BUEIRO_INTERVAL);
+        if (offset < 0.0f) offset += BUEIRO_INTERVAL;
+
+        for (float x = -offset; x < (float)screenWidth + bueiroW; x += BUEIRO_INTERVAL)
+        {
+            Rectangle src = { 0, 0, (float)bg->bueiro.width, (float)bg->bueiro.height };
+            Rectangle dest = { x, bueiroBaseY - bueiroH - 17.0f, bueiroW, bueiroH };
+            DrawTexturePro(bg->bueiro, src, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
+        }
+    }
+
     DrawRectangleGradientV(0, 0, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 180 }, (Color){ 0, 0, 0, 0 });
     DrawRectangleGradientV(0, screenHeight * 3 / 4, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 0 }, (Color){ 0, 0, 0, 180 });
 
@@ -263,6 +290,69 @@ void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY)
                 }
             EndBlendMode();
         }
+    }
+}
+
+void UpdateObjetos(Background *bg, float dt, int screenWidth, int screenHeight, float groundY, GamePhase phase)
+{
+    if (phase != PHASE_RUNNING || bg->objetos.id == 0) return;
+
+    float frameW = (float)bg->objetos.width / 3.0f;
+    float floorScale = (bg->floor.id > 0) ? (float)screenWidth / bg->floor.width : 1.0f;
+    float objScale = floorScale * 1.7f;
+    float objW = frameW * objScale;
+    float objH = (float)bg->objetos.height * objScale;
+
+    for (int i = 0; i < MAX_OBJETOS; i++)
+    {
+        if (!bg->objetosList[i].active) continue;
+        bg->objetosList[i].x -= FLOOR_SCROLL_SPEED * dt;
+        if (bg->objetosList[i].x + objW < 0.0f)
+            bg->objetosList[i].active = false;
+    }
+
+    bg->objetoSpawnTimer += dt;
+    if (bg->objetoSpawnTimer >= bg->objetoSpawnInterval)
+    {
+        bg->objetoSpawnTimer = 0.0f;
+        bg->objetoSpawnInterval = (float)GetRandomValue(150, 300) / 100.0f;
+
+        for (int i = 0; i < MAX_OBJETOS; i++)
+        {
+            if (bg->objetosList[i].active) continue;
+
+            float waterTopY = groundY + (screenHeight * -0.04f);
+            float waterBottomY = (float)screenHeight - objH;
+            float spawnY = waterTopY;
+            if (waterBottomY > waterTopY)
+                spawnY = waterTopY + (float)GetRandomValue(0, (int)(waterBottomY - waterTopY));
+
+            bg->objetosList[i].active = true;
+            bg->objetosList[i].x = (float)screenWidth + 10.0f;
+            bg->objetosList[i].y = spawnY;
+            bg->objetosList[i].frame = GetRandomValue(0, 2);
+            break;
+        }
+    }
+}
+
+void DrawObjetos(Background *bg, int screenWidth, int screenHeight, float groundY)
+{
+    if (bg->objetos.id == 0) return;
+
+    float frameW = (float)bg->objetos.width / 3.0f;
+    float frameH = (float)bg->objetos.height;
+    float floorScale = (bg->floor.id > 0) ? (float)screenWidth / bg->floor.width : 1.0f;
+    float objScale = floorScale * 1.7f;
+    float objW = frameW * objScale;
+    float objH = frameH * objScale;
+
+    for (int i = 0; i < MAX_OBJETOS; i++)
+    {
+        if (!bg->objetosList[i].active) continue;
+        Rectangle src = { bg->objetosList[i].frame * frameW, 0, frameW, frameH };
+        Rectangle dest = { bg->objetosList[i].x, bg->objetosList[i].y, objW, objH };
+        DrawTexturePro(bg->objetos, src, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
     }
 }
 
@@ -344,6 +434,8 @@ void DrawProgressBar(Background *bg, float progress, int screenWidth, int screen
 void UnloadBackground(Background *bg)
 {
     UnloadTexture(bg->floor);
+    UnloadTexture(bg->bueiro);
+    UnloadTexture(bg->objetos);
     UnloadTexture(bg->bossHairyLeg);
     UnloadTexture(bg->bossMidnightMan);
     UnloadTexture(bg->bossShark);

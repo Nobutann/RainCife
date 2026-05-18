@@ -4,6 +4,14 @@
 #include <raylib.h>
 #include "sprites.h"
 
+#define MAX_OBJETOS 10
+
+typedef struct {
+    float x, y;
+    int frame;
+    bool active;
+} ObjetoInstance;
+
 typedef enum
 {
     PHASE_RUNNING,
@@ -31,12 +39,19 @@ typedef struct {
     Texture2D runningPhase2[3];
     Texture2D runningPhase3[3];
     float runningBgScrollX;
+    Texture2D bueiro;
+    Texture2D objetos;
+    ObjetoInstance objetosList[MAX_OBJETOS];
+    float objetoSpawnTimer;
+    float objetoSpawnInterval;
 } Background;
 
 void InitBackground(Background *bg);
 void UpdateBackground(Background *bg, float dt, GamePhase phase);
+void UpdateObjetos(Background *bg, float dt, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY);
+void DrawObjetos(Background *bg, int screenWidth, int screenHeight, float groundY);
 void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight);
 void UnloadBackground(Background *bg);
 

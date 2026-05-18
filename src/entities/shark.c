@@ -139,8 +139,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
 
         case SHARK_PREP_LEFT:
             shark->rect.x -= 1500.0f * deltaTime;
-            if (shark->rect.x < -shark->rect.width) {
-                shark->rect.x = -1050.0f;
+            if (shark->rect.x < -1200.0f) {
+                shark->rect.x = -1200.0f;
                 shark->state = SHARK_DASH_WAIT;
                 shark->timer = 0.0f;
             }
@@ -148,7 +148,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
 
         case SHARK_DASH_WAIT:
             shark->timer += deltaTime;
-            if (shark->timer >= 1.0f) {
+            if (shark->timer >= 0.5f) {
                 shark->state = SHARK_DASH_RIGHT;
                 shark->timer = 0.0f;
                 shark->animFrame = 0;
