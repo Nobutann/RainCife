@@ -90,6 +90,7 @@ void UseHammer(Player *player)
 
 void UsePistol(Player *player)
 {
+    SpawnPistolProjectile(player);
     bool isIdle = (player->isBossFighting && player->velocity.x == 0);
 
     if (isIdle)
@@ -178,9 +179,14 @@ void UseWeapon(Player *player)
     }
 
     player->weapon.cooldownTimer = player->weapon.cooldown;
-    player->weapon.attacking = true;
     player->weapon.hitConnected = false;
-    player->weapon.attackTimer = player->weapon.attackDuration;
+
+    if (player->weapon.type != WEAPON_PISTOL)
+    {
+        player->weapon.attackTimer = player->weapon.attackDuration;
+        player->weapon.attacking = true;
+    }
+
     player->weapon.attack(player);
 }
 

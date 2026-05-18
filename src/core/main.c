@@ -462,6 +462,10 @@ int main(void)
             Vector2 startPos = { 100, initGroundY };
             InitPlayer(&player, startPos, SPEED);
 
+            ProjectileSystem projectiles;
+            InitProjectileSystem(&projectiles);
+            SetProjectileSystem(&projectiles);
+
             HairyLeg pernaCabeluda;
             InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
 
@@ -870,6 +874,8 @@ int main(void)
 
                 UpdateBackground(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, phase);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
+                UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
+
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 
                 if (!infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
@@ -1039,6 +1045,33 @@ int main(void)
                     {
                         DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
                     }
+
+                    if (!(currentLevel->id == 6 && level6IntroActive))
+                    {
+                        DrawPlayer(&player, playerScale);
+                    }
+
+                    if (phase == PHASE_BOSS)
+                    {
+                        if (currentLevel->bossId == 1)
+                        {
+                            DrawHairyLeg(&pernaCabeluda, bossScale);
+                        }
+
+                        if (currentLevel->bossId == 2)
+                        {
+                            DrawShark(&shark);
+                        }
+
+                        if (currentLevel->bossId == 3)
+                        {
+                            DrawMidnightMan(&midnightMan);
+                        }
+
+                    }
+
+                    DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
+                    DrawProjectiles(&projectiles);
                     DrawGameplayCursor(player.weapon.attacking);
                 EndDrawing();
             }
@@ -1061,6 +1094,7 @@ int main(void)
             UnloadTexture(enemyAssets.destroyedSheet);
             UnloadShark(&shark);
             UnloadMidnightMan(&midnightMan);
+            UnloadProjectileSystem(&projectiles);
             FreeLevels(levels);
         }
     }

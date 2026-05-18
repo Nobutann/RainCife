@@ -211,6 +211,23 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothi
     playerSprites->jumpUpLegs.layers[0] = LoadAnimation(sprites->jumpUpLegs, 1, FRAME_TIME);
 
     playerSprites->jumpDownLegs.layerCount = 1;
+    playerSprites->jumpDownLegs.layers[0] = LoadAnimation("assets/sprites/Player/attack/Legs_jump_down.png", 1, FRAME_TIME);
+
+    playerSprites->armGun = LoadTexture("assets/sprites/Player/Spr_rat/Arm_gun.png");
+
+    playerSprites->walkBackwardsGun.layerCount = 3;
+    playerSprites->walkBackwardsGun.layers[0] = LoadAnimation("assets/sprites/Player/walkBack/Running_legs_backwards-Sheet.png", 8, FRAME_TIME);
+    playerSprites->walkBackwardsGun.layers[1] = LoadAnimation("assets/sprites/Player/Spr_rat/Running_body_gun_backward.png", 1, FRAME_TIME);
+    playerSprites->walkBackwardsGun.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
+
+    playerSprites->jumpUpGun.layerCount = 1;
+    playerSprites->jumpUpGun.layers[0] = LoadAnimation("assets/sprites/Player/Spr_rat/Jump_up_gun.png", 1, FRAME_TIME);
+
+    playerSprites->jumpDownGun.layerCount = 1;
+    playerSprites->jumpDownGun.layers[0] = LoadAnimation("assets/sprites/Player/Spr_rat/Jump_down_gun.png", 1, FRAME_TIME);
+
+    playerSprites->idleGun.layerCount = 1;
+    playerSprites->idleGun.layers[0] = LoadAnimation("assets/sprites/Player/Spr_rat/Idle_body_gun.png", 1, FRAME_TIME);
     playerSprites->jumpDownLegs.layers[0] = LoadAnimation(sprites->jumpDownLegs, 1, FRAME_TIME);
 }
 
@@ -223,6 +240,16 @@ float LoadAttackAnimation(PlayerSprites *playerSprites, int characterId, const c
     playerSprites->attack.layers[1] = LoadAnimation(path, frameCount, frameTime);
     playerSprites->attack.layers[2] = LoadAnimation(sprites->headRunning, 8, frameTime);
     return frameCount * frameTime;
+}
+
+void LoadPistolAnimation(PlayerSprites *playerSprites, int clothingId)
+{
+    bool clothed = clothingId == 2;
+    UnloadLayeredAnimation(&playerSprites->attack);
+    playerSprites->attack.layerCount = 3;
+    playerSprites->attack.layers[0] = LoadAnimation("assets/sprites/Player/walkFront/Running_legs_forward-Sheet.png", 8, FRAME_TIME);
+    playerSprites->attack.layers[1] = LoadAnimation(clothed ? "assets/sprites/Player/Spr_rat/Running_body_gun_cesar.png" : "assets/sprites/Player/Spr_rat/Running_gun_body.png", 8, FRAME_TIME);
+    playerSprites->attack.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
 }
 
 void UnloadAttackAnimation(PlayerSprites *playerSprites)
@@ -242,6 +269,10 @@ void UnloadPlayerSprites(PlayerSprites *playerSprites)
     UnloadLayeredAnimation(&playerSprites->idleHead);
     UnloadLayeredAnimation(&playerSprites->jumpUpLegs);
     UnloadLayeredAnimation(&playerSprites->jumpDownLegs);
+    UnloadLayeredAnimation(&playerSprites->walkBackwardsGun);
+    UnloadLayeredAnimation(&playerSprites->jumpUpGun);
+    UnloadLayeredAnimation(&playerSprites->jumpDownGun);
+    UnloadTexture(playerSprites->armGun);
 }
 
 void UpdateAnimation(Animation *animation, float dt)
