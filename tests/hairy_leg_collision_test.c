@@ -325,6 +325,19 @@ int main(void)
     Vector2 bossThreeFallDrawPosition = GetPlayerSpriteDrawPosition(&bossThreeFallPlayer, 2.0f);
     assert(fabsf(bossThreeFallDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
 
+    Player airborneLeftAttackPlayer = airborneBossLeftPlayer;
+    airborneLeftAttackPlayer.currentAnim = &airborneLeftAttackPlayer.sprites.attack;
+    airborneLeftAttackPlayer.velocity.y = 10.0f;
+    Vector2 airborneLeftAttackDrawPosition = GetPlayerSpriteDrawPosition(&airborneLeftAttackPlayer, 2.0f);
+    assert(fabsf(airborneLeftAttackDrawPosition.x - airborneLeftAttackPlayer.position.x) < 0.001f);
+
+    Player landingLeftFallPlayer = airborneBossLeftPlayer;
+    landingLeftFallPlayer.onGround = true;
+    landingLeftFallPlayer.currentAnim = &landingLeftFallPlayer.sprites.jumpDown;
+    landingLeftFallPlayer.velocity.y = 0.0f;
+    Vector2 landingLeftFallDrawPosition = GetPlayerSpriteDrawPosition(&landingLeftFallPlayer, 2.0f);
+    assert(fabsf(landingLeftFallDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
+
     HairyLeg damagedLeg = {0};
     damagedLeg.health = 100;
     damagedLeg.rect = rightAttackHitbox;
