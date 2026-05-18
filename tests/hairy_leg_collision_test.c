@@ -12,6 +12,8 @@ extern bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle play
 extern Rectangle GetPlayerAttackHitbox(Player *player, float scale);
 extern void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY, float scale);
 extern bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float playerScale);
+extern void UpdatePlayerFacingForHorizontalInput(Player *player, float horizontalInput);
+extern Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale);
 
 static HairyLeg MakeJumpingLeg(void)
 {
@@ -254,6 +256,74 @@ int main(void)
     Rectangle leftAttackHitbox = GetPlayerAttackHitbox(&leftAttackPlayer, 1.0f);
     Rectangle leftPlayerBody = GetPlayerHitbox(&leftAttackPlayer, 1.0f);
     assert(leftAttackHitbox.x + leftAttackHitbox.width == leftPlayerBody.x);
+
+    Player bossBackInputPlayer = MakeAttackingPlayer(false);
+    bossBackInputPlayer.isBossFighting = true;
+    UpdatePlayerFacingForHorizontalInput(&bossBackInputPlayer, -1.0f);
+    assert(bossBackInputPlayer.facingRight);
+
+    Player runningBackInputPlayer = MakeAttackingPlayer(true);
+    runningBackInputPlayer.isBossFighting = false;
+    UpdatePlayerFacingForHorizontalInput(&runningBackInputPlayer, -1.0f);
+    assert(!runningBackInputPlayer.facingRight);
+
+    Player airborneBossLeftPlayer = MakeAttackingPlayer(true);
+    airborneBossLeftPlayer.isBossFighting = true;
+    airborneBossLeftPlayer.onGround = false;
+    airborneBossLeftPlayer.position = (Vector2){100.0f, 50.0f};
+    airborneBossLeftPlayer.sprites.jumpUp.layerCount = 1;
+    airborneBossLeftPlayer.sprites.jumpUp.layers[0].frameWidth = 252;
+    airborneBossLeftPlayer.sprites.jumpDown.layerCount = 1;
+    airborneBossLeftPlayer.sprites.jumpDown.layers[0].frameWidth = 252;
+    airborneBossLeftPlayer.sprites.jumpUpLegs.layers[0].frameWidth = 82;
+    airborneBossLeftPlayer.currentAnim = &airborneBossLeftPlayer.sprites.jumpUp;
+    Vector2 airborneBossLeftJumpUpDrawPosition = GetPlayerSpriteDrawPosition(&airborneBossLeftPlayer, 2.0f);
+
+    airborneBossLeftPlayer.currentAnim = &airborneBossLeftPlayer.sprites.jumpDown;
+    airborneBossLeftPlayer.velocity.y = 10.0f;
+    Vector2 airborneBossLeftJumpDownDrawPosition = GetPlayerSpriteDrawPosition(&airborneBossLeftPlayer, 2.0f);
+    Rectangle airborneBossLeftJumpDownHitbox = GetPlayerHitbox(&airborneBossLeftPlayer, 2.0f);
+
+    float expectedBossLeftJumpUpX = 100.0f + ((252.0f * 0.525f) - 85.5f) * 2.0f;
+    float expectedBossLeftJumpDownX = 100.0f + 252.0f * 2.0f;
+    float airborneBossLeftJumpDownSpriteLeft = airborneBossLeftJumpDownDrawPosition.x + 42.0f * 2.0f;
+    float airborneBossLeftJumpDownHitboxCenter = airborneBossLeftJumpDownHitbox.x + airborneBossLeftJumpDownHitbox.width * 0.5f;
+    assert(fabsf(airborneBossLeftJumpUpDrawPosition.x - expectedBossLeftJumpUpX) < 0.001f);
+    assert(fabsf(airborneBossLeftJumpDownDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
+    assert(airborneBossLeftJumpDownSpriteLeft > airborneBossLeftJumpDownHitboxCenter);
+    assert(fabsf(airborneBossLeftJumpUpDrawPosition.y - 50.0f) < 0.001f);
+
+    Player mouseBossLeftPlayer = airborneBossLeftPlayer;
+    mouseBossLeftPlayer.sprites.jumpUpLegs.layers[0].frameWidth = 194;
+    mouseBossLeftPlayer.currentAnim = &mouseBossLeftPlayer.sprites.jumpUp;
+    mouseBossLeftPlayer.velocity.y = -10.0f;
+    Vector2 mouseBossLeftJumpUpDrawPosition = GetPlayerSpriteDrawPosition(&mouseBossLeftPlayer, 2.0f);
+
+    mouseBossLeftPlayer.currentAnim = &mouseBossLeftPlayer.sprites.jumpDown;
+    mouseBossLeftPlayer.velocity.y = 10.0f;
+    Vector2 mouseBossLeftJumpDownDrawPosition = GetPlayerSpriteDrawPosition(&mouseBossLeftPlayer, 2.0f);
+    Rectangle mouseBossLeftJumpDownHitbox = GetPlayerHitbox(&mouseBossLeftPlayer, 2.0f);
+
+    float expectedMouseBossLeftJumpUpX = 100.0f + ((252.0f * 0.525f) - 107.5f) * 2.0f;
+    float mouseBossLeftJumpDownSpriteLeft = mouseBossLeftJumpDownDrawPosition.x + 42.0f * 2.0f;
+    float mouseBossLeftJumpDownHitboxCenter = mouseBossLeftJumpDownHitbox.x + mouseBossLeftJumpDownHitbox.width * 0.5f;
+    assert(fabsf(mouseBossLeftJumpUpDrawPosition.x - expectedMouseBossLeftJumpUpX) < 0.001f);
+    assert(fabsf(mouseBossLeftJumpDownDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
+    assert(mouseBossLeftJumpDownSpriteLeft > mouseBossLeftJumpDownHitboxCenter);
+
+    Player groundedBossLeftPlayer = airborneBossLeftPlayer;
+    groundedBossLeftPlayer.onGround = true;
+    Vector2 groundedBossLeftDrawPosition = GetPlayerSpriteDrawPosition(&groundedBossLeftPlayer, 2.0f);
+    assert(fabsf(groundedBossLeftDrawPosition.x - 100.0f) < 0.001f);
+
+    Player bossThreeFallPlayer = airborneBossLeftPlayer;
+    bossThreeFallPlayer.isBossFighting = false;
+    bossThreeFallPlayer.onGround = false;
+    bossThreeFallPlayer.facingRight = true;
+    bossThreeFallPlayer.currentAnim = &bossThreeFallPlayer.sprites.jumpDown;
+    bossThreeFallPlayer.velocity.y = 10.0f;
+    Vector2 bossThreeFallDrawPosition = GetPlayerSpriteDrawPosition(&bossThreeFallPlayer, 2.0f);
+    assert(fabsf(bossThreeFallDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
 
     HairyLeg damagedLeg = {0};
     damagedLeg.health = 100;

@@ -4,6 +4,10 @@
 #include "core/screens.h"
 
 #define BOSS_INTRO_PLAYER_GAP 220.0f
+#define PLAYER_HITBOX_CENTER_RATIO 0.525f
+#define BOSS_LEFT_JUMP_UP_CENTER_X 85.5f
+#define BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X 107.5f
+#define MOUSE_JUMP_LEGS_MIN_WIDTH 150
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {
@@ -36,6 +40,60 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
 static bool IsHammerAirAttack(const Player *player)
 {
     return !player->onGround && player->weapon.attacking && player->weapon.type == WEAPON_HAMMER;
+}
+
+void UpdatePlayerFacingForHorizontalInput(Player *player, float horizontalInput)
+{
+    if (horizontalInput > 0.0f)
+    {
+        player->facingRight = false;
+    }
+    else if (horizontalInput < 0.0f)
+    {
+        player->facingRight = player->isBossFighting;
+    }
+}
+
+Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
+{
+    Vector2 drawPosition = player->position;
+
+    if (player->facingRight && !player->onGround)
+    {
+        const Animation *jumpUp = &player->sprites.jumpUp.layers[0];
+        float referenceFrameWidth = (float)jumpUp->frameWidth;
+        if (referenceFrameWidth <= 0.0f && player->currentAnim && player->currentAnim->layerCount > 0)
+        {
+            referenceFrameWidth = (float)player->currentAnim->layers[0].frameWidth;
+        }
+
+        if (referenceFrameWidth <= 0.0f)
+        {
+            return drawPosition;
+        }
+
+        float hitboxCenterX = referenceFrameWidth * PLAYER_HITBOX_CENTER_RATIO;
+        bool usingJumpUpPose = player->currentAnim == &player->sprites.jumpUp ||
+            (player->currentAnim == &player->sprites.attack && player->velocity.y <= 0.0f);
+
+        if (!usingJumpUpPose)
+        {
+            drawPosition.x += referenceFrameWidth * scale;
+            return drawPosition;
+        }
+
+        float spriteCenterX = BOSS_LEFT_JUMP_UP_CENTER_X;
+        bool usingMouseJumpSprites = player->sprites.jumpUpLegs.layers[0].frameWidth >= MOUSE_JUMP_LEGS_MIN_WIDTH;
+
+        if (usingMouseJumpSprites)
+        {
+            spriteCenterX = BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X;
+        }
+
+        drawPosition.x += (hitboxCenterX - spriteCenterX) * scale;
+    }
+
+    return drawPosition;
 }
 
 static void DrawLayeredAnimationLayer(LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX, Color tint)
@@ -77,7 +135,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     if (IsKeyDown(config->teclaFrente))
     {
         player->velocity.x = player->speed;
-        player->facingRight = false;
+        UpdatePlayerFacingForHorizontalInput(player, 1.0f);
         if (player->onGround && !player->weapon.attacking)
         {
             player->currentAnim = &player->sprites.walkFront;
@@ -95,9 +153,9 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     else if (IsKeyDown(config->teclaTras))
     {
         player->velocity.x = -player->speed;
+        UpdatePlayerFacingForHorizontalInput(player, -1.0f);
         if (player->isBossFighting)
         {
-            player->facingRight = true;
             if (player->onGround && !player->weapon.attacking)
             {
                 player->currentAnim = &player->sprites.walkFront;
@@ -555,16 +613,18 @@ void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY
 
 void DrawPlayer(Player *player, float scale)
 {   
+    Vector2 drawPosition = GetPlayerSpriteDrawPosition(player, scale);
+
     if (IsHammerAirAttack(player))
     {
         bool flipX = !player->facingRight;
-        DrawLayeredAnimationLayer(player->currentAnim, 1, player->position, scale, flipX, WHITE);
-        DrawLayeredAnimationLayer(player->currentAnim, 0, player->position, scale, flipX, WHITE);
-        DrawLayeredAnimationLayer(player->currentAnim, 2, player->position, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 1, drawPosition, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 0, drawPosition, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 2, drawPosition, scale, flipX, WHITE);
     }
     else
     {
-        DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
+        DrawLayeredAnimation(player->currentAnim, drawPosition, scale, !player->facingRight, WHITE);
     }
 
     Rectangle hitbox = GetPlayerHitbox(player, scale);
