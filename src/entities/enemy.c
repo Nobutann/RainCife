@@ -1,8 +1,8 @@
 #include <raylib.h>
 #include "entities/enemy.h"
 
-#define FISH_WATER_EXIT_DELAY 1.1
-#define FISH_JUMP_VELOCITY -26.0f
+#define FISH_WATER_EXIT_DELAY 0.55
+#define FISH_JUMP_VELOCITY -30.0f
 
 void InitEnemyTuned(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed, double waterExitDelay, float fishJumpVelocity)
 {
