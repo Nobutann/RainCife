@@ -1,5 +1,7 @@
 #include <raylib.h>
+#include <stdio.h>
 #include "core/screens.h"
+#include "core/ranking_manager.h"
 #include "core/cursor.h"
 #include "utils.h"
 #include "graphics/sprites.h"
@@ -27,14 +29,82 @@ static void DrawRatPreview(Animation *animation, Rectangle bounds, float widthRa
     DrawTexturePro(animation->sheet, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
 }
 
+static void DrawWeaponPreview(Texture2D texture, Rectangle bounds, int frameCount, int frameIndex)
+{
+    if (texture.id <= 0 || frameCount <= 0)
+    {
+        return;
+    }
+
+    if (frameIndex < 0)
+    {
+        frameIndex = 0;
+    }
+    if (frameIndex >= frameCount)
+    {
+        frameIndex = frameCount - 1;
+    }
+
+    float frameWidth = (float)texture.width / frameCount;
+    Rectangle source =
+    {
+        frameWidth * frameIndex,
+        0.0f,
+        frameWidth,
+        (float)texture.height
+    };
+    float maxWidth = bounds.width * 0.92f;
+    float maxHeight = bounds.height * 0.92f;
+    float scaleX = maxWidth / source.width;
+    float scaleY = maxHeight / source.height;
+    float scale = scaleX < scaleY ? scaleX : scaleY;
+    Rectangle dest =
+    {
+        bounds.x + (bounds.width - source.width * scale) * 0.5f,
+        bounds.y + (bounds.height - source.height * scale) * 0.5f,
+        source.width * scale,
+        source.height * scale
+    };
+
+    DrawTexturePro(texture, source, dest, (Vector2){0, 0}, 0.0f, WHITE);
+}
+
+static const char *GetPlayerGunSpritePath(int characterId)
+{
+    static const char *gunSpritePaths[ITEMS_CHARACTER_SLOT_COUNT] =
+    {
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Arm_gun.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Arm_gun.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Arm_gun.png"
+    };
+
+    int index = characterId - 1;
+    if (index < 0 || index >= ITEMS_CHARACTER_SLOT_COUNT)
+    {
+        index = 0;
+    }
+    return gunSpritePaths[index];
+}
+
 static int selectedStoryLevelId = 1;
 static int maxUnlockedStoryLevelId = 1;
 static int selectedClothingId = 1;
 static int selectedWeaponId = 1;
+static GameScreen itemsReturnScreen = SCREEN_LEVEL_SELECT;
 
 int GetSelectedClothingId(void)
 {
     return selectedClothingId;
+}
+
+int GetSelectedWeaponId(void)
+{
+    return selectedWeaponId;
+}
+
+void SetItemsReturnScreen(GameScreen returnScreen)
+{
+    itemsReturnScreen = returnScreen;
 }
 
 int GetSelectedStoryLevelId(void)
@@ -155,16 +225,93 @@ static void DrawSelectionArrow(Rectangle stageRect)
     DrawLineEx((Vector2){tip.x, tip.y - 72.0f}, tip, 7.0f, RED);
 }
 
+static void DrawInfiniteRankingPanel(Rectangle panel, const RankingInfinito *ranking, int screenHeight)
+{
+    int titleSize = screenHeight / 30;
+    int headerSize = screenHeight / 48;
+    int rowSize = screenHeight / 46;
+    const char *title = "Top 10";
+
+    DrawRectangleRec(panel, (Color){232, 232, 232, 255});
+    DrawRectangleLinesEx(panel, 3.0f, DARKGRAY);
+
+    DrawText(
+        title,
+        (int)(panel.x + (panel.width - MeasureText(title, titleSize)) * 0.5f),
+        (int)(panel.y + panel.height * 0.07f),
+        titleSize,
+        DARKBLUE
+    );
+
+    float tableX = panel.x + panel.width * 0.12f;
+    float tableY = panel.y + panel.height * 0.23f;
+    float rankX = tableX;
+    float nameX = tableX + panel.width * 0.13f;
+    float scoreX = panel.x + panel.width * 0.70f;
+    float tableW = panel.width * 0.76f;
+    float rowH = rowSize + 7.0f;
+
+    DrawText("POS", (int)rankX, (int)tableY, headerSize, GRAY);
+    DrawText("NOME", (int)nameX, (int)tableY, headerSize, GRAY);
+    DrawText("METROS", (int)scoreX, (int)tableY, headerSize, GRAY);
+    DrawLine(
+        (int)tableX,
+        (int)(tableY + headerSize + 7),
+        (int)(tableX + tableW),
+        (int)(tableY + headerSize + 7),
+        GRAY
+    );
+
+    if (ranking->quantidade == 0)
+    {
+        const char *emptyText = "Sem recordes ainda";
+        DrawText(
+            emptyText,
+            (int)(panel.x + (panel.width - MeasureText(emptyText, rowSize)) * 0.5f),
+            (int)(panel.y + panel.height * 0.52f),
+            rowSize,
+            DARKGRAY
+        );
+        return;
+    }
+
+    for (int i = 0; i < ranking->quantidade; i++)
+    {
+        char posText[8];
+        char scoreText[24];
+        snprintf(posText, sizeof(posText), "%d.", i + 1);
+        snprintf(scoreText, sizeof(scoreText), "%.0fm", ranking->entradas[i].metros);
+
+        float y = tableY + headerSize + 16.0f + i * rowH;
+        if (i % 2 == 0)
+        {
+            DrawRectangle(
+                (int)(tableX - 8.0f),
+                (int)(y - 3.0f),
+                (int)(tableW + 16.0f),
+                (int)(rowH - 1.0f),
+                (Color){222, 222, 222, 255}
+            );
+        }
+
+        Color rowColor = i == 0 ? DARKBLUE : DARKGRAY;
+        DrawText(posText, (int)rankX, (int)y, rowSize, rowColor);
+        DrawText(ranking->entradas[i].nome, (int)nameX, (int)y, rowSize, rowColor);
+        DrawText(scoreText, (int)scoreX, (int)y, rowSize, rowColor);
+    }
+}
+
 GameScreen RunLevelSelect()
 {
     const char *menuOptions[] =
     {
         "Play",
         "Itens",
-        "Opcoes",
+        "Opções",
         "Menu"
     };
     bool acceptClick = false;
+    bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
     Vector2 lastMousePosition = GetMousePosition();
 
     while (!WindowShouldClose())
@@ -184,7 +331,12 @@ GameScreen RunLevelSelect()
         BuildStageRects(stageRects, currentWidth, currentHeight);
         BuildOptionRects(optionRects, menuOptions, 4, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
 
-        if (IsKeyPressed(KEY_ESCAPE))
+        if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
+        {
+            acceptEscape = true;
+        }
+
+        if (acceptEscape && IsKeyPressed(KEY_ESCAPE))
         {
             return SCREEN_CHARACTER_SELECT;
         }
@@ -231,6 +383,7 @@ GameScreen RunLevelSelect()
         }
         if (clicked == 1)
         {
+            SetItemsReturnScreen(SCREEN_LEVEL_SELECT);
             return SCREEN_ITEMS;
         }
         if (clicked == 2)
@@ -272,14 +425,133 @@ GameScreen RunLevelSelect()
     return SCREEN_EXIT;
 }
 
+GameScreen RunInfiniteMenu()
+{
+    const char *menuOptions[] =
+    {
+        "Jogar",
+        "Itens",
+        "Opções",
+        "Menu"
+    };
+    bool acceptClick = false;
+    bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
+    RankingInfinito ranking = CarregarRankingInfinito();
+
+    while (!WindowShouldClose())
+    {
+        int currentWidth = GetScreenWidth();
+        int currentHeight = GetScreenHeight();
+        int titleSize = currentHeight / 10;
+        int menuFontSize = currentHeight / 21;
+        int menuSpacing = menuFontSize + 18;
+        int menuStartY = (int)(currentHeight * 0.64f);
+        Rectangle optionRects[4];
+        Rectangle panel =
+        {
+            currentWidth * 0.14f,
+            currentHeight * 0.18f,
+            currentWidth * 0.72f,
+            currentHeight * 0.40f
+        };
+        Vector2 mouse = GetMousePosition();
+        bool hoveringInteractive = false;
+
+        BuildOptionRects(optionRects, menuOptions, 4, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
+
+        if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
+        {
+            acceptEscape = true;
+        }
+
+        if (acceptEscape && IsKeyPressed(KEY_ESCAPE))
+        {
+            return SCREEN_CHARACTER_SELECT;
+        }
+
+        if (!acceptClick && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            acceptClick = true;
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (CheckCollisionPointRec(mouse, optionRects[i]))
+            {
+                hoveringInteractive = true;
+            }
+        }
+
+        int clicked = acceptClick ? GetClickedOption(optionRects, 4) : -1;
+        if (clicked == 0)
+        {
+            return SCREEN_INFINITE_GAME;
+        }
+        if (clicked == 1)
+        {
+            SetItemsReturnScreen(SCREEN_INFINITE_MENU);
+            return SCREEN_ITEMS;
+        }
+        if (clicked == 2)
+        {
+            return SCREEN_OPTIONS;
+        }
+        if (clicked == 3)
+        {
+            return SCREEN_START;
+        }
+
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+            const char *title = "Modo Infinito";
+            DrawText(
+                title,
+                (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
+                (int)(currentHeight * 0.06f),
+                titleSize,
+                DARKBLUE
+            );
+
+            DrawInfiniteRankingPanel(panel, &ranking, currentHeight);
+
+            for (int i = 0; i < 4; i++)
+            {
+                bool hovered = CheckCollisionPointRec(mouse, optionRects[i]);
+                Color color = hovered ? YELLOW : DARKGRAY;
+                DrawText(menuOptions[i], optionRects[i].x, optionRects[i].y, menuFontSize, color);
+            }
+
+            DrawMenuCursor(hoveringInteractive);
+        EndDrawing();
+    }
+
+    return SCREEN_EXIT;
+}
+
 GameScreen RunItems()
 {
+    const char *weaponNames[ITEMS_EQUIPMENT_SLOT_COUNT] =
+    {
+        "Martelo",
+        "Espada",
+        "Arma"
+    };
     Rectangle characterSlots[ITEMS_CHARACTER_SLOT_COUNT];
     Rectangle clothingSlots[ITEMS_CLOTHING_SLOT_COUNT];
     Rectangle weaponSlots[ITEMS_EQUIPMENT_SLOT_COUNT];
     bool acceptClick = false;
-    Animation ratIdleAnimation = LoadAnimation("assets/sprites/Player/idle/Idle_complete-Sheet.png", 6, 0.10f);
-    Animation ratCesarIdleAnimation = LoadAnimation("assets/sprites/Player/idle/Idle_complete_cesar-Sheet.png", 6, 0.10f);
+    Animation idleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
+    Animation clothedIdleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
+    Texture2D weaponTextures[ITEMS_CHARACTER_SLOT_COUNT][ITEMS_EQUIPMENT_SLOT_COUNT];
+    for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+    {
+        const PlayerSpriteSet *sprites = GetPlayerSpriteSet(i + 1);
+        idleAnimations[i] = LoadAnimation(sprites->idle, 6, 0.10f);
+        clothedIdleAnimations[i] = LoadAnimation(sprites->idleClothed, 6, 0.10f);
+        weaponTextures[i][0] = LoadTexture(sprites->attackHammer);
+        weaponTextures[i][1] = LoadTexture(sprites->attackSword);
+        weaponTextures[i][2] = LoadTexture(GetPlayerGunSpritePath(i + 1));
+    }
 
     while (!WindowShouldClose())
     {
@@ -289,7 +561,6 @@ GameScreen RunItems()
         int titleSize = currentHeight / 14;
         int sectionSize = currentHeight / 27;
         int slotLabelSize = currentHeight / 38;
-        int bodySize = currentHeight / 42;
         float frameMargin = currentWidth * 0.035f;
         Rectangle outerFrame =
         {
@@ -321,25 +592,42 @@ GameScreen RunItems()
         float weaponSlotsWidth = equipmentSlotW * ITEMS_EQUIPMENT_SLOT_COUNT + equipmentSlotGap * (ITEMS_EQUIPMENT_SLOT_COUNT - 1);
         Rectangle backButton = { 28.0f, 26.0f, 70.0f, 54.0f };
         bool hoveringInteractive = false;
-        UpdateAnimation(&ratIdleAnimation, GetFrameTime());
-        UpdateAnimation(&ratCesarIdleAnimation, GetFrameTime());
+        for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+        {
+            UpdateAnimation(&idleAnimations[i], GetFrameTime());
+            UpdateAnimation(&clothedIdleAnimations[i], GetFrameTime());
+        }
 
         if (CheckCollisionPointRec(mouse, backButton))
         {
             hoveringInteractive = true;
             if (acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
-                UnloadAnimation(&ratIdleAnimation);
-                UnloadAnimation(&ratCesarIdleAnimation);
-                return SCREEN_LEVEL_SELECT;
+                for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+                {
+                    UnloadAnimation(&idleAnimations[i]);
+                    UnloadAnimation(&clothedIdleAnimations[i]);
+                    for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
+                    {
+                        UnloadTexture(weaponTextures[i][j]);
+                    }
+                }
+                return itemsReturnScreen;
             }
         }
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
-            UnloadAnimation(&ratIdleAnimation);
-            UnloadAnimation(&ratCesarIdleAnimation);
-            return SCREEN_LEVEL_SELECT;
+            for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+            {
+                UnloadAnimation(&idleAnimations[i]);
+                UnloadAnimation(&clothedIdleAnimations[i]);
+                for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
+                {
+                    UnloadTexture(weaponTextures[i][j]);
+                }
+            }
+            return itemsReturnScreen;
         }
 
         if (!acceptClick && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -352,7 +640,7 @@ GameScreen RunItems()
             characterSlots[i] = (Rectangle)
             {
                 rightPanel.x + (rightPanel.width - characterSlotsWidth) * 0.5f + i * (characterSlotW + characterSlotGap),
-                rightPanel.y + rightPanel.height * 0.16f,
+                rightPanel.y + rightPanel.height * 0.12f,
                 characterSlotW,
                 characterSlotW
             };
@@ -420,9 +708,7 @@ GameScreen RunItems()
                 DARKBLUE
             );
 
-            const char *previewLabel = GetSelectedCharacterId() == 1
-                ? "Rato"
-                : TextFormat("Personagem %d", GetSelectedCharacterId());
+            const char *previewLabel = GetPlayerCharacterName(GetSelectedCharacterId());
             int previewLabelWidth = MeasureText(previewLabel, sectionSize);
             DrawText(
                 previewLabel,
@@ -446,13 +732,11 @@ GameScreen RunItems()
                 stage.height * 0.10f,
                 BLACK
             );
-            if (GetSelectedCharacterId() == 1)
-            {
-                Animation *previewAnimation = selectedClothingId == 2
-                    ? &ratCesarIdleAnimation
-                    : &ratIdleAnimation;
-                DrawRatPreview(previewAnimation, stage, 1.18f, 1.18f, -0.10f);
-            }
+            int selectedCharacterIndex = GetSelectedCharacterId() - 1;
+            Animation *previewAnimation = selectedClothingId == 2
+                ? &clothedIdleAnimations[selectedCharacterIndex]
+                : &idleAnimations[selectedCharacterIndex];
+            DrawRatPreview(previewAnimation, stage, 1.18f, 1.18f, -0.10f);
 
             const char *charactersTitle = "Personagens";
             DrawText(
@@ -475,31 +759,21 @@ GameScreen RunItems()
                 DrawRectangleRec(characterSlots[i], fill);
                 DrawRectangleLinesEx(characterSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
 
-                if (i > 0)
+                DrawRatPreview(&idleAnimations[i], characterSlots[i], 1.08f, 1.00f, 0.02f);
+
+                const char *slotTitle = GetPlayerCharacterName(i + 1);
+                int slotTitleSize = slotLabelSize;
+                while (slotTitleSize > 10 && MeasureText(slotTitle, slotTitleSize) > characterSlots[i].width - 8.0f)
                 {
-                    const char *slotTitle = TextFormat("%d", i + 1);
-                    DrawText(
-                        slotTitle,
-                        (int)(characterSlots[i].x + (characterSlots[i].width - MeasureText(slotTitle, slotLabelSize + 8)) * 0.5f),
-                        (int)(characterSlots[i].y + characterSlots[i].height * 0.22f),
-                        slotLabelSize + 8,
-                        DARKBLUE
-                    );
+                    slotTitleSize--;
                 }
-                if (i == 0)
-                {
-                    DrawRatPreview(&ratIdleAnimation, characterSlots[i], 1.08f, 1.00f, 0.02f);
-                }
-                else
-                {
-                    DrawText(
-                        "agente",
-                        (int)(characterSlots[i].x + (characterSlots[i].width - MeasureText("agente", bodySize)) * 0.5f),
-                        (int)(characterSlots[i].y + characterSlots[i].height * 0.62f),
-                        bodySize,
-                        GRAY
-                    );
-                }
+                DrawText(
+                    slotTitle,
+                    (int)(characterSlots[i].x + (characterSlots[i].width - MeasureText(slotTitle, slotTitleSize)) * 0.5f),
+                    (int)(characterSlots[i].y + characterSlots[i].height + 6.0f),
+                    slotTitleSize,
+                    DARKGRAY
+                );
             }
 
             const char *clothingTitle = "Roupas";
@@ -531,13 +805,14 @@ GameScreen RunItems()
                 }
                 DrawRectangleRec(clothingSlots[i], fill);
                 DrawRectangleLinesEx(clothingSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
+                int currentCharacterIndex = GetSelectedCharacterId() - 1;
                 if (i == 0)
                 {
-                    DrawRatPreview(&ratIdleAnimation, clothingSlots[i], 0.96f, 0.96f, 0.00f);
+                    DrawRatPreview(&idleAnimations[currentCharacterIndex], clothingSlots[i], 0.96f, 0.96f, 0.00f);
                 }
                 else if (i == 1)
                 {
-                    DrawRatPreview(&ratCesarIdleAnimation, clothingSlots[i], 0.96f, 0.96f, 0.00f);
+                    DrawRatPreview(&clothedIdleAnimations[currentCharacterIndex], clothingSlots[i], 0.96f, 0.96f, 0.00f);
                 }
             }
 
@@ -552,12 +827,22 @@ GameScreen RunItems()
                 }
                 DrawRectangleRec(weaponSlots[i], fill);
                 DrawRectangleLinesEx(weaponSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
+                int currentCharacterIndex = GetSelectedCharacterId() - 1;
+                int frameCount = i == 2 ? 1 : 5;
+                int frameIndex = i == 2 ? 0 : 2;
+                DrawWeaponPreview(weaponTextures[currentCharacterIndex][i], weaponSlots[i], frameCount, frameIndex);
+
+                int weaponNameSize = slotLabelSize;
+                while (weaponNameSize > 10 && MeasureText(weaponNames[i], weaponNameSize) > weaponSlots[i].width - 8.0f)
+                {
+                    weaponNameSize--;
+                }
                 DrawText(
-                    "arma",
-                    (int)(weaponSlots[i].x + (weaponSlots[i].width - MeasureText("arma", bodySize)) * 0.5f),
-                    (int)(weaponSlots[i].y + weaponSlots[i].height * 0.43f),
-                    bodySize,
-                    GRAY
+                    weaponNames[i],
+                    (int)(weaponSlots[i].x + (weaponSlots[i].width - MeasureText(weaponNames[i], weaponNameSize)) * 0.5f),
+                    (int)(weaponSlots[i].y + weaponSlots[i].height + 6.0f),
+                    weaponNameSize,
+                    DARKGRAY
                 );
             }
 
@@ -565,7 +850,14 @@ GameScreen RunItems()
         EndDrawing();
     }
 
-    UnloadAnimation(&ratIdleAnimation);
-    UnloadAnimation(&ratCesarIdleAnimation);
+    for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+    {
+        UnloadAnimation(&idleAnimations[i]);
+        UnloadAnimation(&clothedIdleAnimations[i]);
+        for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
+        {
+            UnloadTexture(weaponTextures[i][j]);
+        }
+    }
     return SCREEN_EXIT;
 }

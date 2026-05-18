@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 #define FLOOR_SCROLL_SPEED 900.0f
-#define RUNNING_BG_SCROLL_SPEED 375.0f
+#define RUNNING_BG_SCROLL_SPEED 487.5f
 #define FLOOR_VISIBLE_TOP_RATIO 0.85f
 #define FLOOR_WATER_START_Y 317.0f
 #define BAR_WIDTH_RATIO 0.5f
@@ -20,6 +20,7 @@ void InitBackground(Background *bg)
     bg->floor = LoadTexture("assets/sprites/background/Floor.png");
     bg->bossHairyLeg = LoadTexture("assets/sprites/fundo/Background_1Boss.png");
     bg->bossMidnightMan = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Homem_da_meia_noite_background.png");
+    bg->bossShark = LoadTexture("assets/sprites/fundo/Fase_2_fundos/Fase2_background_1.png");
     bg->waterFrameCount = 38;
     bg->waterCurrentFrame = 0;
     bg->waterFrameTimer = 0.0f;
@@ -91,7 +92,7 @@ static void DrawBgStrip(Texture2D *frames, int count, float scrollX, int screenW
     }
 }
 
-void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase)
+void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase)
 {
     Texture2D *runningFrames = NULL;
     if (phase == PHASE_RUNNING)
@@ -113,6 +114,10 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
     if (levelId == 6)
     {
         levelBackground = bg->bossMidnightMan;
+    }
+    else if (bossId == 2)
+    {
+        levelBackground = bg->bossShark;
     }
     else
     {
@@ -187,6 +192,10 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
     DrawRectangleGradientV(0, 0, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 180 }, (Color){ 0, 0, 0, 0 });
     DrawRectangleGradientV(0, screenHeight * 3 / 4, screenWidth, screenHeight / 4, (Color){ 0, 0, 0, 0 }, (Color){ 0, 0, 0, 180 });
 
+}
+
+void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY)
+{
     if (bg->waterStatic.id > 0)
     {
         float tileW = (float)bg->waterStatic.width;
@@ -208,9 +217,12 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
             startX -= scaledW;
         }
 
+        float waterHeight = ((float)screenHeight - waterY) * 1.5f;
+        Rectangle waterSrc = { 0, 0, (float)bg->waterStatic.width, (float)bg->waterStatic.height };
         for (float x = startX; x < screenWidth + scaledW; x += scaledW)
         {
-            DrawTextureEx(bg->waterStatic, (Vector2){x, waterY}, 0.0f, scale, WHITE);
+            Rectangle waterDest = { x, waterY, scaledW, waterHeight };
+            DrawTexturePro(bg->waterStatic, waterSrc, waterDest, (Vector2){0, 0}, 0.0f, WHITE);
         }
     }
 
@@ -224,20 +236,20 @@ void DrawBackground(Background *bg, int levelId, float level6IntroProgress, int 
         float waterH = screenHeight - waterY;
         if (waterH > 0)
         {
-            Rectangle src = 
-            { 
-                0, 
-                0, 
-                (float)wTex.width, 
-                (float)wTex.height 
+            Rectangle src =
+            {
+                0,
+                0,
+                (float)wTex.width,
+                (float)wTex.height
             };
 
-            Rectangle dest = 
-            { 
-                0, 
-                waterY, 
-                (float)screenWidth, 
-                waterH 
+            Rectangle dest =
+            {
+                0,
+                waterY,
+                (float)screenWidth,
+                waterH
             };
 
             float alpha = bg->waterFrameTimer / bg->waterFrameTime;
@@ -334,6 +346,7 @@ void UnloadBackground(Background *bg)
     UnloadTexture(bg->floor);
     UnloadTexture(bg->bossHairyLeg);
     UnloadTexture(bg->bossMidnightMan);
+    UnloadTexture(bg->bossShark);
     for (int i = 0; i < bg->waterFrameCount; i++)
     {
         UnloadTexture(bg->waterFrames[i]);

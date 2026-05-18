@@ -32,6 +32,8 @@ typedef struct
     bool headDestroyed;
     float animationTimer;
     int currentFrame;
+    double waterExitDelay;
+    float fishJumpVelocity;
     Vector2 hitboxOffset;
     Vector2 hitboxSize;
     Vector2 jumpOrigin;
@@ -52,6 +54,7 @@ typedef struct {
 } EnemyAssets;
 
 void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed);
+void InitEnemyTuned(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed, double waterExitDelay, float fishJumpVelocity);
 void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed, Rectangle playerHitbox);
 void DrawEnemy(Enemy *enemy, EnemyAssets *assets);
 Rectangle GetEnemyHitbox(Enemy *enemy);

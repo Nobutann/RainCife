@@ -43,11 +43,13 @@ GameScreen RunStart()
         {
             if (clicked == 0)
             {
+                SetCharacterSelectNextScreen(SCREEN_LEVEL_SELECT);
                 return SCREEN_CHARACTER_SELECT;
             }
             if (clicked == 1)
             {
-                return SCREEN_INFINITE_SOON;
+                SetCharacterSelectNextScreen(SCREEN_INFINITE_MENU);
+                return SCREEN_CHARACTER_SELECT;
             }
             if (clicked == 2)
             {
@@ -66,7 +68,7 @@ GameScreen RunStart()
         BeginDrawing();
             ClearBackground(RAYWHITE);
 
-            const char* title = "RatTsunami";
+            const char* title = "RainCife";
             int titleSize = currentHeight / 10;
             DrawText(title, (currentWidth / 2) - (MeasureText(title, titleSize) / 2), currentHeight / 6, titleSize, DARKBLUE);
 

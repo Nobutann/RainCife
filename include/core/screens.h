@@ -11,7 +11,9 @@ typedef enum
     SCREEN_CHARACTER_SELECT,
     SCREEN_LEVEL_SELECT,
     SCREEN_ITEMS,
+    SCREEN_INFINITE_MENU,
     SCREEN_INFINITE_SOON,
+    SCREEN_INFINITE_GAME,
     SCREEN_CREDITS,
     SCREEN_OPTIONS,
     SCREEN_EXIT
@@ -19,10 +21,13 @@ typedef enum
 
 GameScreen RunStart();
 GameScreen RunCharacterSelect();
+void SetCharacterSelectNextScreen(GameScreen nextScreen);
 GameScreen RunLevelSelect();
+GameScreen RunInfiniteMenu();
 GameScreen RunItems();
+void SetItemsReturnScreen(GameScreen returnScreen);
 GameScreen RunInfiniteSoon();
-GameScreen RunOptions(Config *config);
+GameScreen RunOptions(Config *config, GameScreen returnScreen);
 GameScreen RunCredits();
 GameScreen RunGame(Config *config);
 
@@ -33,5 +38,6 @@ void UnlockStoryLevel(int levelId);
 int GetSelectedCharacterId(void);
 void SetSelectedCharacterId(int characterId);
 int GetSelectedClothingId(void);
+int GetSelectedWeaponId(void);
 
 #endif
