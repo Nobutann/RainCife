@@ -284,6 +284,10 @@ int main(void)
             Vector2 startPos = { 100, initGroundY };
             InitPlayer(&player, startPos, SPEED);
 
+            ProjectileSystem projectiles;
+            InitProjectileSystem(&projectiles);
+            SetProjectileSystem(&projectiles);
+
             HairyLeg pernaCabeluda;
             InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
 
@@ -587,6 +591,8 @@ int main(void)
 
                 UpdateBackground(&bg, dt, phase);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
+                UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
+
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 
                 if (IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
@@ -810,6 +816,7 @@ int main(void)
                     }
 
                     DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
+                    DrawProjectiles(&projectiles);
                     DrawGameplayCursor(player.weapon.attacking);
                 EndDrawing();
             }
@@ -832,6 +839,7 @@ int main(void)
             UnloadTexture(enemyAssets.destroyedSheet);
             UnloadShark(&shark);
             UnloadMidnightMan(&midnightMan);
+            UnloadProjectileSystem(&projectiles);
             FreeLevels(levels);
         }
     }

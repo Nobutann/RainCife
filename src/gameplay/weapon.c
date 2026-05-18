@@ -73,8 +73,7 @@ void UseHammer(Player *player)
 
 void UsePistol(Player *player)
 {
-    float knockback = player->speed * 3.0f;
-    player->velocity.x += player->facingRight ? knockback : -knockback;
+    SpawnPistolProjectile(player);
 }
 
 void EquipWeapon(Player *player, WeaponType type)
