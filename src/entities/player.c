@@ -185,7 +185,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         UseWeapon(player);
     }
 
-    if (!player->onGround && player->weapon.attacking)
+    if (!player->onGround && player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
     {
         if (player->velocity.y <= 0)
         {
@@ -227,7 +227,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
             player->sprites.attack.layers[2].offsetY += 0.0f;
         }
     }
-    else if (player->weapon.attacking)
+    else if (player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
     {
         player->sprites.attack.layers[1].offsetX = 0.0f;
         player->sprites.attack.layers[2].offsetX = 0.0f;

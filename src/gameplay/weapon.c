@@ -73,7 +73,7 @@ void UseHammer(Player *player)
 
 void UsePistol(Player *player)
 {
-    float knockback = player->speed * 0.4f;
+    float knockback = player->speed * 3.0f;
     player->velocity.x += player->facingRight ? knockback : -knockback;
 }
 
@@ -143,9 +143,14 @@ void UseWeapon(Player *player)
     }
 
     player->weapon.cooldownTimer = player->weapon.cooldown;
-    player->weapon.attacking = true;
     player->weapon.hitConnected = false;
-    player->weapon.attackTimer = player->weapon.attackDuration;
+
+    if (player->weapon.type != WEAPON_PISTOL)
+    {
+        player->weapon.attackTimer = player->weapon.attackDuration;
+        player->weapon.attacking = true;
+    }
+
     player->weapon.attack(player);
 }
 
