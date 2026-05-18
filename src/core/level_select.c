@@ -1,5 +1,7 @@
 #include <raylib.h>
+#include <stdio.h>
 #include "core/screens.h"
+#include "core/ranking_manager.h"
 #include "core/cursor.h"
 #include "utils.h"
 #include "graphics/sprites.h"
@@ -223,6 +225,82 @@ static void DrawSelectionArrow(Rectangle stageRect)
     DrawLineEx((Vector2){tip.x, tip.y - 72.0f}, tip, 7.0f, RED);
 }
 
+static void DrawInfiniteRankingPanel(Rectangle panel, const RankingInfinito *ranking, int screenHeight)
+{
+    int titleSize = screenHeight / 30;
+    int headerSize = screenHeight / 48;
+    int rowSize = screenHeight / 46;
+    const char *title = "Top 10";
+
+    DrawRectangleRec(panel, (Color){232, 232, 232, 255});
+    DrawRectangleLinesEx(panel, 3.0f, DARKGRAY);
+
+    DrawText(
+        title,
+        (int)(panel.x + (panel.width - MeasureText(title, titleSize)) * 0.5f),
+        (int)(panel.y + panel.height * 0.07f),
+        titleSize,
+        DARKBLUE
+    );
+
+    float tableX = panel.x + panel.width * 0.12f;
+    float tableY = panel.y + panel.height * 0.23f;
+    float rankX = tableX;
+    float nameX = tableX + panel.width * 0.13f;
+    float scoreX = panel.x + panel.width * 0.70f;
+    float tableW = panel.width * 0.76f;
+    float rowH = rowSize + 7.0f;
+
+    DrawText("POS", (int)rankX, (int)tableY, headerSize, GRAY);
+    DrawText("NOME", (int)nameX, (int)tableY, headerSize, GRAY);
+    DrawText("METROS", (int)scoreX, (int)tableY, headerSize, GRAY);
+    DrawLine(
+        (int)tableX,
+        (int)(tableY + headerSize + 7),
+        (int)(tableX + tableW),
+        (int)(tableY + headerSize + 7),
+        GRAY
+    );
+
+    if (ranking->quantidade == 0)
+    {
+        const char *emptyText = "Sem recordes ainda";
+        DrawText(
+            emptyText,
+            (int)(panel.x + (panel.width - MeasureText(emptyText, rowSize)) * 0.5f),
+            (int)(panel.y + panel.height * 0.52f),
+            rowSize,
+            DARKGRAY
+        );
+        return;
+    }
+
+    for (int i = 0; i < ranking->quantidade; i++)
+    {
+        char posText[8];
+        char scoreText[24];
+        snprintf(posText, sizeof(posText), "%d.", i + 1);
+        snprintf(scoreText, sizeof(scoreText), "%.0fm", ranking->entradas[i].metros);
+
+        float y = tableY + headerSize + 16.0f + i * rowH;
+        if (i % 2 == 0)
+        {
+            DrawRectangle(
+                (int)(tableX - 8.0f),
+                (int)(y - 3.0f),
+                (int)(tableW + 16.0f),
+                (int)(rowH - 1.0f),
+                (Color){222, 222, 222, 255}
+            );
+        }
+
+        Color rowColor = i == 0 ? DARKBLUE : DARKGRAY;
+        DrawText(posText, (int)rankX, (int)y, rowSize, rowColor);
+        DrawText(ranking->entradas[i].nome, (int)nameX, (int)y, rowSize, rowColor);
+        DrawText(scoreText, (int)scoreX, (int)y, rowSize, rowColor);
+    }
+}
+
 GameScreen RunLevelSelect()
 {
     const char *menuOptions[] =
@@ -358,6 +436,7 @@ GameScreen RunInfiniteMenu()
     };
     bool acceptClick = false;
     bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
+    RankingInfinito ranking = CarregarRankingInfinito();
 
     while (!WindowShouldClose())
     {
@@ -366,14 +445,14 @@ GameScreen RunInfiniteMenu()
         int titleSize = currentHeight / 10;
         int menuFontSize = currentHeight / 21;
         int menuSpacing = menuFontSize + 18;
-        int menuStartY = (int)(currentHeight * 0.56f);
+        int menuStartY = (int)(currentHeight * 0.64f);
         Rectangle optionRects[4];
         Rectangle panel =
         {
             currentWidth * 0.14f,
-            currentHeight * 0.22f,
+            currentHeight * 0.18f,
             currentWidth * 0.72f,
-            currentHeight * 0.30f
+            currentHeight * 0.40f
         };
         Vector2 mouse = GetMousePosition();
         bool hoveringInteractive = false;
@@ -424,17 +503,16 @@ GameScreen RunInfiniteMenu()
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
-            DrawRectangleRec(panel, (Color){232, 232, 232, 255});
-            DrawRectangleLinesEx(panel, 3.0f, DARKGRAY);
-
             const char *title = "Modo Infinito";
             DrawText(
                 title,
                 (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
-                (int)(currentHeight * 0.30f),
+                (int)(currentHeight * 0.06f),
                 titleSize,
                 DARKBLUE
             );
+
+            DrawInfiniteRankingPanel(panel, &ranking, currentHeight);
 
             for (int i = 0; i < 4; i++)
             {
