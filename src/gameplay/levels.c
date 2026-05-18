@@ -1,13 +1,14 @@
 #include "gameplay/levels.h"
 #include <stdlib.h>
 
-Level* CreateLevel(int id, int enemyConfigId, float spawnInterval, float duration, int bossId) {
+Level* CreateLevel(int id, int enemyConfigId, float spawnInterval, float duration, float barExtraDuration, int bossId) {
     Level *newLevel = (Level*)malloc(sizeof(Level));
     if (newLevel) {
         newLevel->id = id;
         newLevel->enemyConfigId = enemyConfigId;
         newLevel->spawnInterval = spawnInterval;
         newLevel->duration = duration;
+        newLevel->barExtraDuration = barExtraDuration;
         newLevel->bossId = bossId;
         newLevel->next = NULL;
         newLevel->prev = NULL;
@@ -57,14 +58,14 @@ void FreeLevels(Level *head) {
 Level* InitGameLevels() {
     Level *head = NULL;
 
-    AddLevel(&head, CreateLevel(1, 1, 1.2f, 30.0f, 1));
-    AddLevel(&head, CreateLevel(2, 2, 1.0f, 45.0f, 2));
-    AddLevel(&head, CreateLevel(3, 3, 0.8f, 60.0f, 3));
+    AddLevel(&head, CreateLevel(1, 1, 1.2f, 30.0f, 3.0f, 1));
+    AddLevel(&head, CreateLevel(2, 2, 1.0f, 45.0f, 5.0f, 2));
+    AddLevel(&head, CreateLevel(3, 3, 0.8f, 60.0f, 7.0f, 3));
 
     // debug levels: duration=0 pula direto ao boss
-    AddLevel(&head, CreateLevel(4, 1, 1.0f, 0.0f, 1));
-    AddLevel(&head, CreateLevel(5, 2, 1.0f, 0.0f, 2));
-    AddLevel(&head, CreateLevel(6, 3, 1.0f, 0.0f, 3));
+    AddLevel(&head, CreateLevel(4, 1, 1.0f, 0.0f, 0.0f, 1));
+    AddLevel(&head, CreateLevel(5, 2, 1.0f, 0.0f, 0.0f, 2));
+    AddLevel(&head, CreateLevel(6, 3, 1.0f, 0.0f, 0.0f, 3));
 
     return head;
 }
@@ -72,9 +73,9 @@ Level* InitGameLevels() {
 Level* InitInfiniteLevels() {
     Level *head = NULL;
 
-    AddCircularLevel(&head, CreateLevel(1, 1, 1.2f, 0.0f, 0));
-    AddCircularLevel(&head, CreateLevel(2, 2, 1.0f, 0.0f, 0));
-    AddCircularLevel(&head, CreateLevel(3, 3, 0.8f, 0.0f, 0));
+    AddCircularLevel(&head, CreateLevel(1, 1, 1.2f, 0.0f, 0.0f, 0));
+    AddCircularLevel(&head, CreateLevel(2, 2, 1.0f, 0.0f, 0.0f, 0));
+    AddCircularLevel(&head, CreateLevel(3, 3, 0.8f, 0.0f, 0.0f, 0));
 
     return head;
 }
