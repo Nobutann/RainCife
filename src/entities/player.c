@@ -4,7 +4,6 @@
 #include "core/screens.h"
 
 #define BOSS_INTRO_PLAYER_GAP 220.0f
-#define BOSS_GROUNDED_FLIPPED_DRAW_OFFSET 1.00f
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
 {
@@ -37,24 +36,6 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
 static bool IsHammerAirAttack(const Player *player)
 {
     return !player->onGround && player->weapon.attacking && player->weapon.type == WEAPON_HAMMER;
-}
-
-static Vector2 GetPlayerDrawPosition(const Player *player, float scale)
-{
-    Vector2 drawPosition = player->position;
-
-    if (
-        player->isBossFighting &&
-        player->onGround &&
-        player->facingRight &&
-        player->currentAnim == &player->sprites.walkFront &&
-        player->currentAnim->layerCount > 0
-    )
-    {
-        drawPosition.x += player->currentAnim->layers[0].frameWidth * scale * BOSS_GROUNDED_FLIPPED_DRAW_OFFSET;
-    }
-
-    return drawPosition;
 }
 
 static void DrawLayeredAnimationLayer(LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX, Color tint)
@@ -574,18 +555,16 @@ void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY
 
 void DrawPlayer(Player *player, float scale)
 {   
-    Vector2 drawPosition = GetPlayerDrawPosition(player, scale);
-
     if (IsHammerAirAttack(player))
     {
         bool flipX = !player->facingRight;
-        DrawLayeredAnimationLayer(player->currentAnim, 1, drawPosition, scale, flipX, WHITE);
-        DrawLayeredAnimationLayer(player->currentAnim, 0, drawPosition, scale, flipX, WHITE);
-        DrawLayeredAnimationLayer(player->currentAnim, 2, drawPosition, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 1, player->position, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 0, player->position, scale, flipX, WHITE);
+        DrawLayeredAnimationLayer(player->currentAnim, 2, player->position, scale, flipX, WHITE);
     }
     else
     {
-        DrawLayeredAnimation(player->currentAnim, drawPosition, scale, !player->facingRight, WHITE);
+        DrawLayeredAnimation(player->currentAnim, player->position, scale, !player->facingRight, WHITE);
     }
 
     Rectangle hitbox = GetPlayerHitbox(player, scale);

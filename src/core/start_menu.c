@@ -43,11 +43,13 @@ GameScreen RunStart()
         {
             if (clicked == 0)
             {
+                SetCharacterSelectNextScreen(SCREEN_LEVEL_SELECT);
                 return SCREEN_CHARACTER_SELECT;
             }
             if (clicked == 1)
             {
-                return SCREEN_INFINITE_SOON;
+                SetCharacterSelectNextScreen(SCREEN_INFINITE_GAME);
+                return SCREEN_CHARACTER_SELECT;
             }
             if (clicked == 2)
             {

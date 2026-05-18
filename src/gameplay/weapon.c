@@ -122,19 +122,13 @@ void EquipWeapon(Player *player, WeaponType type)
     player->weapon.type = type;
     player->weapon.cooldownTimer = 0.0f;
     player->weapon.hitConnected = false;
+    float swordCooldown = player->isBossFighting ? 0.5f : 0.85f;
 
     switch (type)
     {
         case WEAPON_BAT:
             player->weapon.damage = 4.0f;
-            if (player->isBossFighting)
-            {
-               player->weapon.cooldown = 0.5f;
-            }
-            else
-            {
-                player->weapon.cooldown = 0.85f;
-            }
+            player->weapon.cooldown = swordCooldown;
             player->weapon.breakPower = 1;
             player->weapon.attack = UseBat;
             player->weapon.attackDuration = LoadAttackAnimation(
@@ -147,7 +141,7 @@ void EquipWeapon(Player *player, WeaponType type)
             break;
         case WEAPON_HAMMER:
             player->weapon.damage = 8.0f;
-            player->weapon.cooldown = 0.85f;
+            player->weapon.cooldown = swordCooldown * 2.0f;
             player->weapon.breakPower = 3;
             player->weapon.attack = UseHammer;
             player->weapon.attackDuration = LoadAttackAnimation(
@@ -155,7 +149,7 @@ void EquipWeapon(Player *player, WeaponType type)
                 characterId,
                 clothed ? sprites->attackHammerClothed : sprites->attackHammer,
                 5,
-                0.09f
+                0.08f
             );
             break;
         case WEAPON_PISTOL:

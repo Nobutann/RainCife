@@ -1,7 +1,10 @@
 #include <raylib.h>
 #include "entities/enemy.h"
 
-void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed)
+#define FISH_WATER_EXIT_DELAY 1.1
+#define FISH_JUMP_VELOCITY -26.0f
+
+void InitEnemyTuned(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed, double waterExitDelay, float fishJumpVelocity)
 {
     enemy->type = type;
     enemy->active = true;
@@ -12,6 +15,8 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
     enemy->headDestroyed = false;
     enemy->animationTimer = 0.0f;
     enemy->currentFrame = 0;
+    enemy->waterExitDelay = waterExitDelay;
+    enemy->fishJumpVelocity = fishJumpVelocity;
 
     switch (type)
     {
@@ -71,6 +76,11 @@ void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, 
         case ENEMY_COUNT:
             break;
     }
+}
+
+void InitEnemy(Enemy *enemy, EnemyType type, int screenWidth, int screenHeight, int baseSpeed)
+{
+    InitEnemyTuned(enemy, type, screenWidth, screenHeight, baseSpeed, FISH_WATER_EXIT_DELAY, FISH_JUMP_VELOCITY);
 }
 
 Rectangle GetEnemyHitbox(Enemy *enemy)
@@ -242,11 +252,11 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             {
                 enemy->basePosition.x -= (15 + baseSpeed);
                 enemy->position.x = enemy->basePosition.x;
-                if (GetTime() - enemy->stateTimer > 1.1)
+                if (GetTime() - enemy->stateTimer > enemy->waterExitDelay)
                 {
                     enemy->state = 1;
                     enemy->position.y = enemy->basePosition.y;
-                    enemy->velocity.y = -26.0f;
+                    enemy->velocity.y = enemy->fishJumpVelocity;
                     enemy->jumpOrigin = enemy->basePosition;
                 }
             }

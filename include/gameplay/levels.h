@@ -17,5 +17,6 @@ Level* CreateLevel(int id, int enemyConfigId, float spawnInterval, float duratio
 void AddLevel(Level **head, Level *newLevel);
 void FreeLevels(Level *head);
 Level* InitGameLevels();
+Level* InitInfiniteLevels();
 
 #endif

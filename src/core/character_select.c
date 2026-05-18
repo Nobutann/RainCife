@@ -7,6 +7,7 @@
 #define CHARACTER_SLOT_COUNT 3
 
 static int selectedCharacterId = 1;
+static GameScreen characterSelectNextScreen = SCREEN_LEVEL_SELECT;
 
 typedef struct CharacterSlot
 {
@@ -91,6 +92,11 @@ void SetSelectedCharacterId(int characterId)
     selectedCharacterId = characterId;
 }
 
+void SetCharacterSelectNextScreen(GameScreen nextScreen)
+{
+    characterSelectNextScreen = nextScreen;
+}
+
 GameScreen RunCharacterSelect()
 {
     CharacterSlot slots[CHARACTER_SLOT_COUNT] =
@@ -149,7 +155,7 @@ GameScreen RunCharacterSelect()
                     {
                         UnloadAnimation(&idleAnimations[j]);
                     }
-                    return SCREEN_LEVEL_SELECT;
+                    return characterSelectNextScreen;
                 }
             }
         }
