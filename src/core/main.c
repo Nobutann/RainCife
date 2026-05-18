@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "core/screens.h"
 #include "core/config_manager.h"
+#include "core/ranking_manager.h"
 #include "entities/player.h"
 #include "entities/hairy_leg.h"
 #include "entities/shark.h"
@@ -342,6 +343,63 @@ static void DrawInfiniteMetersCounter(float meters, int currentWidth, int curren
     DrawText(text, boxX + paddingX, boxY + paddingY, fontSize, RAYWHITE);
 }
 
+static void DrawInfiniteRankingNameOverlay(int currentWidth, int currentHeight, float meters, const char *name)
+{
+    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.82f));
+
+    const char *title = "Novo Top 10!";
+    const char *subtitle = "Digite seu nome";
+    const char *hint = "ENTER salva";
+    int titleSize = currentHeight / 12;
+    int subtitleSize = currentHeight / 28;
+    int inputSize = currentHeight / 22;
+    int hintSize = currentHeight / 34;
+
+    char scoreText[48];
+    snprintf(scoreText, sizeof(scoreText), "%.0fm", meters);
+
+    DrawText(
+        title,
+        (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
+        currentHeight / 4,
+        titleSize,
+        GOLD
+    );
+    DrawText(
+        scoreText,
+        (currentWidth / 2) - (MeasureText(scoreText, subtitleSize) / 2),
+        currentHeight / 4 + titleSize + 8,
+        subtitleSize,
+        RAYWHITE
+    );
+    DrawText(
+        subtitle,
+        (currentWidth / 2) - (MeasureText(subtitle, subtitleSize) / 2),
+        currentHeight / 4 + titleSize + subtitleSize + 18,
+        subtitleSize,
+        LIGHTGRAY
+    );
+
+    int boxW = currentWidth * 0.44f;
+    int boxH = inputSize + 24;
+    int boxX = (currentWidth - boxW) / 2;
+    int boxY = currentHeight / 2;
+    DrawRectangleRounded((Rectangle){boxX, boxY, boxW, boxH}, 0.12f, 8, RAYWHITE);
+    DrawRectangleRoundedLines((Rectangle){boxX, boxY, boxW, boxH}, 0.12f, 8, GOLD);
+
+    const char *shownName = name[0] == '\0' ? "Jogador" : name;
+    int nameW = MeasureText(shownName, inputSize);
+    DrawText(shownName, boxX + (boxW - nameW) / 2, boxY + 12, inputSize, DARKGRAY);
+
+    DrawText(
+        hint,
+        (currentWidth / 2) - (MeasureText(hint, hintSize) / 2),
+        boxY + boxH + 18,
+        hintSize,
+        LIGHTGRAY
+    );
+}
+
 static int GetInfiniteEnemyBaseSpeed(float gameSpeedMultiplier)
 {
     float bonus = 15.0f * (gameSpeedMultiplier - 1.0f);
@@ -509,6 +567,12 @@ int main(void)
             bool deathScreenActive = false;
             bool gamePaused = false;
             GamePhase retryPhase = PHASE_RUNNING;
+            RankingInfinito infiniteRanking = CarregarRankingInfinito();
+            bool infiniteRankingChecked = false;
+            bool infiniteRankingNameActive = false;
+            char infinitePlayerName[INFINITE_PLAYER_NAME_MAX] = "";
+            int infinitePlayerNameLength = 0;
+            float infiniteFinalMeters = 0.0f;
             float infiniteMeters = 0.0f;
             float infiniteNextSpeedStepMeters = INFINITE_SPEED_STEP_METERS;
             float infiniteSpeedMultiplier = 1.0f;
@@ -597,6 +661,52 @@ int main(void)
 
                 if (deathScreenActive)
                 {
+                    if (infiniteMode && !infiniteRankingChecked)
+                    {
+                        infiniteFinalMeters = infiniteMeters;
+                        infiniteRanking = CarregarRankingInfinito();
+                        infiniteRankingNameActive = PontuacaoEntraNoTop10(&infiniteRanking, infiniteFinalMeters);
+                        infinitePlayerName[0] = '\0';
+                        infinitePlayerNameLength = 0;
+                        infiniteRankingChecked = true;
+                    }
+
+                    if (infiniteRankingNameActive)
+                    {
+                        int key = GetCharPressed();
+                        while (key > 0)
+                        {
+                            if (key >= 32 && key <= 126 && infinitePlayerNameLength < INFINITE_PLAYER_NAME_MAX - 1)
+                            {
+                                infinitePlayerName[infinitePlayerNameLength] = (char)key;
+                                infinitePlayerNameLength++;
+                                infinitePlayerName[infinitePlayerNameLength] = '\0';
+                            }
+                            key = GetCharPressed();
+                        }
+
+                        if (IsKeyPressed(KEY_BACKSPACE) && infinitePlayerNameLength > 0)
+                        {
+                            infinitePlayerNameLength--;
+                            infinitePlayerName[infinitePlayerNameLength] = '\0';
+                        }
+
+                        if (IsKeyPressed(KEY_ENTER))
+                        {
+                            AdicionarPontuacaoRankingInfinito(&infiniteRanking, infinitePlayerName, infiniteFinalMeters);
+                            infiniteRankingNameActive = false;
+                        }
+
+                        float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
+
+                        BeginDrawing();
+                            DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
+                            DrawInfiniteMetersCounter(infiniteFinalMeters, currentWidth, currentHeight);
+                            DrawInfiniteRankingNameOverlay(currentWidth, currentHeight, infiniteFinalMeters, infinitePlayerName);
+                        EndDrawing();
+                        continue;
+                    }
+
                     const char *deathOptions[] =
                     {
                         "Continuar",
@@ -633,6 +743,8 @@ int main(void)
                             infiniteMeters = 0.0f;
                             infiniteNextSpeedStepMeters = INFINITE_SPEED_STEP_METERS;
                             infiniteSpeedMultiplier = 1.0f;
+                            infiniteRankingChecked = false;
+                            infiniteRankingNameActive = false;
                             for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                             {
                                 enemies[i].active = false;
