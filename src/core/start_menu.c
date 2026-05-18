@@ -48,7 +48,7 @@ GameScreen RunStart()
             }
             if (clicked == 1)
             {
-                SetCharacterSelectNextScreen(SCREEN_INFINITE_GAME);
+                SetCharacterSelectNextScreen(SCREEN_INFINITE_MENU);
                 return SCREEN_CHARACTER_SELECT;
             }
             if (clicked == 2)

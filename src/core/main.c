@@ -426,6 +426,15 @@ int main(void)
             }
             currentScreen = nextScreen;
         }
+        else if (currentScreen == SCREEN_INFINITE_MENU)
+        {
+            GameScreen nextScreen = RunInfiniteMenu();
+            if (nextScreen == SCREEN_OPTIONS)
+            {
+                optionsReturnScreen = SCREEN_INFINITE_MENU;
+            }
+            currentScreen = nextScreen;
+        }
         else if (currentScreen == SCREEN_ITEMS)
         {
             currentScreen = RunItems();

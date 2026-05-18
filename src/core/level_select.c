@@ -88,6 +88,7 @@ static int selectedStoryLevelId = 1;
 static int maxUnlockedStoryLevelId = 1;
 static int selectedClothingId = 1;
 static int selectedWeaponId = 1;
+static GameScreen itemsReturnScreen = SCREEN_LEVEL_SELECT;
 
 int GetSelectedClothingId(void)
 {
@@ -97,6 +98,11 @@ int GetSelectedClothingId(void)
 int GetSelectedWeaponId(void)
 {
     return selectedWeaponId;
+}
+
+void SetItemsReturnScreen(GameScreen returnScreen)
+{
+    itemsReturnScreen = returnScreen;
 }
 
 int GetSelectedStoryLevelId(void)
@@ -299,6 +305,7 @@ GameScreen RunLevelSelect()
         }
         if (clicked == 1)
         {
+            SetItemsReturnScreen(SCREEN_LEVEL_SELECT);
             return SCREEN_ITEMS;
         }
         if (clicked == 2)
@@ -335,6 +342,109 @@ GameScreen RunLevelSelect()
         EndDrawing();
 
         lastMousePosition = mouse;
+    }
+
+    return SCREEN_EXIT;
+}
+
+GameScreen RunInfiniteMenu()
+{
+    const char *menuOptions[] =
+    {
+        "Jogar",
+        "Itens",
+        "Opções",
+        "Menu"
+    };
+    bool acceptClick = false;
+    bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
+
+    while (!WindowShouldClose())
+    {
+        int currentWidth = GetScreenWidth();
+        int currentHeight = GetScreenHeight();
+        int titleSize = currentHeight / 10;
+        int menuFontSize = currentHeight / 21;
+        int menuSpacing = menuFontSize + 18;
+        int menuStartY = (int)(currentHeight * 0.56f);
+        Rectangle optionRects[4];
+        Rectangle panel =
+        {
+            currentWidth * 0.14f,
+            currentHeight * 0.22f,
+            currentWidth * 0.72f,
+            currentHeight * 0.30f
+        };
+        Vector2 mouse = GetMousePosition();
+        bool hoveringInteractive = false;
+
+        BuildOptionRects(optionRects, menuOptions, 4, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
+
+        if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
+        {
+            acceptEscape = true;
+        }
+
+        if (acceptEscape && IsKeyPressed(KEY_ESCAPE))
+        {
+            return SCREEN_CHARACTER_SELECT;
+        }
+
+        if (!acceptClick && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            acceptClick = true;
+        }
+
+        for (int i = 0; i < 4; i++)
+        {
+            if (CheckCollisionPointRec(mouse, optionRects[i]))
+            {
+                hoveringInteractive = true;
+            }
+        }
+
+        int clicked = acceptClick ? GetClickedOption(optionRects, 4) : -1;
+        if (clicked == 0)
+        {
+            return SCREEN_INFINITE_GAME;
+        }
+        if (clicked == 1)
+        {
+            SetItemsReturnScreen(SCREEN_INFINITE_MENU);
+            return SCREEN_ITEMS;
+        }
+        if (clicked == 2)
+        {
+            return SCREEN_OPTIONS;
+        }
+        if (clicked == 3)
+        {
+            return SCREEN_START;
+        }
+
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+            DrawRectangleRec(panel, (Color){232, 232, 232, 255});
+            DrawRectangleLinesEx(panel, 3.0f, DARKGRAY);
+
+            const char *title = "Modo Infinito";
+            DrawText(
+                title,
+                (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
+                (int)(currentHeight * 0.30f),
+                titleSize,
+                DARKBLUE
+            );
+
+            for (int i = 0; i < 4; i++)
+            {
+                bool hovered = CheckCollisionPointRec(mouse, optionRects[i]);
+                Color color = hovered ? YELLOW : DARKGRAY;
+                DrawText(menuOptions[i], optionRects[i].x, optionRects[i].y, menuFontSize, color);
+            }
+
+            DrawMenuCursor(hoveringInteractive);
+        EndDrawing();
     }
 
     return SCREEN_EXIT;
@@ -424,7 +534,7 @@ GameScreen RunItems()
                         UnloadTexture(weaponTextures[i][j]);
                     }
                 }
-                return SCREEN_LEVEL_SELECT;
+                return itemsReturnScreen;
             }
         }
 
@@ -439,7 +549,7 @@ GameScreen RunItems()
                     UnloadTexture(weaponTextures[i][j]);
                 }
             }
-            return SCREEN_LEVEL_SELECT;
+            return itemsReturnScreen;
         }
 
         if (!acceptClick && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
