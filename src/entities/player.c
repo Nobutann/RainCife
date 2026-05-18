@@ -749,6 +749,8 @@ void DrawPlayer(Player *player, float scale)
         DrawTexturePro(arm, src, dest, origin, player->armAngle, WHITE);
     }
 
+    Vector2 drawPosition = player->position;
+
     if (IsHammerAirAttack(player))
     {
         bool flipX = !player->facingRight;
