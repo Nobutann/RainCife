@@ -1,5 +1,7 @@
 *.exe
 *.bin
+.env
+desafios_gemini_*.json
 .vscode/
 libs/*.dll
 libs/*.exe

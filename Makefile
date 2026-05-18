@@ -55,7 +55,7 @@ obj/%.o: src/%.c
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 run: all
-	./$(TARGET)
+	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; ./$(TARGET)
 
 clean:
 	$(RM) $(call FIX_PATH,bin) $(call FIX_PATH,obj)

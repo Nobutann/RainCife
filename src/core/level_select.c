@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "core/screens.h"
 #include "core/ranking_manager.h"
+#include "core/daily_challenges.h"
 #include "core/cursor.h"
 #include "utils.h"
 #include "graphics/sprites.h"
@@ -430,6 +431,7 @@ GameScreen RunInfiniteMenu()
     const char *menuOptions[] =
     {
         "Jogar",
+        "Desafios",
         "Itens",
         "Opções",
         "Menu"
@@ -445,8 +447,8 @@ GameScreen RunInfiniteMenu()
         int titleSize = currentHeight / 10;
         int menuFontSize = currentHeight / 21;
         int menuSpacing = menuFontSize + 18;
-        int menuStartY = (int)(currentHeight * 0.64f);
-        Rectangle optionRects[4];
+        int menuStartY = (int)(currentHeight * 0.62f);
+        Rectangle optionRects[5];
         Rectangle panel =
         {
             currentWidth * 0.14f,
@@ -457,7 +459,7 @@ GameScreen RunInfiniteMenu()
         Vector2 mouse = GetMousePosition();
         bool hoveringInteractive = false;
 
-        BuildOptionRects(optionRects, menuOptions, 4, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
+        BuildOptionRects(optionRects, menuOptions, 5, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
 
         if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
         {
@@ -474,7 +476,7 @@ GameScreen RunInfiniteMenu()
             acceptClick = true;
         }
 
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 5; i++)
         {
             if (CheckCollisionPointRec(mouse, optionRects[i]))
             {
@@ -482,21 +484,25 @@ GameScreen RunInfiniteMenu()
             }
         }
 
-        int clicked = acceptClick ? GetClickedOption(optionRects, 4) : -1;
+        int clicked = acceptClick ? GetClickedOption(optionRects, 5) : -1;
         if (clicked == 0)
         {
             return SCREEN_INFINITE_GAME;
         }
         if (clicked == 1)
         {
-            SetItemsReturnScreen(SCREEN_INFINITE_MENU);
-            return SCREEN_ITEMS;
+            return SCREEN_DAILY_CHALLENGES;
         }
         if (clicked == 2)
         {
-            return SCREEN_OPTIONS;
+            SetItemsReturnScreen(SCREEN_INFINITE_MENU);
+            return SCREEN_ITEMS;
         }
         if (clicked == 3)
+        {
+            return SCREEN_OPTIONS;
+        }
+        if (clicked == 4)
         {
             return SCREEN_START;
         }
@@ -514,11 +520,135 @@ GameScreen RunInfiniteMenu()
 
             DrawInfiniteRankingPanel(panel, &ranking, currentHeight);
 
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
             {
                 bool hovered = CheckCollisionPointRec(mouse, optionRects[i]);
                 Color color = hovered ? YELLOW : DARKGRAY;
                 DrawText(menuOptions[i], optionRects[i].x, optionRects[i].y, menuFontSize, color);
+            }
+
+            DrawMenuCursor(hoveringInteractive);
+        EndDrawing();
+    }
+
+    return SCREEN_EXIT;
+}
+
+static void DrawDailyChallengeRow(Rectangle row, const DailyChallenge *challenge, int fontSize, int smallFontSize)
+{
+    Color fill = challenge->completed ? (Color){218, 238, 218, 255} : (Color){236, 236, 236, 255};
+    Color border = challenge->completed ? DARKGREEN : DARKGRAY;
+    const char *check = challenge->completed ? "[x]" : "[ ]";
+    char progressText[32];
+
+    snprintf(progressText, sizeof(progressText), "%d/%d", challenge->progress, challenge->target);
+
+    DrawRectangleRec(row, fill);
+    DrawRectangleLinesEx(row, 2.0f, border);
+    DrawText(check, (int)(row.x + row.width * 0.04f), (int)(row.y + row.height * 0.26f), fontSize, border);
+
+    int textX = (int)(row.x + row.width * 0.17f);
+    int textY = (int)(row.y + row.height * 0.18f);
+    int maxTextW = (int)(row.width * 0.60f);
+    int challengeFontSize = fontSize;
+    while (challengeFontSize > 12 && MeasureText(challenge->text, challengeFontSize) > maxTextW)
+    {
+        challengeFontSize--;
+    }
+
+    DrawText(challenge->text, textX, textY, challengeFontSize, DARKGRAY);
+    DrawText(
+        progressText,
+        (int)(row.x + row.width * 0.83f),
+        (int)(row.y + row.height * 0.32f),
+        smallFontSize,
+        challenge->completed ? DARKGREEN : GRAY
+    );
+}
+
+GameScreen RunDailyChallenges()
+{
+    bool acceptClick = false;
+    DailyChallengeState state = CarregarDesafiosDiarios();
+
+    while (!WindowShouldClose())
+    {
+        GarantirDesafiosDiarios(&state);
+
+        int currentWidth = GetScreenWidth();
+        int currentHeight = GetScreenHeight();
+        int titleSize = currentHeight / 12;
+        int rowFontSize = currentHeight / 32;
+        int smallFontSize = currentHeight / 36;
+        Rectangle backButton = { 28.0f, 26.0f, 70.0f, 54.0f };
+        Rectangle panel =
+        {
+            currentWidth * 0.12f,
+            currentHeight * 0.20f,
+            currentWidth * 0.76f,
+            currentHeight * 0.58f
+        };
+        Vector2 mouse = GetMousePosition();
+        bool hoveringInteractive = CheckCollisionPointRec(mouse, backButton);
+
+        if (!acceptClick && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            acceptClick = true;
+        }
+
+        if (IsKeyPressed(KEY_ESCAPE))
+        {
+            return SCREEN_INFINITE_MENU;
+        }
+
+        if (hoveringInteractive && acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            return SCREEN_INFINITE_MENU;
+        }
+
+        BeginDrawing();
+            ClearBackground(RAYWHITE);
+
+            bool backHovered = CheckCollisionPointRec(mouse, backButton);
+            DrawText("<", 40, 18, 58, backHovered ? RED : DARKGRAY);
+
+            const char *title = "Desafios Diarios";
+            DrawText(
+                title,
+                (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
+                (int)(currentHeight * 0.07f),
+                titleSize,
+                DARKBLUE
+            );
+
+            DrawRectangleRec(panel, (Color){232, 232, 232, 255});
+            DrawRectangleLinesEx(panel, 3.0f, DARKGRAY);
+
+            const char *sourceText = state.generatedByAi ? "Gerados por IA - reset as 03h" : "Padrao local - reset as 03h";
+            DrawText(
+                sourceText,
+                (int)(panel.x + (panel.width - MeasureText(sourceText, smallFontSize)) * 0.5f),
+                (int)(panel.y + panel.height * 0.08f),
+                smallFontSize,
+                GRAY
+            );
+
+            float rowW = panel.width * 0.84f;
+            float rowH = panel.height * 0.18f;
+            float rowX = panel.x + (panel.width - rowW) * 0.5f;
+            float rowStartY = panel.y + panel.height * 0.22f;
+            float rowGap = panel.height * 0.07f;
+
+            for (int i = 0; i < DAILY_CHALLENGE_COUNT; i++)
+            {
+                Rectangle row =
+                {
+                    rowX,
+                    rowStartY + i * (rowH + rowGap),
+                    rowW,
+                    rowH
+                };
+                DrawDailyChallengeRow(row, &state.challenges[i], rowFontSize, smallFontSize);
             }
 
             DrawMenuCursor(hoveringInteractive);

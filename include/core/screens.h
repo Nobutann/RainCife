@@ -12,6 +12,7 @@ typedef enum
     SCREEN_LEVEL_SELECT,
     SCREEN_ITEMS,
     SCREEN_INFINITE_MENU,
+    SCREEN_DAILY_CHALLENGES,
     SCREEN_INFINITE_SOON,
     SCREEN_INFINITE_GAME,
     SCREEN_CREDITS,
@@ -24,6 +25,7 @@ GameScreen RunCharacterSelect();
 void SetCharacterSelectNextScreen(GameScreen nextScreen);
 GameScreen RunLevelSelect();
 GameScreen RunInfiniteMenu();
+GameScreen RunDailyChallenges();
 GameScreen RunItems();
 void SetItemsReturnScreen(GameScreen returnScreen);
 GameScreen RunInfiniteSoon();
