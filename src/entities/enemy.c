@@ -25,6 +25,7 @@ void InitEnemyTuned(Enemy *enemy, EnemyType type, int screenWidth, int screenHei
             enemy->size = (Vector2){100, 100};
             enemy->hitboxOffset = (Vector2){18, 28};
             enemy->hitboxSize  = (Vector2){58, 42};
+            enemy->headLanded = false;
             break;
         case ENEMY_BIRD2:
             enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.35f};
@@ -32,6 +33,7 @@ void InitEnemyTuned(Enemy *enemy, EnemyType type, int screenWidth, int screenHei
             enemy->velocity.y = 7.0f;
             enemy->hitboxOffset = (Vector2){18, 28};
             enemy->hitboxSize  = (Vector2){58, 42};
+            enemy->headLanded = false;
             break;
         case ENEMY_BIKE:
             enemy->position = (Vector2){(float)screenWidth, screenHeight * 0.785f - 185};
@@ -65,6 +67,7 @@ void InitEnemyTuned(Enemy *enemy, EnemyType type, int screenWidth, int screenHei
             enemy->stateTimer = GetTime();
             enemy->hitboxOffset = (Vector2){15, 22};
             enemy->hitboxSize  = (Vector2){84, 68};
+            enemy->headLanded = false;
             break;
         case ENEMY_SAFE_POSTE:
             enemy->basePosition = (Vector2){(float)screenWidth, screenHeight * 0.785f - 640};
@@ -134,10 +137,73 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             return;
         }
 
-        float landY = (enemy->type == ENEMY_BIRD1 || enemy->type == ENEMY_BIRD2)
-                      ? screenHeight * 0.785f - 140.0f
-                      : screenHeight * 0.785f - 120.0f;
+        if (enemy->type == ENEMY_BIRD1 || enemy->type == ENEMY_BIRD2)
+        {
+            float landY = screenHeight * 0.785f - 140.0f;
+            if (!enemy->headLanded)
+            {
+                enemy->position.x += enemy->velocity.x;
+                enemy->position.y += enemy->velocity.y;
+                enemy->velocity.y += 0.4f;
+                if (enemy->position.y >= landY)
+                {
+                    enemy->position.y = landY;
+                    enemy->velocity.y = 0.0f;
+                    enemy->headLanded = true;
+                    enemy->animationTimer = 0.0f;
+                    enemy->currentFrame = 0;
+                }
+            }
+            else
+            {
+                enemy->animationTimer += GetFrameTime();
+                if (enemy->animationTimer >= 0.35f / 6.0f)
+                {
+                    enemy->animationTimer = 0.0f;
+                    enemy->currentFrame++;
+                    if (enemy->currentFrame >= 6)
+                    {
+                        enemy->dying = false;
+                        enemy->active = false;
+                    }
+                }
+            }
+            return;
+        }
 
+        if (enemy->type == ENEMY_FISH)
+        {
+            enemy->position.x += enemy->velocity.x;
+            enemy->position.y += enemy->velocity.y;
+            enemy->velocity.y += 0.45f;
+
+            enemy->animationTimer += GetFrameTime();
+            if (!enemy->headLanded)
+            {
+                if (enemy->animationTimer >= 0.35f)
+                {
+                    enemy->headLanded = true;
+                    enemy->animationTimer = 0.0f;
+                    enemy->currentFrame = 0;
+                }
+            }
+            else
+            {
+                if (enemy->animationTimer >= 0.35f / 6.0f)
+                {
+                    enemy->animationTimer = 0.0f;
+                    enemy->currentFrame++;
+                    if (enemy->currentFrame >= 6)
+                    {
+                        enemy->dying = false;
+                        enemy->active = false;
+                    }
+                }
+            }
+            return;
+        }
+
+        float landY = screenHeight * 0.785f - 120.0f;
         if (enemy->position.y < landY)
         {
             enemy->position.x += enemy->velocity.x;
@@ -307,7 +373,17 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
 
         if (enemy->type == ENEMY_BIRD1 || enemy->type == ENEMY_BIRD2)
         {
-            if (assets->birdDeath.id > 0)
+            if (enemy->headLanded)
+            {
+                if (assets->destroyedSheet.id > 0)
+                {
+                    float frameW = (float)assets->destroyedSheet.width / 6.0f;
+                    Rectangle src = { enemy->currentFrame * frameW, 0.0f, frameW, (float)assets->destroyedSheet.height };
+                    Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
+                    DrawTexturePro(assets->destroyedSheet, src, dest, (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
+                }
+            }
+            else if (assets->birdDeath.id > 0)
             {
                 Rectangle src = { 0.0f, 0.0f, (float)assets->birdDeath.width, (float)assets->birdDeath.height };
                 Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
@@ -316,7 +392,17 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
         }
         else if (enemy->type == ENEMY_FISH)
         {
-            if (assets->fishDeath.id > 0)
+            if (enemy->headLanded)
+            {
+                if (assets->destroyedSheet.id > 0)
+                {
+                    float frameW = (float)assets->destroyedSheet.width / 6.0f;
+                    Rectangle src = { enemy->currentFrame * frameW, 0.0f, frameW, (float)assets->destroyedSheet.height };
+                    Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
+                    DrawTexturePro(assets->destroyedSheet, src, dest, (Vector2){ 0.0f, 0.0f }, 0.0f, WHITE);
+                }
+            }
+            else if (assets->fishDeath.id > 0)
             {
                 Rectangle src = { 0.0f, 0.0f, (float)assets->fishDeath.width, (float)assets->fishDeath.height };
                 Rectangle dest = { enemy->position.x, enemy->position.y, enemy->size.x, enemy->size.y };
