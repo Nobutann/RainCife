@@ -6,8 +6,12 @@
 
 #define BOSS_INTRO_PLAYER_GAP 220.0f
 #define PLAYER_HITBOX_CENTER_RATIO 0.525f
+#define PLAYER_GROUND_RIGHT_VISUAL_CENTER_RATIO -0.500f
+#define PLAYER_GROUND_LEFT_VISUAL_CENTER_RATIO 0.500f
 #define BOSS_LEFT_JUMP_UP_CENTER_X 85.5f
 #define BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X 107.5f
+#define BOSS_LEFT_JUMP_DOWN_CENTER_X 85.5f
+#define BOSS_LEFT_MOUSE_JUMP_DOWN_CENTER_X 107.5f
 #define MOUSE_JUMP_LEGS_MIN_WIDTH 150
 
 void InitPlayer(Player *player, Vector2 initialPos, float speed)
@@ -59,10 +63,34 @@ Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
 {
     Vector2 drawPosition = player->position;
 
+    if (!player->facingRight)
+    {
+        if (player->currentAnim == &player->sprites.attack)
+        {
+            return drawPosition;
+        }
+
+        if (player->isBossFighting && player->onGround && player->currentAnim && player->currentAnim->layerCount > 0)
+        {
+            float frameWidth = (float)player->currentAnim->layers[0].frameWidth;
+            float flippedVisualCenterRatio = 1.0f - PLAYER_GROUND_LEFT_VISUAL_CENTER_RATIO;
+            drawPosition.x += (PLAYER_HITBOX_CENTER_RATIO - flippedVisualCenterRatio) * frameWidth * scale;
+        }
+
+        return drawPosition;
+    }
+
     if (player->facingRight)
     {
         if (player->currentAnim == &player->sprites.attack)
         {
+            return drawPosition;
+        }
+
+        if (player->isBossFighting && player->onGround && player->currentAnim && player->currentAnim->layerCount > 0)
+        {
+            float frameWidth = (float)player->currentAnim->layers[0].frameWidth;
+            drawPosition.x += (PLAYER_HITBOX_CENTER_RATIO - PLAYER_GROUND_RIGHT_VISUAL_CENTER_RATIO) * frameWidth * scale;
             return drawPosition;
         }
 
@@ -87,21 +115,16 @@ Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
         }
 
         float hitboxCenterX = referenceFrameWidth * PLAYER_HITBOX_CENTER_RATIO;
+        bool usingMouseJumpSprites = player->sprites.jumpUpLegs.layers[0].frameWidth >= MOUSE_JUMP_LEGS_MIN_WIDTH;
 
         if (!usingJumpUpPose)
         {
-            drawPosition.x += referenceFrameWidth * scale;
+            float spriteCenterX = usingMouseJumpSprites ? BOSS_LEFT_MOUSE_JUMP_DOWN_CENTER_X : BOSS_LEFT_JUMP_DOWN_CENTER_X;
+            drawPosition.x += (hitboxCenterX - spriteCenterX) * scale;
             return drawPosition;
         }
 
-        float spriteCenterX = BOSS_LEFT_JUMP_UP_CENTER_X;
-        bool usingMouseJumpSprites = player->sprites.jumpUpLegs.layers[0].frameWidth >= MOUSE_JUMP_LEGS_MIN_WIDTH;
-
-        if (usingMouseJumpSprites)
-        {
-            spriteCenterX = BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X;
-        }
-
+        float spriteCenterX = usingMouseJumpSprites ? BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X : BOSS_LEFT_JUMP_UP_CENTER_X;
         drawPosition.x += (hitboxCenterX - spriteCenterX) * scale;
     }
 
@@ -700,6 +723,8 @@ void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY
 
 void DrawPlayer(Player *player, float scale)
 {
+    Vector2 drawPosition = GetPlayerSpriteDrawPosition(player, scale);
+
     if (player->weapon.type == WEAPON_PISTOL && player->sprites.armGun.id > 0)
     {
         Texture2D arm = player->sprites.armGun;
