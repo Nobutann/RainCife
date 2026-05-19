@@ -165,6 +165,7 @@ void EquipWeapon(Player *player, WeaponType type)
                 1,
                 0.12f
             );
+            LoadPistolAnimation(&player->sprites, characterId, GetSelectedClothingId());
             break;
         default:
             break;

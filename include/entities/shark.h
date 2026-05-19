@@ -57,6 +57,7 @@ typedef struct {
 } Shark;
 
 void InitShark(Shark *shark, int screenWidth, int screenHeight);
+void ResetShark(Shark *shark, int screenWidth, int screenHeight);
 void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight);
 void DrawShark(Shark *shark);
 void UnloadShark(Shark *shark);
