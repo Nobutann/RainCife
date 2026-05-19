@@ -404,15 +404,14 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         }
         else
         {
-            player->currentAnim = &player->sprites.attack;
+            player->currentAnim = player->isBossFighting ? &player->sprites.idleGun : &player->sprites.attack;
         }
 
         Rectangle hitbox = GetPlayerHitbox(player, scale);
-        
+
         player->armPivot = (Vector2)
         {
-            hitbox.x + hitbox.width * (!player->onGround ? 0.9f : 0.9f),
-            hitbox.y + hitbox.height * (!player->onGround ? 0.1f : 0.1f)
+            player->facingRight ? hitbox.x + hitbox.width * (1.0f - 0.9f) : hitbox.x + hitbox.width * 0.9f, hitbox.y + hitbox.height * 0.1f
         };
 
         float dx = mousePos.x - player->armPivot.x;
@@ -421,15 +420,9 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
 
         if (player->facingRight)
         {
-            player->armAngle = 180.0f - player->armAngle;
-            player->armAngle = Clamp(player->armAngle, 90.0f, 270.0f);
-        }
-        else
-        {
-            player->armAngle = Clamp(player->armAngle, -90.0f, 90.0f);
+            player->armAngle = player->armAngle + 180.0f;
         }
     }
-
     UpdateLayeredAnimation(player->currentAnim, dt);
 }
 
@@ -682,7 +675,13 @@ void DrawPlayer(Player *player, float scale)
             arm.height * armScale
         };
 
-        Vector2 origin = {(arm.width - 113.0f) * armScale, 130.0f * armScale};
+        Vector2 origin = 
+        {
+            player->facingRight 
+            ? 113.0f * armScale 
+            : (arm.width - 113.0f) * armScale,
+            130.0f * armScale
+        };
         DrawTexturePro(arm, src, dest, origin, player->armAngle, WHITE);
     }
 

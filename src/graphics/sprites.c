@@ -258,8 +258,11 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothi
     playerSprites->jumpDownGun.layerCount = 1;
     playerSprites->jumpDownGun.layers[0] = LoadAnimation(clothed ? sprites->jumpDownGunClothed : sprites->jumpDownGun, 1, FRAME_TIME);
 
-    playerSprites->idleGun.layerCount = 1;
-    playerSprites->idleGun.layers[0] = LoadAnimation(sprites->idleBodyGun, 1, FRAME_TIME);
+    playerSprites->idleGun.layerCount = 3;
+    playerSprites->idleGun.layers[0] = LoadAnimation(sprites->idleLegsAttack, 1, FRAME_TIME);
+    playerSprites->idleGun.layers[1] = LoadAnimation(sprites->idleBodyGun, 1, FRAME_TIME);
+    playerSprites->idleGun.layers[2] = LoadAnimation(sprites->idleHeadAttack, 1, FRAME_TIME);
+    
     playerSprites->jumpDownLegs.layers[0] = LoadAnimation(sprites->jumpDownLegs, 1, FRAME_TIME);
 }
 
