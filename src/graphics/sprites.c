@@ -3,6 +3,7 @@
 #include <string.h>
 
 #define FRAME_TIME 0.08f
+#define HAIRY_LEG_DESIGN_FRAME_TIME 0.10f
 
 static const PlayerSpriteSet PLAYER_SPRITE_SETS[] =
 {
@@ -365,9 +366,11 @@ void LoadHairyLegSprites(HairyLegSprites *sprites)
     sprites->jump = LoadAnimation("assets/sprites/Boss/Perna_jump-Sheet.png", 4, FRAME_TIME);
     sprites->fall = LoadAnimation("assets/sprites/Boss/Perna_fall-Sheet.png", 2, FRAME_TIME);
     sprites->kick = LoadAnimation("assets/sprites/Boss/Perna_kick-Sheet.png", 4, FRAME_TIME);
-    sprites->rasteira = LoadAnimation("assets/sprites/Boss/Perna_rasteira-Sheet.png", 4, FRAME_TIME);
+    sprites->rasteira = LoadAnimation("assets/sprites/Boss/Perna_rasteira-Sheet.png", 8, HAIRY_LEG_DESIGN_FRAME_TIME);
+    sprites->recovery = LoadAnimation("assets/sprites/Boss/Perna_rperna_subindo-sheet.png", 7, HAIRY_LEG_DESIGN_FRAME_TIME);
     sprites->death = LoadAnimation("assets/sprites/Boss/Perna_death.png", 1, FRAME_TIME);
     sprites->shadow = LoadAnimation("assets/sprites/Boss/Shadow-Sheet.png", 4, FRAME_TIME);
+    sprites->shockwave = LoadTexture("assets/sprites/Boss/shockwave.png");
 }
 
 void UnloadHairyLegSprites(HairyLegSprites *sprites)
@@ -377,8 +380,10 @@ void UnloadHairyLegSprites(HairyLegSprites *sprites)
     UnloadAnimation(&sprites->fall);
     UnloadAnimation(&sprites->kick);
     UnloadAnimation(&sprites->rasteira);
+    UnloadAnimation(&sprites->recovery);
     UnloadAnimation(&sprites->death);
     UnloadAnimation(&sprites->shadow);
+    UnloadTexture(sprites->shockwave);
 }
 
 void ResetAnimation(Animation *animation) {

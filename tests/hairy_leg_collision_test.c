@@ -75,11 +75,16 @@ static HairyLeg MakeSweepingLeg(int direction, float timer)
     leg.timer = timer;
     leg.direction = direction;
     leg.groundY = 500.0f;
-    leg.sprites.rasteira.frameCount = 4;
+    leg.sprites.rasteira.frameCount = 8;
     leg.sprites.rasteira.frameTime = 0.01f;
     leg.sprites.rasteira.sheet = (Texture2D){0};
-    leg.sprites.rasteira.sheet.width = 1008;
+    leg.sprites.rasteira.sheet.width = 2016;
     leg.sprites.rasteira.sheet.height = 252;
+    leg.sprites.recovery.frameCount = 7;
+    leg.sprites.recovery.frameTime = 0.01f;
+    leg.sprites.recovery.sheet = (Texture2D){0};
+    leg.sprites.recovery.sheet.width = 1764;
+    leg.sprites.recovery.sheet.height = 252;
     leg.currentAnim = &leg.sprites.rasteira;
 
     return leg;
@@ -216,15 +221,19 @@ int main(void)
     rightFacingFall.rect.y = 260.0f;
     UpdateHairyLeg(&rightFacingFall, unusedPlayer, 0.01f, rightFacingFall.groundY, 1.0f);
     assert(rightFacingFall.sprites.fall.currentFrame == 1);
+    assert(fabsf(rightFacingFall.waveLeft.rect.width - 39.6f) < 0.001f);
+    assert(fabsf(rightFacingFall.waveLeft.rect.height - 42.75f) < 0.001f);
+    assert(fabsf(rightFacingFall.waveRight.rect.width - 39.6f) < 0.001f);
+    assert(fabsf(rightFacingFall.waveRight.rect.height - 42.75f) < 0.001f);
 
     HairyLeg rightSweepStartup = MakeSweepingLeg(1, 0.1f);
     UpdateHairyLeg(&rightSweepStartup, unusedPlayer, 0.01f, rightSweepStartup.groundY, 1.0f);
-    assert(rightSweepStartup.sprites.rasteira.currentFrame == 1);
+    assert(rightSweepStartup.sprites.rasteira.currentFrame == 0);
 
     HairyLeg rightSweepActive = MakeSweepingLeg(1, 0.6f);
     UpdateHairyLeg(&rightSweepActive, unusedPlayer, 0.01f, rightSweepActive.groundY, 1.0f);
     assert(rightSweepActive.isKickActive);
-    assert(rightSweepActive.sprites.rasteira.currentFrame == 3);
+    assert(rightSweepActive.sprites.rasteira.currentFrame == 4);
 
     HairyLeg rightCornerPressure = {0};
     rightCornerPressure.rect = (Rectangle){800.0f, 300.0f, 40.0f, 200.0f};
@@ -379,12 +388,16 @@ int main(void)
     HairyLeg sweepRecovery = MakeSweepingLeg(1, 1.2f);
     UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.01f, sweepRecovery.groundY, 1.0f);
     assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
+    assert(sweepRecovery.currentAnim == &sweepRecovery.sprites.recovery);
+    assert(sweepRecovery.sprites.recovery.currentFrame == 0);
     assert(sweepRecovery.rect.height == 60.0f);
     assert(!sweepRecovery.isKickActive);
     assert(GetHairyLegSpriteOffsetX(&sweepRecovery, 1.0f) == -90.0f);
 
     UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.3f, sweepRecovery.groundY, 1.0f);
     assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
+    assert(sweepRecovery.currentAnim == &sweepRecovery.sprites.recovery);
+    assert(sweepRecovery.sprites.recovery.currentFrame == 2);
     assert(sweepRecovery.rect.height > 60.0f);
     assert(sweepRecovery.rect.height < 120.0f);
     assert(GetHairyLegSpriteOffsetX(&sweepRecovery, 1.0f) == -90.0f);

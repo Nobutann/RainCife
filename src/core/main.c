@@ -51,8 +51,8 @@ static void StartLevel(
         enemies[i].active = false;
     }
 
-    InitHairyLeg(pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
-    InitShark(shark, currentWidth, currentHeight);
+    ResetHairyLeg(pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+    ResetShark(shark, currentWidth, currentHeight);
     player->isBossFighting = false;
 }
 
@@ -125,12 +125,12 @@ static void RestartCurrentEncounter(
 
         if (currentLevel->bossId == 1)
         {
-            InitHairyLeg(pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
+            ResetHairyLeg(pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
             PlacePlayerForBossIntro(player, pernaCabeluda->rect, playerStandingY, playerScale);
         }
         else if (currentLevel->bossId == 2)
         {
-            InitShark(shark, currentWidth, currentHeight);
+            ResetShark(shark, currentWidth, currentHeight);
             PlacePlayerForBossIntro(player, GetSharkHitbox(shark), playerStandingY, playerScale);
         }
         return;
@@ -139,8 +139,8 @@ static void RestartCurrentEncounter(
     *phase = PHASE_RUNNING;
     *progressTimer = 0.0f;
     *autoSpawn = true;
-    InitHairyLeg(pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
-    InitShark(shark, currentWidth, currentHeight);
+    ResetHairyLeg(pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
+    ResetShark(shark, currentWidth, currentHeight);
     ResetPlayerForRunningRetry(player, playerStandingY, playerScale);
 }
 
@@ -176,12 +176,12 @@ static void EnterBossPhase(
 
     if (currentLevel->bossId == 1)
     {
-        InitHairyLeg(pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
+        ResetHairyLeg(pernaCabeluda, (Vector2){(float)currentWidth * 0.6f, groundY}, groundY, bossScale);
         PlacePlayerForBossIntro(player, pernaCabeluda->rect, playerStandingY, playerScale);
     }
     else if (currentLevel->bossId == 2)
     {
-        InitShark(shark, currentWidth, currentHeight);
+        ResetShark(shark, currentWidth, currentHeight);
         PlacePlayerForBossIntro(player, GetSharkHitbox(shark), playerStandingY, playerScale);
     }
 }
@@ -522,21 +522,21 @@ int main(void)
             float initGroundY = initH * GROUND_RATIO;
             float initBossScale = (float)initH * 0.65f / 252.0f;
 
-            Player player;
+            Player player = {0};
             Vector2 startPos = { 100, initGroundY };
             InitPlayer(&player, startPos, SPEED);
 
-            ProjectileSystem projectiles;
+            ProjectileSystem projectiles = {0};
             InitProjectileSystem(&projectiles);
             SetProjectileSystem(&projectiles);
 
-            HairyLeg pernaCabeluda;
+            HairyLeg pernaCabeluda = {0};
             InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
 
-            Shark shark;
+            Shark shark = {0};
             InitShark(&shark, initW, initH);
 
-            MidnightMan midnightMan;
+            MidnightMan midnightMan = {0};
             InitMidnightMan(&midnightMan, initW, initH, initGroundY);
 
             Level *levels = infiniteMode ? InitInfiniteLevels() : InitGameLevels();
@@ -1223,6 +1223,7 @@ int main(void)
             UnloadTexture(enemyAssets.birdDeath);
             UnloadTexture(enemyAssets.fishDeath);
             UnloadTexture(enemyAssets.destroyedSheet);
+            UnloadHairyLeg(&pernaCabeluda);
             UnloadShark(&shark);
             UnloadMidnightMan(&midnightMan);
             UnloadProjectileSystem(&projectiles);
