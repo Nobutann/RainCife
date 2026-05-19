@@ -4,6 +4,7 @@
 #include "core/screens.h"
 #include "core/config_manager.h"
 #include "core/ranking_manager.h"
+#include "core/daily_challenges.h"
 #include "entities/player.h"
 #include "entities/hairy_leg.h"
 #include "entities/shark.h"
@@ -494,6 +495,10 @@ int main(void)
             }
             currentScreen = nextScreen;
         }
+        else if (currentScreen == SCREEN_DAILY_CHALLENGES)
+        {
+            currentScreen = RunDailyChallenges();
+        }
         else if (currentScreen == SCREEN_ITEMS)
         {
             currentScreen = RunItems();
@@ -580,6 +585,7 @@ int main(void)
             float infiniteMeters = 0.0f;
             float infiniteNextSpeedStepMeters = INFINITE_SPEED_STEP_METERS;
             float infiniteSpeedMultiplier = 1.0f;
+            bool infiniteRunRecorded = false;
 
             while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
@@ -665,6 +671,13 @@ int main(void)
 
                 if (deathScreenActive)
                 {
+                    if (infiniteMode && !infiniteRunRecorded)
+                    {
+                        RegistrarDistanciaDesafioDiario(infiniteMeters);
+                        RegistrarRunDesafioDiario();
+                        infiniteRunRecorded = true;
+                    }
+
                     if (infiniteMode && !infiniteRankingChecked)
                     {
                         infiniteFinalMeters = infiniteMeters;
@@ -749,6 +762,7 @@ int main(void)
                             infiniteSpeedMultiplier = 1.0f;
                             infiniteRankingChecked = false;
                             infiniteRankingNameActive = false;
+                            infiniteRunRecorded = false;
                             for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                             {
                                 enemies[i].active = false;
@@ -970,8 +984,12 @@ int main(void)
                         if (!enemies[i].active) continue;
                         Rectangle attackHitbox = (player.weapon.type == WEAPON_HAMMER) ? hammerHitbox : otherHitbox;
                         if (!CanWeaponBreakEnemy(player.weapon.type, enemies[i].type)) continue;
-                        if (CheckCollisionRecs(attackHitbox, GetEnemyHitbox(&enemies[i])))
+                        if (!enemies[i].dying && CheckCollisionRecs(attackHitbox, GetEnemyHitbox(&enemies[i])))
                         {
+                            if (infiniteMode)
+                            {
+                                RegistrarInimigoDesafioDiario(enemies[i].type);
+                            }
                             enemies[i].dying = true;
                             enemies[i].velocity.x = -8.0f;
                             enemies[i].velocity.y = -5.0f;
