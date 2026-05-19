@@ -233,7 +233,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
     {
         case ENEMY_BIRD1:
             enemy->position.x -= (15 + baseSpeed);
-            if (enemy->position.x < -enemy->size.x)
+            if (enemy->position.x < -(enemy->size.x + 150.0f))
             {
                 enemy->active = false;
             } 
@@ -250,7 +250,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
             {
                 enemy->velocity.y = -7.0f;
             }
-            if (enemy->position.x < -enemy->size.x)
+            if (enemy->position.x < -(enemy->size.x + 150.0f))
             {
                 enemy->active = false;
             }
@@ -258,14 +258,14 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
 
         case ENEMY_BIKE:
             enemy->position.x -= (15 + baseSpeed);
-        if (enemy->position.x < -enemy->size.x) 
+        if (enemy->position.x < -(enemy->size.x + 150.0f)) 
         {
             enemy->active = false;
         }
             break;
         case ENEMY_WOOD:
             enemy->position.x -= (15 + baseSpeed);
-            if (enemy->position.x < -enemy->size.x)
+            if (enemy->position.x < -(enemy->size.x + 150.0f))
             {
                 enemy->active = false;
             }
@@ -307,7 +307,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                 enemy->position.x += enemy->velocity.x;
             }
 
-            if (enemy->headLanded && !enemy->headDestroyed ? enemy->position.x < -enemy->size.x : enemy->basePosition.x < -enemy->size.x)
+            if (enemy->headLanded && !enemy->headDestroyed ? enemy->position.x < -(enemy->size.x + 150.0f) : enemy->basePosition.x < -(enemy->size.x + 150.0f))
             {
                 enemy->active = false;
             }
@@ -333,7 +333,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
                 enemy->velocity.y += 0.45f;
             }
             
-            if (enemy->position.x < -enemy->size.x)
+            if (enemy->position.x < -(enemy->size.x + 150.0f))
             {
                 enemy->active = false;
             }
@@ -345,7 +345,7 @@ void UpdateEnemy(Enemy *enemy, int screenWidth, int screenHeight, int baseSpeed,
 
         case ENEMY_SAFE_POSTE:
             enemy->position.x -= (15 + baseSpeed);
-            if (enemy->position.x < -enemy->size.x)
+            if (enemy->position.x < -(enemy->size.x + 150.0f))
             {
                 enemy->active = false;
             }

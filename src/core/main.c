@@ -416,7 +416,7 @@ static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float pro
     float barValue = 1.0f;
     if (phase == PHASE_RUNNING && currentLevel->duration > 0.0f)
     {
-        barValue = progressTimer / currentLevel->duration;
+        barValue = progressTimer / (currentLevel->duration + currentLevel->barExtraDuration);
     }
     else if (phase == PHASE_BOSS)
     {
@@ -1189,11 +1189,6 @@ int main(void)
                         if (currentLevel->bossId == 1)
                         {
                             DrawHairyLeg(&pernaCabeluda, bossScale);
-                        }
-
-                        if (currentLevel->bossId == 2)
-                        {
-                            DrawShark(&shark);
                         }
 
                         if (currentLevel->bossId == 3)
