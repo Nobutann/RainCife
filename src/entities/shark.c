@@ -2,6 +2,9 @@
 #include "entities/player.h"
 #include "raymath.h"
 
+#define SHARK_DEATH_DURATION 2.3f
+#define SHARK_DEATH_SINK_DISTANCE 100.0f
+
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
@@ -49,7 +52,10 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     shark->shootCount = 0;
     shark->arcDrops = 0;
     shark->active = true;
+    shark->dying = false;
     shark->health = 100;
+    shark->deathTimer = 0.0f;
+    shark->deathStartY = shark->rect.y;
 
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         shark->balls[i].active = false;
@@ -60,11 +66,24 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     shark->texDashRight = LoadTexture("assets/sprites/Boss/Angry_shark-sheet.png");
     shark->texJump = LoadTexture("assets/sprites/Boss/tubarao_flying-Sheet.png");
     shark->texBubble = LoadTexture("assets/sprites/Boss/bubble.png");
+    shark->texDeath = LoadTexture("assets/sprites/Boss/Shark_death.png");
     shark->animTimer = 0.0f;
     shark->animFrame = 0;
 }
 
 void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight) {
+    if (shark->dying) {
+        shark->deathTimer += deltaTime;
+        float progress = shark->deathTimer / SHARK_DEATH_DURATION;
+        if (progress > 1.0f) progress = 1.0f;
+
+        shark->rect.y = shark->deathStartY + SHARK_DEATH_SINK_DISTANCE * progress;
+        if (shark->deathTimer >= SHARK_DEATH_DURATION) {
+            shark->dying = false;
+        }
+        return;
+    }
+
     if (!shark->active) return;
 
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
@@ -252,7 +271,13 @@ static void DrawSharkFrame(Texture2D sheet, int frame, int totalFrames, Rectangl
 }
 
 void DrawShark(Shark *shark) {
-    if (!shark->active) return;
+    if (!shark->active && !shark->dying) return;
+
+    if (shark->dying) {
+        Rectangle destDeath = { shark->rect.x - 120.0f, shark->rect.y - 160.0f, 500.0f, 446.7f };
+        DrawSharkTexture(shark->texDeath, destDeath, false);
+        return;
+    }
 
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) continue;
@@ -310,14 +335,25 @@ void UnloadShark(Shark *shark) {
     UnloadTexture(shark->texDashRight);
     UnloadTexture(shark->texJump);
     UnloadTexture(shark->texBubble);
+    UnloadTexture(shark->texDeath);
 }
 
 void DamageShark(Shark *shark, int damage) {
     if (damage <= 0) return;
+    if (!shark->active || shark->dying) return;
+
     shark->health -= damage;
     if (shark->health <= 0) {
         shark->health = 0;
         shark->active = false;
+        shark->dying = true;
+        shark->deathTimer = 0.0f;
+        shark->deathStartY = shark->rect.y;
+        shark->velocity = (Vector2){0.0f, 0.0f};
+
+        for (int i = 0; i < MAX_WATER_BALLS; i++) {
+            shark->balls[i].active = false;
+        }
     }
 }
 

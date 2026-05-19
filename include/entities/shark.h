@@ -38,7 +38,10 @@ typedef struct {
     int targetShootCount;
     int arcDrops;
     bool active;
+    bool dying;
     int health;
+    float deathTimer;
+    float deathStartY;
     WaterBall balls[MAX_WATER_BALLS];
 
     Texture2D texShoot;      // Shark_attack_bubble.png — spritesheet 3 frames
@@ -46,6 +49,8 @@ typedef struct {
     Texture2D texDashRight;  // Angry_shark-sheet.png — spritesheet 4 frames (dash direita)
     Texture2D texJump;       // tubarao_flying-Sheet.png — spritesheet 12 frames
     Texture2D texBubble;     // bubble.png — projétil
+
+    Texture2D texDeath;
 
     float animTimer;
     int animFrame;

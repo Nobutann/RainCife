@@ -18,7 +18,7 @@
 #include "utils.h"
 #define MAX_ACTIVE_ENEMIES 12
 #define LEVEL6_INTRO_DURATION 2.5f
-#define HAIRY_LEG_DEATH_ADVANCE_DELAY 1.0f
+#define BOSS_DEFEAT_TRANSITION_DELAY 2.5f
 #define INFINITE_METERS_PER_SECOND (5000.0f / 60.0f)
 #define INFINITE_SPEED_STEP_METERS 5000.0f
 #define INFINITE_SPEED_MULTIPLIER_STEP 1.05f
@@ -433,6 +433,39 @@ static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float pro
     return barValue;
 }
 
+typedef enum { TRANSITION_RUNNING_TO_BOSS, TRANSITION_BOSS_TO_RUNNING } PhaseTransitionType;
+
+static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rectangle advanceRect, Rectangle menuRect, int btnFontSize, const char *title, bool hoveringButton)
+{
+    int blockW = 400;
+    int blockH = 300;
+    int blockX = (currentWidth - blockW) / 2;
+    int blockY = (currentHeight - blockH) / 2;
+
+    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.55f));
+    DrawRectangleRounded((Rectangle){blockX, blockY, blockW, blockH}, 0.08f, 8, (Color){20, 20, 30, 245});
+    DrawRectangleRoundedLines((Rectangle){blockX, blockY, blockW, blockH}, 0.08f, 8, RAYWHITE);
+
+    int titleSize = blockH / 6;
+    DrawText(
+        title,
+        blockX + (blockW - MeasureText(title, titleSize)) / 2,
+        blockY + blockH / 6,
+        titleSize,
+        RAYWHITE
+    );
+
+    Vector2 mouse = GetMousePosition();
+
+    bool hoverMenu = CheckCollisionPointRec(mouse, menuRect);
+    DrawText("Menu", (int)menuRect.x, (int)menuRect.y, btnFontSize, hoverMenu ? YELLOW : RAYWHITE);
+
+    bool hoverAdvance = CheckCollisionPointRec(mouse, advanceRect);
+    DrawText("Avançar", (int)advanceRect.x, (int)advanceRect.y, btnFontSize, hoverAdvance ? YELLOW : RAYWHITE);
+
+    DrawMenuCursor(hoveringButton);
+}
+
 int main(void)
 {
     Config config = CarregarConfig();
@@ -576,6 +609,10 @@ int main(void)
             bool deathScreenActive = false;
             bool gamePaused = false;
             GamePhase retryPhase = PHASE_RUNNING;
+            bool phaseTransitionActive = false;
+            PhaseTransitionType transitionType = TRANSITION_RUNNING_TO_BOSS;
+            bool bossDefeatTransitionPending = false;
+            float bossDefeatTransitionTimer = 0.0f;
             RankingInfinito infiniteRanking = CarregarRankingInfinito();
             bool infiniteRankingChecked = false;
             bool infiniteRankingNameActive = false;
@@ -589,7 +626,7 @@ int main(void)
 
             while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
-                if (!deathScreenActive && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)))
+                if (!deathScreenActive && !phaseTransitionActive && !bossDefeatTransitionPending && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)))
                 {
                     gamePaused = !gamePaused;
                 }
@@ -842,6 +879,108 @@ int main(void)
                     continue;
                 }
 
+                if (phaseTransitionActive)
+                {
+                    int blockW = 400;
+                    int blockH = 300;
+                    int blockX = (currentWidth - blockW) / 2;
+                    int blockY = (currentHeight - blockH) / 2;
+                    int btnFontSize = currentHeight / 24;
+                    int padding = 20;
+
+                    const char *advText = "Avançar";
+                    const char *menuText = "Menu";
+                    int advTextW = MeasureText(advText, btnFontSize);
+                    int menuTextW = MeasureText(menuText, btnFontSize);
+
+                    Rectangle advanceRect = {
+                        (float)(blockX + blockW - advTextW - padding),
+                        (float)(blockY + blockH - btnFontSize - padding),
+                        (float)advTextW,
+                        (float)btnFontSize
+                    };
+                    Rectangle menuRect = {
+                        (float)(blockX + padding),
+                        (float)(blockY + blockH - btnFontSize - padding),
+                        (float)menuTextW,
+                        (float)btnFontSize
+                    };
+
+                    Vector2 mouse = GetMousePosition();
+                    bool hoveringButton = CheckCollisionPointRec(mouse, advanceRect) || CheckCollisionPointRec(mouse, menuRect);
+
+                    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                    {
+                        if (CheckCollisionPointRec(mouse, advanceRect))
+                        {
+                            phaseTransitionActive = false;
+                            if (transitionType == TRANSITION_RUNNING_TO_BOSS)
+                            {
+                                EnterBossPhase(
+                                    currentLevel,
+                                    &phase,
+                                    &progressTimer,
+                                    &autoSpawn,
+                                    &safePosteFollowUpTimer,
+                                    enemies,
+                                    &player,
+                                    &pernaCabeluda,
+                                    &shark,
+                                    currentWidth,
+                                    currentHeight,
+                                    groundY,
+                                    bossScale,
+                                    playerStandingY,
+                                    playerScale
+                                );
+                                if (currentLevel->bossId == 3)
+                                {
+                                    InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                                }
+                            }
+                            else if (transitionType == TRANSITION_BOSS_TO_RUNNING)
+                            {
+                                StartLevel(
+                                    &currentLevel,
+                                    currentLevel->next,
+                                    &phase,
+                                    &progressTimer,
+                                    &autoSpawn,
+                                    &spawnTimer,
+                                    enemies,
+                                    &player,
+                                    &pernaCabeluda,
+                                    &shark,
+                                    currentWidth,
+                                    currentHeight,
+                                    groundY,
+                                    bossScale
+                                );
+                                safePosteFollowUpTimer = -1.0f;
+                                ResetPlayerForRunningRetry(&player, playerStandingY, playerScale);
+                                if (currentLevel->bossId == 3)
+                                {
+                                    InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                                }
+                                level6IntroActive = (currentLevel->id == 6);
+                                level6IntroTimer = 0.0f;
+                            }
+                        }
+                        else if (CheckCollisionPointRec(mouse, menuRect))
+                        {
+                            currentScreen = SCREEN_LEVEL_SELECT;
+                        }
+                    }
+
+                    const char *transitionTitle = (transitionType == TRANSITION_RUNNING_TO_BOSS) ? "Fase Concluída!" : "Boss Derrotado!";
+                    float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
+                    BeginDrawing();
+                        DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
+                        DrawPhaseTransitionOverlay(currentWidth, currentHeight, advanceRect, menuRect, btnFontSize, transitionTitle, hoveringButton);
+                    EndDrawing();
+                    continue;
+                }
+
                 int infiniteEnemyBaseSpeed = infiniteMode ? GetInfiniteEnemyBaseSpeed(infiniteSpeedMultiplier) : 0;
 
                 if (phase == PHASE_RUNNING)
@@ -863,26 +1002,37 @@ int main(void)
                     }
                     else if (progressTimer >= currentLevel->duration)
                     {
-                        EnterBossPhase(
-                            currentLevel,
-                            &phase,
-                            &progressTimer,
-                            &autoSpawn,
-                            &safePosteFollowUpTimer,
-                            enemies,
-                            &player,
-                            &pernaCabeluda,
-                            &shark,
-                            currentWidth,
-                            currentHeight,
-                            groundY,
-                            bossScale,
-                            playerStandingY,
-                            playerScale
-                        );
-                        if (currentLevel->bossId == 3)
+                        if (currentLevel->duration > 0.0f)
                         {
-                            InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                            progressTimer = currentLevel->duration;
+                            autoSpawn = false;
+                            for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++) enemies[i].active = false;
+                            phaseTransitionActive = true;
+                            transitionType = TRANSITION_RUNNING_TO_BOSS;
+                        }
+                        else
+                        {
+                            EnterBossPhase(
+                                currentLevel,
+                                &phase,
+                                &progressTimer,
+                                &autoSpawn,
+                                &safePosteFollowUpTimer,
+                                enemies,
+                                &player,
+                                &pernaCabeluda,
+                                &shark,
+                                currentWidth,
+                                currentHeight,
+                                groundY,
+                                bossScale,
+                                playerStandingY,
+                                playerScale
+                            );
+                            if (currentLevel->bossId == 3)
+                            {
+                                InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                            }
                         }
                     }
 
@@ -1011,7 +1161,7 @@ int main(void)
 
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 
-                if (!infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
+                if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
                     EnterBossPhase(
                         currentLevel,
                         &phase,
@@ -1034,7 +1184,7 @@ int main(void)
                         InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
                     }
                 }
-                else if (!infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_BOSS && currentLevel->next) {
+                else if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_BOSS && currentLevel->next) {
                     UnlockStoryLevel(currentLevel->next->id);
                     StartLevel(
                         &currentLevel,
@@ -1061,7 +1211,7 @@ int main(void)
                     level6IntroActive = (currentLevel->id == 6);
                     level6IntroTimer = 0.0f;
                 }
-                if (!infiniteMode && IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
+                if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
                     StartLevel(
                         &currentLevel,
                         currentLevel->prev,
@@ -1095,12 +1245,17 @@ int main(void)
                     if (currentLevel->bossId == 1)
                     {
                         UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
-                        TryDamageHairyLegFromPlayerAttack(&pernaCabeluda, &player, playerScale);
+                        if (!bossDefeatTransitionPending)
+                        {
+                            TryDamageHairyLegFromPlayerAttack(&pernaCabeluda, &player, playerScale);
+                        }
 
-                        if (pernaCabeluda.state == HL_DEAD && pernaCabeluda.timer >= HAIRY_LEG_DEATH_ADVANCE_DELAY && currentLevel->next)
+                        if (!bossDefeatTransitionPending && pernaCabeluda.state == HL_DEAD && currentLevel->next)
                         {
                             UnlockStoryLevel(currentLevel->next->id);
-                            StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
+                            transitionType = TRANSITION_BOSS_TO_RUNNING;
+                            bossDefeatTransitionPending = true;
+                            bossDefeatTransitionTimer = 0.0f;
                             bossDefeatedThisFrame = true;
                         }
                     }
@@ -1108,12 +1263,17 @@ int main(void)
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 2)
                     {
                         UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
-                        TryDamageSharkFromPlayerAttack(&shark, &player, playerScale);
+                        if (!bossDefeatTransitionPending)
+                        {
+                            TryDamageSharkFromPlayerAttack(&shark, &player, playerScale);
+                        }
 
-                        if (!shark.active && currentLevel->next)
+                        if (!bossDefeatTransitionPending && !shark.active && currentLevel->next)
                         {
                             UnlockStoryLevel(currentLevel->next->id);
-                            StartLevel(&currentLevel, currentLevel->next, &phase, &progressTimer, &autoSpawn, &spawnTimer, enemies, &player, &pernaCabeluda, &shark, currentWidth, currentHeight, groundY, bossScale);
+                            transitionType = TRANSITION_BOSS_TO_RUNNING;
+                            bossDefeatTransitionPending = true;
+                            bossDefeatTransitionTimer = 0.0f;
                             bossDefeatedThisFrame = true;
                         }
                     }
@@ -1121,6 +1281,19 @@ int main(void)
                     if (currentLevel->bossId == 3)
                     {
                         UpdateMidnightMan(&midnightMan, playerHitbox, dt, currentWidth, currentHeight, groundY);
+                    }
+
+                    if (bossDefeatTransitionPending)
+                    {
+                        bossDefeatTransitionTimer += dt;
+                        if (bossDefeatTransitionTimer >= BOSS_DEFEAT_TRANSITION_DELAY)
+                        {
+                            bossDefeatTransitionPending = false;
+                            bossDefeatTransitionTimer = 0.0f;
+                            phaseTransitionActive = true;
+                            transitionType = TRANSITION_BOSS_TO_RUNNING;
+                        }
+                        bossDefeatedThisFrame = true;
                     }
 
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 1 && pernaCabeluda.state != HL_DEAD)
