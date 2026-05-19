@@ -1203,7 +1203,10 @@ int main(void)
 
                     }
 
-                    DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
+                    if (!infiniteMode)
+                    {
+                        DrawProgressBar(&bg, barValue, currentWidth, currentHeight);
+                    }
                     DrawProjectiles(&projectiles);
                     DrawGameplayCursor(player.weapon.attacking);
                 EndDrawing();
