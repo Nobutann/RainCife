@@ -379,26 +379,6 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     if (player->weapon.type == WEAPON_PISTOL)
     {
         Vector2 mousePos = GetMousePosition();
-        Rectangle hitbox = GetPlayerHitbox(player, scale);
-        player->armPivot = (Vector2)
-        {
-            hitbox.x + hitbox.width * (!player->onGround ? 0.05f : 0.5f),
-            hitbox.y + hitbox.height * (!player->onGround ? 0.01f : 0.3f)
-        };
-
-        float dx = mousePos.x - player->armPivot.x;
-        float dy = mousePos.y - player->armPivot.y;
-        player->armAngle = atan2f(dy, dx) * RAD2DEG;
-
-        if (player->facingRight)
-        {
-            player->armAngle = 180.0f - player->armAngle;
-            player->armAngle = Clamp(player->armAngle, 90.0f, 270.0f);
-        }
-        else
-        {
-            player->armAngle = Clamp(player->armAngle, -90.0f, 90.0f);
-        }
 
         if (!player->onGround)
         {
@@ -425,6 +405,28 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         else
         {
             player->currentAnim = &player->sprites.attack;
+        }
+
+        Rectangle hitbox = GetPlayerHitbox(player, scale);
+        
+        player->armPivot = (Vector2)
+        {
+            hitbox.x + hitbox.width * (!player->onGround ? 0.9f : 0.9f),
+            hitbox.y + hitbox.height * (!player->onGround ? 0.1f : 0.1f)
+        };
+
+        float dx = mousePos.x - player->armPivot.x;
+        float dy = mousePos.y - player->armPivot.y;
+        player->armAngle = atan2f(dy, dx) * RAD2DEG;
+
+        if (player->facingRight)
+        {
+            player->armAngle = 180.0f - player->armAngle;
+            player->armAngle = Clamp(player->armAngle, 90.0f, 270.0f);
+        }
+        else
+        {
+            player->armAngle = Clamp(player->armAngle, -90.0f, 90.0f);
         }
     }
 
@@ -704,6 +706,8 @@ void DrawPlayer(Player *player, float scale)
         Rectangle attackHitbox = GetPlayerAttackHitbox(player, scale);
         DrawRectangleLinesEx(attackHitbox, 2.0f, YELLOW);
     }
+
+    DrawCircle((int)player->armPivot.x, (int)player->armPivot.y, 5, RED);
 }
 
 void UnloadPlayer(Player *player)

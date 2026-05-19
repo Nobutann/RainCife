@@ -28,7 +28,17 @@ static const PlayerSpriteSet PLAYER_SPRITE_SETS[] =
         "assets/sprites/Player/Spr_Mouse/attack/melee/Mouse_Attack_sword-Sheet.png",
         "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Attack_sword_cesar-Sheet.png",
         "assets/sprites/Player/Spr_Mouse/attack/melee/Mouse_Attack_hammer-Sheet.png",
-        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Attack_hammer_cesar-Sheet.png"
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Attack_hammer_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Arm_gun.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_gun_body.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_gun_body.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_body_gun_backward.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_body_gun_backward.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Jump_up_gun.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Jump_up_gun_cesar.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Jump_down_gun.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Jump_down_gun_cesar.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Idle_body_gun.png"
     },
     {
         "Capivara",
@@ -52,7 +62,17 @@ static const PlayerSpriteSet PLAYER_SPRITE_SETS[] =
         "assets/sprites/Player/Spr_Capibara/Capibara_Attack_sword-Sheet.png",
         "assets/sprites/Player/Spr_Capibara/Capibara_Attack_sword_cesar-Sheet.png",
         "assets/sprites/Player/Spr_Capibara/Capibara_Attack_hammer-Sheet.png",
-        "assets/sprites/Player/Spr_Capibara/Capibara_Attack_hammer_cesar-Sheet.png"
+        "assets/sprites/Player/Spr_Capibara/Capibara_Attack_hammer_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Arm_gun.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_gun_body.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_gun_body_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_body_gun_backward.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Running_body_gun_backward_cesar.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_up_gun.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_up_gun_cesar.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_down_gun.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Jump_down_gun_cesar.png",
+        "assets/sprites/Player/Spr_Capibara/Capibara_Idle_body_gun.png"
     },
     {
         "Guaiamum",
@@ -76,7 +96,17 @@ static const PlayerSpriteSet PLAYER_SPRITE_SETS[] =
         "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_sword-Sheet.png",
         "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_sword_cesar-Sheet.png",
         "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_hammer-Sheet.png",
-        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_hammer_cesar-Sheet.png"
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Attack_hammer_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Arm_gun.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_gun_body-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_gun_body_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_body_gun_backward.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Running_body_gun_backward_cesar.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_up_gun.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_up_gun_cesar.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_down_gun.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Jump_down_gun_cesar.png",
+        "assets/sprites/Player/Spr_Guaiamum/Guaiamum_Idle_body_gun.png"
     }
 };
 
@@ -215,21 +245,21 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothi
     playerSprites->jumpDownLegs.layerCount = 1;
     playerSprites->jumpDownLegs.layers[0] = LoadAnimation("assets/sprites/Player/attack/Legs_jump_down.png", 1, FRAME_TIME);
 
-    playerSprites->armGun = LoadTexture("assets/sprites/Player/Spr_rat/Arm_gun.png");
+    playerSprites->armGun = LoadTexture(sprites->armGun);
 
     playerSprites->walkBackwardsGun.layerCount = 3;
-    playerSprites->walkBackwardsGun.layers[0] = LoadAnimation("assets/sprites/Player/walkBack/Running_legs_backwards-Sheet.png", 8, FRAME_TIME);
-    playerSprites->walkBackwardsGun.layers[1] = LoadAnimation("assets/sprites/Player/Spr_rat/Running_body_gun_backward.png", 1, FRAME_TIME);
-    playerSprites->walkBackwardsGun.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
+    playerSprites->walkBackwardsGun.layers[0] = LoadAnimation(sprites->walkBackLegs, 8, FRAME_TIME);
+    playerSprites->walkBackwardsGun.layers[1] = LoadAnimation(clothed ? sprites->walkBackBodyGunClothed : sprites->walkBackBodyGun, 1, FRAME_TIME);
+    playerSprites->walkBackwardsGun.layers[2] = LoadAnimation(sprites->headRunning, 8, FRAME_TIME);
 
     playerSprites->jumpUpGun.layerCount = 1;
-    playerSprites->jumpUpGun.layers[0] = LoadAnimation("assets/sprites/Player/Spr_rat/Jump_up_gun.png", 1, FRAME_TIME);
+    playerSprites->jumpUpGun.layers[0] = LoadAnimation(clothed ? sprites->jumpUpGunClothed : sprites->jumpUpGun, 1, FRAME_TIME);
 
     playerSprites->jumpDownGun.layerCount = 1;
-    playerSprites->jumpDownGun.layers[0] = LoadAnimation("assets/sprites/Player/Spr_rat/Jump_down_gun.png", 1, FRAME_TIME);
+    playerSprites->jumpDownGun.layers[0] = LoadAnimation(clothed ? sprites->jumpDownGunClothed : sprites->jumpDownGun, 1, FRAME_TIME);
 
     playerSprites->idleGun.layerCount = 1;
-    playerSprites->idleGun.layers[0] = LoadAnimation("assets/sprites/Player/Spr_rat/Idle_body_gun.png", 1, FRAME_TIME);
+    playerSprites->idleGun.layers[0] = LoadAnimation(sprites->idleBodyGun, 1, FRAME_TIME);
     playerSprites->jumpDownLegs.layers[0] = LoadAnimation(sprites->jumpDownLegs, 1, FRAME_TIME);
 }
 
@@ -244,14 +274,15 @@ float LoadAttackAnimation(PlayerSprites *playerSprites, int characterId, const c
     return frameCount * frameTime;
 }
 
-void LoadPistolAnimation(PlayerSprites *playerSprites, int clothingId)
+void LoadPistolAnimation(PlayerSprites *playerSprites, int characterId, int clothingId)
 {
     bool clothed = clothingId == 2;
+    const PlayerSpriteSet *sprites = GetPlayerSpriteSet(characterId);
     UnloadLayeredAnimation(&playerSprites->attack);
     playerSprites->attack.layerCount = 3;
-    playerSprites->attack.layers[0] = LoadAnimation("assets/sprites/Player/walkFront/Running_legs_forward-Sheet.png", 8, FRAME_TIME);
-    playerSprites->attack.layers[1] = LoadAnimation(clothed ? "assets/sprites/Player/Spr_rat/Running_body_gun_cesar.png" : "assets/sprites/Player/Spr_rat/Running_gun_body.png", 8, FRAME_TIME);
-    playerSprites->attack.layers[2] = LoadAnimation("assets/sprites/Player/Head_running-Sheet.png", 8, FRAME_TIME);
+    playerSprites->attack.layers[0] = LoadAnimation(sprites->walkFrontLegs, 8, FRAME_TIME);
+    playerSprites->attack.layers[1] = LoadAnimation(clothed ? sprites->walkFrontBodyGunClothed : sprites->walkFrontBodyGun, 8, FRAME_TIME);
+    playerSprites->attack.layers[2] = LoadAnimation(sprites->headRunning, 8, FRAME_TIME);
 }
 
 void UnloadAttackAnimation(PlayerSprites *playerSprites)
