@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "graphics/sprites.h"
+#include <string.h>
 
 #define FRAME_TIME 0.08f
 
@@ -149,6 +150,7 @@ void UnloadLayeredAnimation(LayeredAnimation *layeredAnimation)
 
 void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothingId)
 {
+    memset(playerSprites, 0, sizeof(PlayerSprites));
     bool clothed = clothingId == 2;
     const PlayerSpriteSet *sprites = GetPlayerSpriteSet(characterId);
 

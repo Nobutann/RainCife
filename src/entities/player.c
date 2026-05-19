@@ -59,78 +59,6 @@ void UpdatePlayerFacingForHorizontalInput(Player *player, float horizontalInput)
     }
 }
 
-Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
-{
-    Vector2 drawPosition = player->position;
-
-    if (!player->facingRight)
-    {
-        if (player->currentAnim == &player->sprites.attack)
-        {
-            return drawPosition;
-        }
-
-        if (player->isBossFighting && player->onGround && player->currentAnim && player->currentAnim->layerCount > 0)
-        {
-            float frameWidth = (float)player->currentAnim->layers[0].frameWidth;
-            float flippedVisualCenterRatio = 1.0f - PLAYER_GROUND_LEFT_VISUAL_CENTER_RATIO;
-            drawPosition.x += (PLAYER_HITBOX_CENTER_RATIO - flippedVisualCenterRatio) * frameWidth * scale;
-        }
-
-        return drawPosition;
-    }
-
-    if (player->facingRight)
-    {
-        if (player->currentAnim == &player->sprites.attack)
-        {
-            return drawPosition;
-        }
-
-        if (player->isBossFighting && player->onGround && player->currentAnim && player->currentAnim->layerCount > 0)
-        {
-            float frameWidth = (float)player->currentAnim->layers[0].frameWidth;
-            drawPosition.x += (PLAYER_HITBOX_CENTER_RATIO - PLAYER_GROUND_RIGHT_VISUAL_CENTER_RATIO) * frameWidth * scale;
-            return drawPosition;
-        }
-
-        bool usingJumpUpPose = player->currentAnim == &player->sprites.jumpUp;
-        bool usingJumpDownPose = player->currentAnim == &player->sprites.jumpDown;
-
-        if (!usingJumpUpPose && !usingJumpDownPose)
-        {
-            return drawPosition;
-        }
-
-        const Animation *jumpUp = &player->sprites.jumpUp.layers[0];
-        float referenceFrameWidth = (float)jumpUp->frameWidth;
-        if (referenceFrameWidth <= 0.0f && player->currentAnim && player->currentAnim->layerCount > 0)
-        {
-            referenceFrameWidth = (float)player->currentAnim->layers[0].frameWidth;
-        }
-
-        if (referenceFrameWidth <= 0.0f)
-        {
-            return drawPosition;
-        }
-
-        float hitboxCenterX = referenceFrameWidth * PLAYER_HITBOX_CENTER_RATIO;
-        bool usingMouseJumpSprites = player->sprites.jumpUpLegs.layers[0].frameWidth >= MOUSE_JUMP_LEGS_MIN_WIDTH;
-
-        if (!usingJumpUpPose)
-        {
-            float spriteCenterX = usingMouseJumpSprites ? BOSS_LEFT_MOUSE_JUMP_DOWN_CENTER_X : BOSS_LEFT_JUMP_DOWN_CENTER_X;
-            drawPosition.x += (hitboxCenterX - spriteCenterX) * scale;
-            return drawPosition;
-        }
-
-        float spriteCenterX = usingMouseJumpSprites ? BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X : BOSS_LEFT_JUMP_UP_CENTER_X;
-        drawPosition.x += (hitboxCenterX - spriteCenterX) * scale;
-    }
-
-    return drawPosition;
-}
-
 static void DrawLayeredAnimationLayer(LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX, Color tint)
 {
     float refFrameWidth = layeredAnimation->referenceFrameWidth > 0.0f
@@ -539,10 +467,17 @@ Rectangle GetPlayerHitbox(Player *player, float scale)
         float frameRenderWidth = baseLayer->frameWidth * scale;
         float frameRenderHeight = baseLayer->sheet.height * scale;
 
+        bool flipX = !player->facingRight;
+
         float offsetX = (currentRenderWidth - frameRenderWidth) * 0.5f + frameRenderWidth * 0.45f;
         float offsetY = (currentRenderHeight - frameRenderHeight) + frameRenderHeight * 0.40f;
         float hitboxW = frameRenderWidth * 0.15f;
         float hitboxH = frameRenderHeight * 0.40f;
+
+        if (flipX)
+        {
+            offsetX = currentRenderWidth - offsetX - hitboxW;
+        }
 
         return (Rectangle){
             player->position.x + offsetX,
@@ -723,7 +658,7 @@ void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY
 
 void DrawPlayer(Player *player, float scale)
 {
-    Vector2 drawPosition = GetPlayerSpriteDrawPosition(player, scale);
+    Vector2 drawPosition = player->position;
 
     if (player->weapon.type == WEAPON_PISTOL && player->sprites.armGun.id > 0)
     {
