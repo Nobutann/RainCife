@@ -67,6 +67,16 @@ typedef struct
     const char *attackSwordClothed;
     const char *attackHammer;
     const char *attackHammerClothed;
+    const char *armGun;
+    const char *walkFrontBodyGun;
+    const char *walkFrontBodyGunClothed;
+    const char *walkBackBodyGun;
+    const char *walkBackBodyGunClothed;
+    const char *jumpUpGun;
+    const char *jumpUpGunClothed;
+    const char *jumpDownGun;
+    const char *jumpDownGunClothed;
+    const char *idleBodyGun;
 } PlayerSpriteSet;
 
 typedef struct {
@@ -88,7 +98,7 @@ const PlayerSpriteSet *GetPlayerSpriteSet(int characterId);
 const char *GetPlayerCharacterName(int characterId);
 void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothingId);
 void UnloadPlayerSprites(PlayerSprites *playerSprites);
-void LoadPistolAnimation(PlayerSprites *playerSprites, int clothingId);
+void LoadPistolAnimation(PlayerSprites *playerSprites, int characterId, int clothingId);
 float LoadAttackAnimation(PlayerSprites *playerSprites, int characterId, const char *path, int frameCount, float frameTime);
 void UnloadAttackAnimation(PlayerSprites *playerSprites);
 void UpdateAnimation(Animation *animation, float dt);
