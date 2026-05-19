@@ -38,7 +38,7 @@ static void FireBubble(Shark *shark) {
     }
 }
 
-void InitShark(Shark *shark, int screenWidth, int screenHeight) {
+void ResetShark(Shark *shark, int screenWidth, int screenHeight) {
     float size = 300.0f;
     shark->startPos = (Vector2){ (float)screenWidth - size - 50.0f, (float)screenHeight - size - 50.0f };
     shark->rect = (Rectangle){ shark->startPos.x, shark->startPos.y, size, size };
@@ -55,13 +55,17 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
         shark->balls[i].active = false;
     }
 
+    shark->animTimer = 0.0f;
+    shark->animFrame = 0;
+}
+
+void InitShark(Shark *shark, int screenWidth, int screenHeight) {
+    ResetShark(shark, screenWidth, screenHeight);
     shark->texShoot = LoadTexture("assets/sprites/Boss/Shark_attack_bubble.png");
     shark->texDashLeft = LoadTexture("assets/sprites/Boss/Shark_dash.png");
     shark->texDashRight = LoadTexture("assets/sprites/Boss/Angry_shark-sheet.png");
     shark->texJump = LoadTexture("assets/sprites/Boss/tubarao_flying-Sheet.png");
     shark->texBubble = LoadTexture("assets/sprites/Boss/bubble.png");
-    shark->animTimer = 0.0f;
-    shark->animFrame = 0;
 }
 
 void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight) {

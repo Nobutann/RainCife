@@ -75,8 +75,10 @@ typedef struct {
     Animation fall;
     Animation kick;
     Animation rasteira;
+    Animation recovery;
     Animation death;
     Animation shadow;
+    Texture2D shockwave;
 } HairyLegSprites;
 
 Animation LoadAnimation(const char* path, int frameCount, float frameTime);
