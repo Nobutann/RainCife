@@ -4,6 +4,7 @@
 #include <raylib.h>
 
 #define MAX_LAYERS 4
+#define HAIRY_LEG_KICK_FRAME_COUNT 8
 
 typedef struct
 {
