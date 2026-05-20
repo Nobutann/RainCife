@@ -17,6 +17,7 @@
 #include "core/window_mode.h"
 #include "utils.h"
 #include "core/sounds.h"
+#include "core/intro_screen.h"
 #define MAX_ACTIVE_ENEMIES 12
 #define LEVEL6_INTRO_DURATION 2.5f
 #define BOSS_DEFEAT_TRANSITION_DELAY 2.5f
@@ -503,7 +504,7 @@ int main(void)
     SetTargetFPS(60);
     SetExitKey(KEY_DELETE);
 
-    GameScreen currentScreen = SCREEN_START;
+    GameScreen currentScreen = SCREEN_INTRO;
     GameScreen optionsReturnScreen = SCREEN_START;
 
     while (currentScreen != SCREEN_EXIT && !WindowShouldClose())
@@ -516,7 +517,11 @@ int main(void)
             SalvarConfig(config);
         }
 
-        if (currentScreen == SCREEN_START)
+        if (currentScreen == SCREEN_INTRO)
+        {
+            currentScreen = RunIntro();
+        }
+        else if (currentScreen == SCREEN_START)
         {
             GameScreen nextScreen = RunStart();
             if (nextScreen == SCREEN_OPTIONS)
@@ -1215,7 +1220,7 @@ int main(void)
                             enemies[i].velocity.y = -5.0f;
                             enemies[i].animationTimer = 0.0f;
                             enemies[i].currentFrame = 0;
-                            
+
                             // Deactivate the bullet
                             projectiles.items[j].active = false;
                             break;

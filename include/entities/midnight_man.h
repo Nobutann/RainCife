@@ -81,4 +81,3 @@ bool TryDamageMidnightManFromPlayerAttack(MidnightMan *mm, Player *player, float
 bool IsMidnightManColliding(const MidnightMan *mm, Rectangle playerHitbox);
 
 #endif
-
