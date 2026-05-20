@@ -1,66 +1,89 @@
-TARGET ?= bin/RainCife
+ifeq ($(OS),Windows_NT)
+    PLATFORM_OS = WINDOWS
+    EXT        = .exe
+    ifneq ($(wildcard C:/msys64/mingw64/bin/gcc.exe),)
+        CC       = C:/msys64/mingw64/bin/gcc.exe
+        INCLUDES = -I./include -IC:/msys64/mingw64/include
+        LIBS     = -LC:/msys64/mingw64/lib -lraylib -lopengl32 -lgdi32 -lwinmm
+    else
+        CC       = C:/raylib/w64devkit/bin/gcc.exe
+        INCLUDES = -I./include -IC:/raylib-5.5_win64_mingw-w64/include -IC:/raylib/raylib/src
+        LIBS     = -LC:/raylib-5.5_win64_mingw-w64/lib -lraylib -lopengl32 -lgdi32 -lwinmm
+    endif
+    RM       = rd /s /q
+    MKDIR    = mkdir
+    FIX_PATH = $(subst /,\,$1)
+else
+    PLATFORM_OS = LINUX
+    EXT        =
+    CC         = gcc
+    INCLUDES   = -I./include
+    LIBS       = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11 -lXrandr -lXinerama -lXi -lXcursor
+    RM         = rm -rf
+    MKDIR      = mkdir -p
+    FIX_PATH   = $1
+endif
 
-CC = gcc
-PKG_CONFIG ?= pkg-config
-
-SRC_DIR = src
-OBJ_DIR = objects
-
-INCLUDES = -I./include
-
+# Wildcard check for raydial (from main)
 ifneq ($(wildcard external/raydial/include),)
-INCLUDES += -I./external/raydial/include
+    INCLUDES += -I./external/raydial/include
 endif
 
-RAYLIB_CFLAGS = $(shell $(PKG_CONFIG) --cflags raylib 2>/dev/null)
-RAYLIB_LIBS = $(shell $(PKG_CONFIG) --libs raylib 2>/dev/null)
+CFLAGS  = -std=c99 -Wall -Wextra -DPLATFORM_DESKTOP
+LDFLAGS =
 
-ifeq ($(strip $(RAYLIB_LIBS)),)
-RAYLIB_LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+# Build mode: make BUILD=release
+ifeq ($(BUILD),release)
+    CFLAGS += -O2 -DNDEBUG
+else
+    CFLAGS += -g -O0 -DDEBUG
 endif
 
-CFLAGS ?= -std=c99 -Wall -Wextra -g -O0 -DDEBUG -DPLATFORM_DESKTOP
-CPPFLAGS ?= $(INCLUDES) $(RAYLIB_CFLAGS)
-LDLIBS ?= $(RAYLIB_LIBS) -lm
+TARGET = bin/RatTsunami$(EXT)
 
-SRC = $(wildcard $(SRC_DIR)/*.c) \
-      $(wildcard $(SRC_DIR)/*/*.c)
-
+SRC    = $(wildcard src/*.c) $(wildcard src/**/*.c)
 RAYDIAL_SRC = $(wildcard external/raydial/src/*.c)
 
-OBJ = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
-RAYDIAL_OBJ = $(patsubst external/raydial/src/%.c,$(OBJ_DIR)/raydial/%.o,$(RAYDIAL_SRC))
+OBJ    = $(patsubst src/%.c, obj/%.o, $(SRC))
+RAYDIAL_OBJ = $(patsubst external/raydial/src/%.c, obj/raydial/%.o, $(RAYDIAL_SRC))
 
 ALL_OBJ = $(OBJ) $(RAYDIAL_OBJ)
 
+# ── Targets ────────────────────────────────────────────────────────────────────
+
+.PHONY: all run clean dirs release info
+
 all: dirs $(TARGET)
 
-$(TARGET): $(ALL_OBJ) | dirs
-	$(CC) $(ALL_OBJ) -o $(TARGET) $(LDLIBS)
+release:
+	$(MAKE) BUILD=release
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	mkdir -p $(dir $@)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+$(TARGET): $(ALL_OBJ)
+	$(CC) $(ALL_OBJ) -o $@ $(LIBS) $(LDFLAGS)
 
-$(OBJ_DIR)/raydial/%.o: external/raydial/src/%.c
-	mkdir -p $(dir $@)
-	$(CC) -w $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+obj/%.o: src/%.c
+	$(MKDIR) $(dir $@)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-dirs:
-	mkdir -p bin
-	mkdir -p objects
-	mkdir -p objects/raydial
+obj/raydial/%.o: external/raydial/src/%.c
+	$(MKDIR) $(dir $@)
+	$(CC) -w $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 run: all
-	./$(TARGET)
+	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; ./$(TARGET)
 
 clean:
-	rm -rf bin objects
+	$(RM) $(call FIX_PATH,bin) $(call FIX_PATH,obj)
+
+dirs:
+	-$(MKDIR) bin
+	-$(MKDIR) obj
+	-$(MKDIR) obj/raydial
 
 info:
-	@echo SRC: $(SRC)
-	@echo RAYDIAL_SRC: $(RAYDIAL_SRC)
-	@echo OBJ: $(OBJ)
-	@echo ALL_OBJ: $(ALL_OBJ)
-
-.PHONY: all run clean dirs info
+	@echo "Platform : $(PLATFORM_OS)"
+	@echo "Compiler : $(CC)"
+	@echo "Target   : $(TARGET)"
+	@echo "Sources  : $(SRC)"
+	@echo "Raydial  : $(RAYDIAL_SRC)"
+	@echo "Build    : $(if $(filter release,$(BUILD)),release,debug)"
