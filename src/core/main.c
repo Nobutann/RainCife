@@ -102,6 +102,7 @@ static void RestartCurrentEncounter(
     Player *player,
     HairyLeg *pernaCabeluda,
     Shark *shark,
+    MidnightMan *midnightMan,
     int currentWidth,
     int currentHeight,
     float groundY,
@@ -133,6 +134,12 @@ static void RestartCurrentEncounter(
             ResetShark(shark, currentWidth, currentHeight);
             PlacePlayerForBossIntro(player, GetSharkHitbox(shark), playerStandingY, playerScale);
         }
+        else if (currentLevel->bossId == 3)
+        {
+            InitMidnightMan(midnightMan, currentWidth, currentHeight, groundY);
+            Rectangle bossPlaceholder = { (float)currentWidth * 0.7f, groundY - 150.0f, 100.0f, 150.0f };
+            PlacePlayerForBossIntro(player, bossPlaceholder, playerStandingY, playerScale);
+        }
         return;
     }
 
@@ -141,6 +148,10 @@ static void RestartCurrentEncounter(
     *autoSpawn = true;
     ResetHairyLeg(pernaCabeluda, (Vector2){ (float)currentWidth * 0.6f, groundY }, groundY, bossScale);
     ResetShark(shark, currentWidth, currentHeight);
+    if (currentLevel->bossId == 3)
+    {
+        InitMidnightMan(midnightMan, currentWidth, currentHeight, groundY);
+    }
     ResetPlayerForRunningRetry(player, playerStandingY, playerScale);
 }
 
@@ -416,7 +427,7 @@ static int GetInfiniteEnemyBaseSpeed(float gameSpeedMultiplier)
     return (int)(bonus + 0.5f);
 }
 
-static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float progressTimer, HairyLeg *pernaCabeluda, Shark *shark)
+static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float progressTimer, HairyLeg *pernaCabeluda, Shark *shark, MidnightMan *midnightMan)
 {
     float barValue = 1.0f;
     if (phase == PHASE_RUNNING && currentLevel->duration > 0.0f)
@@ -432,6 +443,10 @@ static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float pro
         else if (currentLevel->bossId == 2)
         {
             barValue = (float)shark->health / 100.0f;
+        }
+        else if (currentLevel->bossId == 3)
+        {
+            barValue = (float)midnightMan->health / 200.0f;
         }
     }
 
@@ -601,8 +616,9 @@ int main(void)
 
             GamePhase phase = PHASE_RUNNING;
             float progressTimer = 0.0f;
-            bool level6IntroActive = false;
+            bool level6IntroActive = (currentLevel->id == 6);
             float level6IntroTimer = 0.0f;
+            float level6IntroDuration = LEVEL6_INTRO_DURATION;
 
             // player.isBossFighting = (currentLevel->bossId != 0);
             player.isBossFighting = false;
@@ -649,7 +665,7 @@ int main(void)
 
                 if (currentLevel->id == 6)
                 {
-                    level6IntroProgress = level6IntroTimer / LEVEL6_INTRO_DURATION;
+                    level6IntroProgress = level6IntroTimer / level6IntroDuration;
                 }
 
                 if (gamePaused)
@@ -687,7 +703,7 @@ int main(void)
                         currentScreen = SCREEN_START;
                     }
 
-                    float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
+                    float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark, &midnightMan);
 
                     BeginDrawing();
                         DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode, true);
@@ -703,12 +719,12 @@ int main(void)
                 if (currentLevel->id == 6 && level6IntroActive)
                 {
                     level6IntroTimer += dt;
-                    if (level6IntroTimer >= LEVEL6_INTRO_DURATION)
+                    if (level6IntroTimer >= level6IntroDuration)
                     {
-                        level6IntroTimer = LEVEL6_INTRO_DURATION;
+                        level6IntroTimer = level6IntroDuration;
                         level6IntroActive = false;
                     }
-                    level6IntroProgress = level6IntroTimer / LEVEL6_INTRO_DURATION;
+                    level6IntroProgress = level6IntroTimer / level6IntroDuration;
                 }
 
                 if (deathScreenActive)
@@ -756,7 +772,7 @@ int main(void)
                             infiniteRankingNameActive = false;
                         }
 
-                        float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
+                        float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark, &midnightMan);
 
                         BeginDrawing();
                             DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode, true);
@@ -825,6 +841,7 @@ int main(void)
                                 &player,
                                 &pernaCabeluda,
                                 &shark,
+                                &midnightMan,
                                 currentWidth,
                                 currentHeight,
                                 groundY,
@@ -832,6 +849,12 @@ int main(void)
                                 playerStandingY,
                                 playerScale
                             );
+                            if (currentLevel->bossId == 3)
+                            {
+                                level6IntroActive = (currentLevel->id == 6);
+                                level6IntroTimer = 0.0f;
+                                level6IntroDuration = 0.6f;
+                            }
                         }
                         safePosteFollowUpTimer = -1.0f;
                         deathScreenActive = false;
@@ -970,6 +993,7 @@ int main(void)
                                 }
                                 level6IntroActive = (currentLevel->id == 6);
                                 level6IntroTimer = 0.0f;
+                                level6IntroDuration = LEVEL6_INTRO_DURATION;
                             }
                         }
                         else if (CheckCollisionPointRec(mouse, menuRect))
@@ -979,7 +1003,7 @@ int main(void)
                     }
 
                     const char *transitionTitle = (transitionType == TRANSITION_RUNNING_TO_BOSS) ? "Fase Concluída!" : "Boss Derrotado!";
-                    float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
+                    float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark, &midnightMan);
                     BeginDrawing();
                         DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode, true);
                         DrawPhaseTransitionOverlay(currentWidth, currentHeight, advanceRect, menuRect, btnFontSize, transitionTitle, hoveringButton);
@@ -1216,6 +1240,7 @@ int main(void)
                     }
                     level6IntroActive = (currentLevel->id == 6);
                     level6IntroTimer = 0.0f;
+                    level6IntroDuration = LEVEL6_INTRO_DURATION;
                 }
                 if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
                     StartLevel(
@@ -1242,6 +1267,7 @@ int main(void)
                     }
                     level6IntroActive = (currentLevel->id == 6);
                     level6IntroTimer = 0.0f;
+                    level6IntroDuration = LEVEL6_INTRO_DURATION;
                 }
 
                 if (phase == PHASE_BOSS)
@@ -1286,7 +1312,21 @@ int main(void)
 
                     if (currentLevel->bossId == 3)
                     {
-                        UpdateMidnightMan(&midnightMan, playerHitbox, dt, currentWidth, currentHeight, groundY);
+                        float mmDt = (currentLevel->id == 6 && level6IntroActive) ? 0.0f : dt;
+                        UpdateMidnightMan(&midnightMan, playerHitbox, mmDt, currentWidth, currentHeight, groundY);
+                        if (!bossDefeatTransitionPending)
+                        {
+                            TryDamageMidnightManFromPlayerAttack(&midnightMan, &player, playerScale);
+                        }
+
+                        if (!bossDefeatTransitionPending && midnightMan.health <= 0 && currentLevel->next)
+                        {
+                            UnlockStoryLevel(currentLevel->next->id);
+                            transitionType = TRANSITION_BOSS_TO_RUNNING;
+                            bossDefeatTransitionPending = true;
+                            bossDefeatTransitionTimer = 0.0f;
+                            bossDefeatedThisFrame = true;
+                        }
                     }
 
                     if (bossDefeatTransitionPending)
@@ -1347,9 +1387,17 @@ int main(void)
                         }
                     }
 
+                    if (!bossDefeatedThisFrame && currentLevel->bossId == 3)
+                    {
+                        if (IsMidnightManColliding(&midnightMan, playerHitbox))
+                        {
+                            deathScreenActive = true;
+                            retryPhase = PHASE_BOSS;
+                        }
+                    }
                 }
 
-                float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
+                float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark, &midnightMan);
 
                 BeginDrawing();
                     DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, false, false);
