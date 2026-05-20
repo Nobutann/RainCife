@@ -47,7 +47,7 @@ typedef struct {
     Texture2D texShoot;      // Shark_attack_bubble.png — spritesheet 3 frames
     Texture2D texIdle;       // tubarao_idle-Sheet.png — spritesheet 9 frames
     Texture2D texDashLeft;   // Shark_dash-Sheet.png — spritesheet 6 frames (prep e retorno esquerda)
-    Texture2D texDashRight;  // Angry_shark-sheet.png — spritesheet 4 frames (dash direita)
+    Texture2D texDashRight;  // Shark_angry-Sheet.png — spritesheet 6 frames (dash direita)
     Texture2D texJump;       // tubarao_flying-Sheet.png — spritesheet 12 frames
     Texture2D texBubble;     // bubble.png — projétil
 

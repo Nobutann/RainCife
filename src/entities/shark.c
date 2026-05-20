@@ -70,7 +70,7 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     shark->texShoot = LoadTexture("assets/sprites/Boss/Shark_attack_bubble.png");
     shark->texIdle = LoadTexture("assets/sprites/Boss/tubarao_idle-Sheet.png");
     shark->texDashLeft = LoadTexture("assets/sprites/Boss/Shark_dash-Sheet.png");
-    shark->texDashRight = LoadTexture("assets/sprites/Boss/Angry_shark-sheet.png");
+    shark->texDashRight = LoadTexture("assets/sprites/Boss/Shark_angry-Sheet.png");
     shark->texJump = LoadTexture("assets/sprites/Boss/tubarao_flying-Sheet.png");
     shark->texBubble = LoadTexture("assets/sprites/Boss/bubble.png");
     shark->texDeath = LoadTexture("assets/sprites/Boss/Shark_death.png");
@@ -129,7 +129,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         shark->animTimer += deltaTime;
         if (shark->animTimer >= 0.06f) {
             shark->animTimer = 0.0f;
-            shark->animFrame = (shark->animFrame + 1) % 4;
+            shark->animFrame = (shark->animFrame + 1) % 6;
         }
     } else if (shark->state == SHARK_DASH_LEFT || shark->state == SHARK_PREP_LEFT) {
         shark->animTimer += deltaTime;
@@ -148,8 +148,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             float dashLeftOffsets[6] = { 35.0f, 10.0f, -20.0f, -45.0f, -20.0f, 10.0f };
             yOffset = dashLeftOffsets[shark->animFrame % 6];
         } else if (shark->state == SHARK_DASH_RIGHT) {
-            float dashRightOffsets[4] = { 35.0f, 10.0f, -55.0f, 10.0f };
-            yOffset = dashRightOffsets[shark->animFrame % 4];
+            float dashRightOffsets[6] = { 35.0f, 10.0f, -20.0f, -45.0f, -20.0f, 10.0f };
+            yOffset = dashRightOffsets[shark->animFrame % 6];
         }
         
         shark->rect.y = shark->startPos.y + yOffset;
@@ -350,7 +350,7 @@ void DrawShark(Shark *shark) {
             break;
 
         case SHARK_DASH_RIGHT:
-            DrawSharkFrame(shark->texDashRight, shark->animFrame, 4, destDash, false);
+            DrawSharkFrame(shark->texDashRight, shark->animFrame, 6, destDash, false);
             break;
 
         case SHARK_DASH_LEFT:
