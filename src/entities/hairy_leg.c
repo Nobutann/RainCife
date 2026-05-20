@@ -737,20 +737,11 @@ void DrawHairyLeg(HairyLeg *leg, float scale) {
     Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->rect.y + offsetY };
     DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
 
-    // Linhas de debug para hitboxes
-    DrawRectangleLinesEx(leg->bodyHitbox, 2.0f, RED); // Hitbox principal
-
-    if (leg->isKickActive) {
-        DrawRectangleLinesEx(leg->kickHitbox, 2.0f, ORANGE); // Hitbox do chute
-    }
-
     if (leg->waveLeft.active) {
         DrawHairyLegShockwave(leg, &leg->waveLeft, true);
-        DrawRectangleLinesEx(leg->waveLeft.hitbox, 2.0f, BLUE); // Onda de choque esquerda
     }
     if (leg->waveRight.active) {
         DrawHairyLegShockwave(leg, &leg->waveRight, false);
-        DrawRectangleLinesEx(leg->waveRight.hitbox, 2.0f, BLUE); // Onda de choque direita
     }
 }
 
