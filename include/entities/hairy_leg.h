@@ -30,6 +30,7 @@ typedef struct {
 
 typedef struct {
     Rectangle rect;
+    Rectangle bodyHitbox;
     HairyLegState state;
     float timer;
     int health;

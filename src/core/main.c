@@ -1307,7 +1307,7 @@ int main(void)
 
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 1 && pernaCabeluda.state != HL_DEAD)
                     {
-                        if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect))
+                        if (CheckCollisionRecs(playerHitbox, pernaCabeluda.bodyHitbox))
                         {
                             deathScreenActive = true;
                             retryPhase = PHASE_BOSS;

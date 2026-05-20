@@ -23,6 +23,28 @@
 #define HAIRY_LEG_SHOCKWAVE_HITBOX_BOTTOM_MARGIN_RATIO 0.06f
 #define HAIRY_LEG_SHOCKWAVE_VERTICAL_OFFSET 14.0f
 
+static const Rectangle HAIRY_LEG_KICK_FRAME_HITBOXES[HAIRY_LEG_KICK_FRAME_COUNT] = {
+    {174.0f, 214.0f, 105.0f, 27.0f},
+    {174.0f, 210.0f, 105.0f, 31.0f},
+    {174.0f, 204.0f, 106.0f, 37.0f},
+    { 60.0f, 180.0f,  68.0f, 40.0f},
+    { 45.0f, 180.0f,  63.0f, 37.0f},
+    { 48.0f, 180.0f,  71.0f, 42.0f},
+    {103.0f, 180.0f,  98.0f, 54.0f},
+    {174.0f, 210.0f, 105.0f, 31.0f}
+};
+
+static const Rectangle HAIRY_LEG_KICK_BODY_HITBOXES[HAIRY_LEG_KICK_FRAME_COUNT] = {
+    {205.0f,  8.0f, 80.0f, 220.0f},
+    {180.0f, 30.0f, 80.0f, 210.0f},
+    {174.0f, 36.0f, 80.0f, 200.0f},
+    {150.0f, 38.0f, 80.0f, 182.0f},
+    {125.0f, 36.0f, 80.0f, 184.0f},
+    {135.0f, 34.0f, 80.0f, 188.0f},
+    {145.0f, 24.0f, 80.0f, 208.0f},
+    {180.0f, 30.0f, 80.0f, 210.0f}
+};
+
 static Animation *GetHairyLegAnimationForState(HairyLeg *leg) {
     switch (leg->state) {
         case HL_IDLE:
@@ -49,6 +71,13 @@ static Animation *GetHairyLegAnimationForState(HairyLeg *leg) {
 
 static void SyncHairyLegAnimation(HairyLeg *leg) {
     leg->currentAnim = GetHairyLegAnimationForState(leg);
+}
+
+static int GetHairyLegDirectionTowardPlayer(const HairyLeg *leg, Rectangle playerRect) {
+    float centroRato = playerRect.x + (playerRect.width / 2.0f);
+    float centroPerna = leg->rect.x + (leg->rect.width / 2.0f);
+
+    return centroRato > centroPerna ? 1 : -1;
 }
 
 static int GetHairyLegFrameForProgress(float progress, int frameCount) {
@@ -197,6 +226,55 @@ float GetHairyLegSpriteOffsetX(const HairyLeg *leg, float scale) {
     return flipX ? -(scale * 90.0f) : -(scale * 115.0f);
 }
 
+static void SetHairyLegStatePreservingSpriteX(HairyLeg *leg, HairyLegState state, float scale) {
+    float spriteX = leg->rect.x + GetHairyLegSpriteOffsetX(leg, scale);
+
+    leg->state = state;
+    leg->rect.x = spriteX - GetHairyLegSpriteOffsetX(leg, scale);
+}
+
+static Rectangle GetHairyLegFrameHitbox(const HairyLeg *leg, float scale, const Rectangle *localHitboxes) {
+    const Animation *kick = &leg->sprites.kick;
+    int frame = kick->currentFrame;
+
+    if (frame < 0) {
+        frame = 0;
+    }
+    if (frame >= HAIRY_LEG_KICK_FRAME_COUNT) {
+        frame = HAIRY_LEG_KICK_FRAME_COUNT - 1;
+    }
+
+    Rectangle localHitbox = localHitboxes[frame];
+    float frameWidth = kick->frameWidth > 0
+        ? (float)kick->frameWidth
+        : (float)kick->sheet.width / (float)HAIRY_LEG_KICK_FRAME_COUNT;
+    bool flipX = (leg->direction == 1);
+
+    if (flipX) {
+        localHitbox.x = frameWidth - localHitbox.x - localHitbox.width;
+    }
+
+    float currentSpriteH = (float)kick->sheet.height * scale;
+    float emptyBottom = currentSpriteH * 0.08f;
+    float offsetX = GetHairyLegSpriteOffsetX(leg, scale);
+    float offsetY = -(currentSpriteH - emptyBottom - leg->rect.height);
+
+    return (Rectangle){
+        leg->rect.x + offsetX + localHitbox.x * scale,
+        leg->rect.y + offsetY + localHitbox.y * scale,
+        localHitbox.width * scale,
+        localHitbox.height * scale
+    };
+}
+
+Rectangle GetHairyLegBodyFrameHitbox(const HairyLeg *leg, float scale) {
+    return GetHairyLegFrameHitbox(leg, scale, HAIRY_LEG_KICK_BODY_HITBOXES);
+}
+
+Rectangle GetHairyLegKickFrameHitbox(const HairyLeg *leg, float scale) {
+    return GetHairyLegFrameHitbox(leg, scale, HAIRY_LEG_KICK_FRAME_HITBOXES);
+}
+
 void ResetHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale) {
     leg->currentAnim = &leg->sprites.idle;
     leg->groundY = groundY;
@@ -205,6 +283,7 @@ void ResetHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float sc
     float emptyBottom = spriteH * 0.08f;
     float hitboxH = spriteH - emptyTop - emptyBottom;
     leg->rect = (Rectangle){ startPosition.x, groundY - emptyBottom - hitboxH, 40.0f * scale, hitboxH };
+    leg->bodyHitbox = leg->rect;
     leg->state = HL_IDLE;
     leg->timer = 0.0f;
     leg->health = 100;
@@ -287,7 +366,10 @@ bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float play
     }
 
     Rectangle attackHitbox = GetPlayerAttackHitbox(player, playerScale);
-    if (!CheckCollisionRecs(attackHitbox, leg->rect)) {
+    Rectangle bodyHitbox = (leg->bodyHitbox.width > 0.0f && leg->bodyHitbox.height > 0.0f)
+        ? leg->bodyHitbox
+        : leg->rect;
+    if (!CheckCollisionRecs(attackHitbox, bodyHitbox)) {
         return false;
     }
 
@@ -311,15 +393,6 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
         leg->rect.y = leg->groundY - emptyBottom - leg->rect.height;
     }
 
-    if (leg->state == HL_IDLE || leg->state == HL_VULNERABLE) {
-        float centroRato = playerRect.x + (playerRect.width / 2.0f);
-        float centroPerna = leg->rect.x + (leg->rect.width / 2.0f);
-        if (centroRato > centroPerna) {
-            leg->direction = 1;
-        } else {
-            leg->direction = -1;
-        }
-    }
     if (leg->waveLeft.active) {
         leg->waveLeft.rect.x -= leg->waveLeft.speed.x * deltaTime;
         SyncHairyLegShockwaveHitbox(&leg->waveLeft);
@@ -336,6 +409,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             leg->timer += deltaTime;
             if (leg->timer > 1.0f) {
                 int screenW = GetScreenWidth();
+                leg->direction = GetHairyLegDirectionTowardPlayer(leg, playerRect);
 
                 if (ShouldHairyLegJumpBackFromCorner(leg, playerRect, (float)screenW)) {
                     leg->state = HL_JUMPING_BACK;
@@ -521,18 +595,14 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
                 leg->isKickActive = false;
             }
             else if (leg->timer < 0.7f) {
-                float larguraHitbox = 80.0f * scale;
-                float alturaHitbox = 40.0f * scale;
-                float hitboxX = (leg->direction == 1) ? (leg->rect.x + leg->rect.width) : (leg->rect.x - larguraHitbox);
-                leg->kickHitbox = (Rectangle){ hitboxX, leg->rect.y + currentSpriteH * 0.7f, larguraHitbox, alturaHitbox };
                 leg->isKickActive = true;
             }
             else if (leg->timer < 1.2f) {
                 leg->isKickActive = false;
                 leg->rect.x -= 20 * leg->direction * deltaTime;
-                 }
+            }
             else {
-                leg->state = HL_VULNERABLE;
+                SetHairyLegStatePreservingSpriteX(leg, HL_VULNERABLE, scale);
                 leg->sprites.idle.currentFrame = 0;
                 leg->timer = 0.0f;
             }
@@ -544,12 +614,14 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             break;
     }
     int screenWidth = GetScreenWidth();
-    if (leg->rect.x < 0) {
+    if (screenWidth > 0) {
+        if (leg->rect.x < 0) {
             leg->rect.x = 0;
         }
         else if (leg->rect.x + leg->rect.width > screenWidth) {
             leg->rect.x = screenWidth - leg->rect.width;
         }
+    }
 
     SyncHairyLegAnimation(leg);
 
@@ -563,6 +635,15 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
         if (isAttack && leg->currentAnim->currentFrame >= leg->currentAnim->frameCount) {
             leg->currentAnim->currentFrame = leg->currentAnim->frameCount - 1;
         }
+    }
+
+    if (leg->state == HL_KICKING) {
+        leg->bodyHitbox = GetHairyLegBodyFrameHitbox(leg, scale);
+        if (leg->isKickActive) {
+            leg->kickHitbox = GetHairyLegKickFrameHitbox(leg, scale);
+        }
+    } else {
+        leg->bodyHitbox = leg->rect;
     }
 }
 
@@ -612,7 +693,7 @@ void DrawHairyLeg(HairyLeg *leg, float scale) {
     DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
 
     // Linhas de debug para hitboxes
-    DrawRectangleLinesEx(leg->rect, 2.0f, RED); // Hitbox principal
+    DrawRectangleLinesEx(leg->bodyHitbox, 2.0f, RED); // Hitbox principal
 
     if (leg->isKickActive) {
         DrawRectangleLinesEx(leg->kickHitbox, 2.0f, ORANGE); // Hitbox do chute
