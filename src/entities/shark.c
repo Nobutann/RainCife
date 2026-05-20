@@ -68,7 +68,8 @@ void ResetShark(Shark *shark, int screenWidth, int screenHeight) {
 void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     ResetShark(shark, screenWidth, screenHeight);
     shark->texShoot = LoadTexture("assets/sprites/Boss/Shark_attack_bubble.png");
-    shark->texDashLeft = LoadTexture("assets/sprites/Boss/Shark_dash.png");
+    shark->texIdle = LoadTexture("assets/sprites/Boss/tubarao_idle-Sheet.png");
+    shark->texDashLeft = LoadTexture("assets/sprites/Boss/Shark_dash-Sheet.png");
     shark->texDashRight = LoadTexture("assets/sprites/Boss/Angry_shark-sheet.png");
     shark->texJump = LoadTexture("assets/sprites/Boss/tubarao_flying-Sheet.png");
     shark->texBubble = LoadTexture("assets/sprites/Boss/bubble.png");
@@ -106,7 +107,13 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         }
     }
 
-    if (shark->state == SHARK_SHOOTING) {
+    if (shark->state == SHARK_IDLE) {
+        shark->animTimer += deltaTime;
+        if (shark->animTimer >= 0.1f) {
+            shark->animTimer = 0.0f;
+            shark->animFrame = (shark->animFrame + 1) % 9;
+        }
+    } else if (shark->state == SHARK_SHOOTING) {
         shark->animTimer += deltaTime;
         if (shark->animTimer >= 0.1f) {
             shark->animTimer = 0.0f;
@@ -124,12 +131,28 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             shark->animTimer = 0.0f;
             shark->animFrame = (shark->animFrame + 1) % 4;
         }
+    } else if (shark->state == SHARK_DASH_LEFT || shark->state == SHARK_PREP_LEFT) {
+        shark->animTimer += deltaTime;
+        if (shark->animTimer >= 0.06f) {
+            shark->animTimer = 0.0f;
+            shark->animFrame = (shark->animFrame + 1) % 6;
+        }
     }
 
     float size = 300.0f;
     if (shark->state != SHARK_ARC_ATTACK && shark->state != SHARK_WAIT_RETURN) {
         shark->startPos.y = (float)screenHeight - size - 50.0f;
-        shark->rect.y = shark->startPos.y;
+        
+        float yOffset = 0.0f;
+        if (shark->state == SHARK_PREP_LEFT || shark->state == SHARK_DASH_LEFT) {
+            float dashLeftOffsets[6] = { 35.0f, 10.0f, -20.0f, -45.0f, -20.0f, 10.0f };
+            yOffset = dashLeftOffsets[shark->animFrame % 6];
+        } else if (shark->state == SHARK_DASH_RIGHT) {
+            float dashRightOffsets[4] = { 35.0f, 10.0f, -55.0f, 10.0f };
+            yOffset = dashRightOffsets[shark->animFrame % 4];
+        }
+        
+        shark->rect.y = shark->startPos.y + yOffset;
     }
     shark->rect.width = size;
     shark->rect.height = size;
@@ -141,6 +164,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 int chance = GetRandomValue(1, 100);
                 if (chance <= 33) {
                     shark->state = SHARK_PREP_LEFT;
+                    shark->animFrame = 0;
+                    shark->animTimer = 0.0f;
                 } else if (chance <= 66) {
                     shark->state = SHARK_SHOOTING;
                     shark->shootCount = 0;
@@ -184,6 +209,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             if (shark->rect.x > (float)screenWidth + 100.0f) {
                 shark->state = SHARK_DASH_LEFT;
                 shark->timer = 0.0f;
+                shark->animFrame = 0;
+                shark->animTimer = 0.0f;
             }
             break;
 
@@ -201,6 +228,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             if (shark->rect.x == shark->startPos.x) {
                 shark->state = SHARK_IDLE;
                 shark->timer = 0.0f;
+                shark->animFrame = 0;
+                shark->animTimer = 0.0f;
             }
             break;
 
@@ -215,6 +244,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 } else {
                     shark->state = SHARK_IDLE;
                     shark->timer = 0.0f;
+                    shark->animFrame = 0;
+                    shark->animTimer = 0.0f;
                 }
             }
             break;
@@ -252,6 +283,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 shark->rect.y = shark->startPos.y;
                 shark->state = SHARK_IDLE;
                 shark->timer = 0.0f;
+                shark->animFrame = 0;
+                shark->animTimer = 0.0f;
             }
             break;
     }
@@ -298,6 +331,9 @@ void DrawShark(Shark *shark) {
     float shootSpriteWidth = 800.0f, shootSpriteHeight = 700.0f;
     Rectangle destShoot = { shark->rect.x - 300.0f, shark->rect.y - 400.0f, shootSpriteWidth, shootSpriteHeight };
 
+    float idleSpriteWidth = 800.0f, idleSpriteHeight = 800.0f;
+    Rectangle destIdle = { shark->rect.x - 300.0f, shark->rect.y - 450.0f, idleSpriteWidth, idleSpriteHeight };
+
     float dashSpriteWidth = 1150.0f, dashSpriteHeight = 650.0f;
     Rectangle destDash = { shark->rect.x - 225.0f, shark->rect.y - 230.0f, dashSpriteWidth, dashSpriteHeight };
 
@@ -306,11 +342,11 @@ void DrawShark(Shark *shark) {
 
     switch (shark->state) {
         case SHARK_IDLE:
-            DrawSharkFrame(shark->texShoot, 0, 3, destShoot, false);
+            DrawSharkFrame(shark->texIdle, shark->animFrame, 9, destIdle, false);
             break;
 
         case SHARK_PREP_LEFT:
-            DrawSharkTexture(shark->texDashLeft, destDash, true);
+            DrawSharkFrame(shark->texDashLeft, shark->animFrame, 6, destDash, true);
             break;
 
         case SHARK_DASH_RIGHT:
@@ -318,7 +354,7 @@ void DrawShark(Shark *shark) {
             break;
 
         case SHARK_DASH_LEFT:
-            DrawSharkTexture(shark->texDashLeft, destDash, true);
+            DrawSharkFrame(shark->texDashLeft, shark->animFrame, 6, destDash, true);
             break;
 
         case SHARK_SHOOTING:
@@ -335,6 +371,7 @@ void DrawShark(Shark *shark) {
 
 void UnloadShark(Shark *shark) {
     UnloadTexture(shark->texShoot);
+    UnloadTexture(shark->texIdle);
     UnloadTexture(shark->texDashLeft);
     UnloadTexture(shark->texDashRight);
     UnloadTexture(shark->texJump);
