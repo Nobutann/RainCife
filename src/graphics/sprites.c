@@ -366,7 +366,7 @@ void LoadHairyLegSprites(HairyLegSprites *sprites)
     sprites->jump = LoadAnimation("assets/sprites/Boss/Perna_jump-Sheet.png", 4, FRAME_TIME);
     sprites->fall = LoadAnimation("assets/sprites/Boss/Perna_fall-Sheet.png", 2, FRAME_TIME);
     sprites->kick = LoadAnimation("assets/sprites/Boss/Perna_kick-Sheet.png", HAIRY_LEG_KICK_FRAME_COUNT, FRAME_TIME);
-    sprites->rasteira = LoadAnimation("assets/sprites/Boss/Perna_rasteira-Sheet.png", 8, HAIRY_LEG_DESIGN_FRAME_TIME);
+    sprites->rasteira = LoadAnimation("assets/sprites/Boss/Perna_rasteira-Sheet.png", HAIRY_LEG_SWEEP_FRAME_COUNT, HAIRY_LEG_DESIGN_FRAME_TIME);
     sprites->recovery = LoadAnimation("assets/sprites/Boss/Perna_rperna_subindo-sheet.png", 7, HAIRY_LEG_DESIGN_FRAME_TIME);
     sprites->death = LoadAnimation("assets/sprites/Boss/Perna_death.png", 1, FRAME_TIME);
     sprites->shadow = LoadAnimation("assets/sprites/Boss/Shadow-Sheet.png", 4, FRAME_TIME);
