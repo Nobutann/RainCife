@@ -41,6 +41,7 @@ typedef struct {
     float runningBgScrollX;
     Texture2D bueiro;
     Texture2D objetos;
+    Texture2D colorFront;
     ObjetoInstance objetosList[MAX_OBJETOS];
     float objetoSpawnTimer;
     float objetoSpawnInterval;
@@ -52,6 +53,7 @@ void UpdateObjetos(Background *bg, float dt, int screenWidth, int screenHeight, 
 void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY);
 void DrawObjetos(Background *bg, int screenWidth, int screenHeight, float groundY);
+void DrawStageFront(Background *bg, int screenWidth, int screenHeight);
 void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight);
 void UnloadBackground(Background *bg);
 

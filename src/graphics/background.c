@@ -12,6 +12,7 @@
 #define BAR_Y_RATIO 0.03f
 #define LEVEL6_BOTTOM_TRIM_RATIO 0.030f
 #define BUEIRO_INTERVAL 2000.0f
+#define COLOR_FRONT_TINT_ALPHA 145
 
 void InitBackground(Background *bg)
 {
@@ -46,6 +47,7 @@ void InitBackground(Background *bg)
     bg->runningBgScrollX = 0.0f;
     bg->bueiro = LoadTexture("assets/sprites/background/Bueiro.png");
     bg->objetos = LoadTexture("assets/sprites/background/objetos.png");
+    bg->colorFront = LoadTexture("assets/sprites/background/Color_front.png");
     for (int i = 0; i < MAX_OBJETOS; i++) bg->objetosList[i].active = false;
     bg->objetoSpawnTimer = 0.0f;
     bg->objetoSpawnInterval = 2.0f;
@@ -356,6 +358,18 @@ void DrawObjetos(Background *bg, int screenWidth, int screenHeight, float ground
     }
 }
 
+void DrawStageFront(Background *bg, int screenWidth, int screenHeight)
+{
+    if (bg->colorFront.id == 0) return;
+
+    Rectangle src = { 0, 0, (float)bg->colorFront.width, (float)bg->colorFront.height };
+    Rectangle dest = { 0, 0, (float)screenWidth, (float)screenHeight };
+
+    BeginBlendMode(BLEND_ALPHA);
+        DrawTexturePro(bg->colorFront, src, dest, (Vector2){ 0, 0 }, 0.0f, (Color){ 255, 255, 255, COLOR_FRONT_TINT_ALPHA });
+    EndBlendMode();
+}
+
 void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight)
 {
     if (progress < 0.0f)
@@ -436,6 +450,7 @@ void UnloadBackground(Background *bg)
     UnloadTexture(bg->floor);
     UnloadTexture(bg->bueiro);
     UnloadTexture(bg->objetos);
+    UnloadTexture(bg->colorFront);
     UnloadTexture(bg->bossHairyLeg);
     UnloadTexture(bg->bossMidnightMan);
     UnloadTexture(bg->bossShark);

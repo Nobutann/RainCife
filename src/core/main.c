@@ -275,7 +275,8 @@ static void DrawGameplayScene(
     Shark *shark,
     MidnightMan *midnightMan,
     float barValue,
-    bool showProgressBar
+    bool showProgressBar,
+    bool showStageFront
 )
 {
     ClearBackground(BLACK);
@@ -319,6 +320,10 @@ static void DrawGameplayScene(
 
     DrawWater(bg, currentWidth, currentHeight, groundY);
     DrawObjetos(bg, currentWidth, currentHeight, groundY);
+    if (showStageFront)
+    {
+        DrawStageFront(bg, currentWidth, currentHeight);
+    }
     if (showProgressBar)
     {
         DrawProgressBar(bg, barValue, currentWidth, currentHeight);
@@ -685,7 +690,7 @@ int main(void)
                     float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
 
                     BeginDrawing();
-                        DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
+                        DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode, true);
                         if (infiniteMode)
                         {
                             DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
@@ -754,7 +759,7 @@ int main(void)
                         float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
 
                         BeginDrawing();
-                            DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
+                            DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode, true);
                             DrawInfiniteMetersCounter(infiniteFinalMeters, currentWidth, currentHeight);
                             DrawInfiniteRankingNameOverlay(currentWidth, currentHeight, infiniteFinalMeters, infinitePlayerName);
                         EndDrawing();
@@ -873,6 +878,7 @@ int main(void)
 
                         DrawWater(&bg, currentWidth, currentHeight, groundY);
                         DrawObjetos(&bg, currentWidth, currentHeight, groundY);
+                        DrawStageFront(&bg, currentWidth, currentHeight);
 
                         DrawDeathScreenOverlay(currentWidth, currentHeight, deathOptionRects, deathOptions, deathOptionCount, hoveringButton);
                     EndDrawing();
@@ -975,7 +981,7 @@ int main(void)
                     const char *transitionTitle = (transitionType == TRANSITION_RUNNING_TO_BOSS) ? "Fase Concluída!" : "Boss Derrotado!";
                     float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
                     BeginDrawing();
-                        DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
+                        DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode, true);
                         DrawPhaseTransitionOverlay(currentWidth, currentHeight, advanceRect, menuRect, btnFontSize, transitionTitle, hoveringButton);
                     EndDrawing();
                     continue;
@@ -1346,12 +1352,7 @@ int main(void)
                 float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark);
 
                 BeginDrawing();
-                    DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, !infiniteMode);
-                    if (infiniteMode)
-                    {
-                        DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
-                    }
-
+                    DrawGameplayScene(&bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, &enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, false, false);
                     if (!(currentLevel->id == 6 && level6IntroActive))
                     {
                         DrawPlayer(&player, playerScale);
@@ -1369,6 +1370,12 @@ int main(void)
                             DrawMidnightMan(&midnightMan);
                         }
 
+                    }
+
+                    DrawStageFront(&bg, currentWidth, currentHeight);
+                    if (infiniteMode)
+                    {
+                        DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
                     }
 
                     if (!infiniteMode)
