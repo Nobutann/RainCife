@@ -3,6 +3,7 @@
 #include "entities/player.h"
 #include "graphics/sprites.h"
 #include "core/screens.h"
+#include "core/sounds.h"
 
 static const char *GetPlayerGunSpritePath(int characterId)
 {
@@ -186,6 +187,21 @@ void UseWeapon(Player *player)
     {
         player->weapon.attackTimer = player->weapon.attackDuration;
         player->weapon.attacking = true;
+    }
+
+    switch (player->weapon.type)
+    {
+        case WEAPON_BAT:
+            PlayAttackSwordSound();
+            break;
+        case WEAPON_HAMMER:
+            PlayAttackHammerSound();
+            break;
+        case WEAPON_PISTOL:
+            PlayShootSound();
+            break;
+        default:
+            break;
     }
 
     player->weapon.attack(player);
