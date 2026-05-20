@@ -102,8 +102,8 @@ int main(void)
     UpdateHairyLeg(&falling, playerHitbox, 0.01f, falling.groundY, 1.0f);
 
     float legHitboxTipY = falling.rect.y + falling.rect.height;
-    assert(fabsf((falling.waveLeft.rect.y + falling.waveLeft.rect.height) - legHitboxTipY) < 0.001f);
-    assert(fabsf((falling.waveRight.rect.y + falling.waveRight.rect.height) - legHitboxTipY) < 0.001f);
+    assert(fabsf((falling.waveLeft.rect.y + falling.waveLeft.rect.height) - (legHitboxTipY + 14.0f)) < 0.001f);
+    assert(fabsf((falling.waveRight.rect.y + falling.waveRight.rect.height) - (legHitboxTipY + 14.0f)) < 0.001f);
 
     return 0;
 }

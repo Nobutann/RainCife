@@ -16,6 +16,7 @@
 #include "core/cursor.h"
 #include "core/window_mode.h"
 #include "utils.h"
+#include "core/sounds.h"
 #define MAX_ACTIVE_ENEMIES 12
 #define LEVEL6_INTRO_DURATION 2.5f
 #define BOSS_DEFEAT_TRANSITION_DELAY 2.5f
@@ -494,6 +495,8 @@ int main(void)
     InitWindow(800, 600, "RainCife");
     HideCursor();
     InitCustomCursor();
+    InitSoundSystem();
+    SetSoundSystemVolume(config.volume);
 
     ApplyWindowMode(config.telaCheia != 0);
 
@@ -1441,7 +1444,7 @@ int main(void)
 
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 1 && pernaCabeluda.state != HL_DEAD)
                     {
-                        if (CheckCollisionRecs(playerHitbox, pernaCabeluda.rect))
+                        if (CheckCollisionRecs(playerHitbox, pernaCabeluda.bodyHitbox))
                         {
                             deathScreenActive = true;
                             retryPhase = PHASE_BOSS;
@@ -1453,13 +1456,13 @@ int main(void)
                             retryPhase = PHASE_BOSS;
                         }
 
-                        if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect))
+                        if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.hitbox))
                         {
                             deathScreenActive = true;
                             retryPhase = PHASE_BOSS;
                         }
 
-                        if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect))
+                        if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.hitbox))
                         {
                             deathScreenActive = true;
                             retryPhase = PHASE_BOSS;
@@ -1558,6 +1561,7 @@ int main(void)
 
     UnloadCustomCursor();
     ShowCursor();
+    UnloadSoundSystem();
     CloseWindow();
 
     return 0;

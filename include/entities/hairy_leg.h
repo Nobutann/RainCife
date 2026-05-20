@@ -21,12 +21,16 @@ typedef enum {
 
 typedef struct {
     Rectangle rect;
+    Rectangle hitbox;
     Vector2 speed;
     bool active;
+    int currentFrame;
+    float frameTimer;
 } Shockwave;
 
 typedef struct {
     Rectangle rect;
+    Rectangle bodyHitbox;
     HairyLegState state;
     float timer;
     int health;

@@ -24,6 +24,11 @@ else
     FIX_PATH   = $1
 endif
 
+# Wildcard check for raydial (from main)
+ifneq ($(wildcard external/raydial/include),)
+    INCLUDES += -I./external/raydial/include
+endif
+
 CFLAGS  = -std=c99 -Wall -Wextra -DPLATFORM_DESKTOP
 LDFLAGS =
 
@@ -35,8 +40,14 @@ else
 endif
 
 TARGET = bin/RatTsunami$(EXT)
+
 SRC    = $(wildcard src/*.c) $(wildcard src/**/*.c)
+RAYDIAL_SRC = $(wildcard external/raydial/src/*.c)
+
 OBJ    = $(patsubst src/%.c, obj/%.o, $(SRC))
+RAYDIAL_OBJ = $(patsubst external/raydial/src/%.c, obj/raydial/%.o, $(RAYDIAL_SRC))
+
+ALL_OBJ = $(OBJ) $(RAYDIAL_OBJ)
 
 # ── Targets ────────────────────────────────────────────────────────────────────
 
@@ -47,12 +58,16 @@ all: dirs $(TARGET)
 release:
 	$(MAKE) BUILD=release
 
-$(TARGET): $(OBJ)
-	$(CC) $(OBJ) -o $@ $(LIBS) $(LDFLAGS)
+$(TARGET): $(ALL_OBJ)
+	$(CC) $(ALL_OBJ) -o $@ $(LIBS) $(LDFLAGS)
 
 obj/%.o: src/%.c
 	$(MKDIR) $(dir $@)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+obj/raydial/%.o: external/raydial/src/%.c
+	$(MKDIR) $(dir $@)
+	$(CC) -w $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 run: all
 	@if [ -f .env ]; then set -a; . ./.env; set +a; fi; ./$(TARGET)
@@ -60,15 +75,15 @@ run: all
 clean:
 	$(RM) $(call FIX_PATH,bin) $(call FIX_PATH,obj)
 
-
-
 dirs:
 	-$(MKDIR) bin
 	-$(MKDIR) obj
+	-$(MKDIR) obj/raydial
 
 info:
 	@echo "Platform : $(PLATFORM_OS)"
 	@echo "Compiler : $(CC)"
 	@echo "Target   : $(TARGET)"
 	@echo "Sources  : $(SRC)"
+	@echo "Raydial  : $(RAYDIAL_SRC)"
 	@echo "Build    : $(if $(filter release,$(BUILD)),release,debug)"

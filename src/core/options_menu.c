@@ -4,6 +4,7 @@
 #include "core/config_manager.h"
 #include "core/cursor.h"
 #include "core/window_mode.h"
+#include "core/sounds.h"
 
 static const char *GetControlKeyLabel(int key)
 {
@@ -181,13 +182,19 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
 
         if (aceitarClique && hoveringBack && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
+            SalvarConfig(*config);
             return returnScreen;
         }
 
         if (aceitarClique)
         {
+            float prevVolume = config->volume;
             config->volume = UpdateSlider(barSom, config->volume, &draggingSom);
             config->musica = UpdateSlider(barMusica, config->musica, &draggingMusica);
+            if (config->volume != prevVolume)
+            {
+                SetSoundSystemVolume(config->volume);
+            }
         }
 
         for (int i = 0; i < 4; i++)
@@ -211,6 +218,7 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
+            SalvarConfig(*config);
             return returnScreen;
         }
         BeginDrawing();
