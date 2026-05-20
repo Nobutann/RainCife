@@ -5,6 +5,10 @@
 #define SHARK_DEATH_DURATION 2.3f
 #define SHARK_DEATH_SINK_DISTANCE 100.0f
 
+// Frame (0-indexed, 0-8) at which the projectile fires during SHARK_SHOOTING.
+// Increase to delay the shot; decrease to fire earlier in the animation cycle.
+#define SHARK_SHOOT_FIRE_FRAME 7
+
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
@@ -67,7 +71,7 @@ void ResetShark(Shark *shark, int screenWidth, int screenHeight) {
 
 void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     ResetShark(shark, screenWidth, screenHeight);
-    shark->texShoot = LoadTexture("assets/sprites/Boss/Shark_attack_bubble.png");
+    shark->texShoot = LoadTexture("assets/sprites/Boss/tubarao_shooting-Sheet.png");
     shark->texIdle = LoadTexture("assets/sprites/Boss/tubarao_idle-Sheet.png");
     shark->texDashLeft = LoadTexture("assets/sprites/Boss/Shark_dash-Sheet.png");
     shark->texDashRight = LoadTexture("assets/sprites/Boss/Shark_angry-Sheet.png");
@@ -117,7 +121,21 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         shark->animTimer += deltaTime;
         if (shark->animTimer >= 0.1f) {
             shark->animTimer = 0.0f;
-            shark->animFrame = (shark->animFrame + 1) % 3;
+            shark->animFrame = (shark->animFrame + 1) % 9;
+
+            // Fire projectile on the exact frame where the bubble appears.
+            if (shark->animFrame == SHARK_SHOOT_FIRE_FRAME) {
+                if (shark->shootCount < shark->targetShootCount) {
+                    FireProjectile(shark, playerRect);
+                    shark->shootCount++;
+                } else {
+                    // All shots done — wait for this cycle to finish, then go idle.
+                    shark->state = SHARK_IDLE;
+                    shark->timer = 0.0f;
+                    shark->animFrame = 0;
+                    shark->animTimer = 0.0f;
+                }
+            }
         }
     } else if (shark->state == SHARK_ARC_ATTACK) {
         shark->animTimer += deltaTime;
@@ -170,7 +188,6 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                     shark->state = SHARK_SHOOTING;
                     shark->shootCount = 0;
                     shark->targetShootCount = GetRandomValue(3, 4);
-                    shark->shootTimer = 1.5f;
                     shark->animFrame = 0;
                     shark->animTimer = 0.0f;
                 } else {
@@ -234,20 +251,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             break;
 
         case SHARK_SHOOTING:
-            shark->shootTimer += deltaTime;
-
-            if (shark->shootTimer >= 1.1f) {
-                if (shark->shootCount < shark->targetShootCount) {
-                    FireProjectile(shark, playerRect);
-                    shark->shootCount++;
-                    shark->shootTimer = 0.0f;
-                } else {
-                    shark->state = SHARK_IDLE;
-                    shark->timer = 0.0f;
-                    shark->animFrame = 0;
-                    shark->animTimer = 0.0f;
-                }
-            }
+            /* Firing is driven by the animation frame (see SHARK_SHOOT_FIRE_FRAME above). */
             break;
 
         case SHARK_ARC_ATTACK:
@@ -328,8 +332,8 @@ void DrawShark(Shark *shark) {
 
     DrawRectangleLinesEx(GetSharkHitbox(shark), 2.0f, RED);
 
-    float shootSpriteWidth = 800.0f, shootSpriteHeight = 700.0f;
-    Rectangle destShoot = { shark->rect.x - 300.0f, shark->rect.y - 400.0f, shootSpriteWidth, shootSpriteHeight };
+    float shootSpriteWidth = 800.0f, shootSpriteHeight = 800.0f;
+    Rectangle destShoot = { shark->rect.x - 300.0f, shark->rect.y - 450.0f, shootSpriteWidth, shootSpriteHeight };
 
     float idleSpriteWidth = 800.0f, idleSpriteHeight = 800.0f;
     Rectangle destIdle = { shark->rect.x - 300.0f, shark->rect.y - 450.0f, idleSpriteWidth, idleSpriteHeight };
@@ -358,7 +362,7 @@ void DrawShark(Shark *shark) {
             break;
 
         case SHARK_SHOOTING:
-            DrawSharkFrame(shark->texShoot, shark->animFrame, 3, destShoot, false);
+            DrawSharkFrame(shark->texShoot, shark->animFrame, 9, destShoot, false);
             break;
 
         case SHARK_ARC_ATTACK:

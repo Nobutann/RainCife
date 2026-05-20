@@ -6,6 +6,7 @@
 
 typedef enum
 {
+    SCREEN_INTRO,
     SCREEN_GAME,
     SCREEN_START,
     SCREEN_CHARACTER_SELECT,
@@ -20,6 +21,7 @@ typedef enum
     SCREEN_EXIT
 } GameScreen;
 
+GameScreen RunIntro();
 GameScreen RunStart();
 GameScreen RunCharacterSelect();
 void SetCharacterSelectNextScreen(GameScreen nextScreen);
