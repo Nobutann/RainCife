@@ -2,6 +2,7 @@
 #include "entities/player.h"
 #include "gameplay/weapon.h"
 #include "core/screens.h"
+#include "core/sounds.h"
 #include <raymath.h>
 
 #define BOSS_INTRO_PLAYER_GAP 220.0f
@@ -189,6 +190,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         player->isJumping = true;
         player->onGround = false;
         player->jumpHoldTimer = 0.0f;
+        PlayJumpSound();
         if (!player->weapon.attacking && player->weapon.type != WEAPON_PISTOL)
         {
             player->currentAnim = &player->sprites.jumpUp;
