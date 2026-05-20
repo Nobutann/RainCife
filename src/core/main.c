@@ -1189,6 +1189,103 @@ int main(void)
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
 
+                // Bullet collision handling
+                for (int j = 0; j < MAX_PROJECTILES; j++)
+                {
+                    if (!projectiles.items[j].active) continue;
+                    Rectangle bulletHitbox = GetProjectileHitbox(&projectiles.items[j]);
+
+                    // 1. Check normal enemies collision (birds and fish, only)
+                    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+                    {
+                        if (!enemies[i].active || enemies[i].dying) continue;
+                        if (enemies[i].type != ENEMY_BIRD1 && enemies[i].type != ENEMY_BIRD2 && enemies[i].type != ENEMY_FISH) continue;
+
+                        if (CheckCollisionRecs(bulletHitbox, GetEnemyHitbox(&enemies[i])))
+                        {
+                            if (infiniteMode)
+                            {
+                                RegistrarInimigoDesafioDiario(enemies[i].type);
+                            }
+                            enemies[i].dying = true;
+                            enemies[i].velocity.x = -8.0f;
+                            enemies[i].velocity.y = -5.0f;
+                            enemies[i].animationTimer = 0.0f;
+                            enemies[i].currentFrame = 0;
+                            
+                            // Deactivate the bullet
+                            projectiles.items[j].active = false;
+                            break;
+                        }
+                    }
+
+                    if (!projectiles.items[j].active) continue;
+
+                    // 2. Check bosses collision
+                    if (phase == PHASE_BOSS)
+                    {
+                        int dmg = (int)player.weapon.damage;
+                        if (dmg <= 0) dmg = 3;
+
+                        if (currentLevel->bossId == 1) // Hairy Leg
+                        {
+                            if (pernaCabeluda.state != HL_DEAD)
+                            {
+                                if (CheckCollisionRecs(bulletHitbox, pernaCabeluda.rect))
+                                {
+                                    DamageHairyLeg(&pernaCabeluda, dmg);
+                                    projectiles.items[j].active = false;
+                                }
+                            }
+                        }
+                        else if (currentLevel->bossId == 2) // Shark
+                        {
+                            if (shark.active && !shark.dying)
+                            {
+                                if (CheckCollisionRecs(bulletHitbox, GetSharkHitbox(&shark)))
+                                {
+                                    DamageShark(&shark, dmg);
+                                    projectiles.items[j].active = false;
+                                }
+                            }
+                        }
+                        else if (currentLevel->bossId == 3) // Midnight Man
+                        {
+                            if (midnightMan.active && midnightMan.health > 0)
+                            {
+                                bool hit = false;
+                                // Check all active hands
+                                for (int h = 0; h < MM_HAND_COUNT; h++)
+                                {
+                                    if (midnightMan.handActive[h])
+                                    {
+                                        if (CheckCollisionRecs(bulletHitbox, midnightMan.handHitboxes[h]))
+                                        {
+                                            hit = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                // Check sweep hand
+                                if (!hit && midnightMan.state == MM_SWEEP_MOVE)
+                                {
+                                    if (CheckCollisionRecs(bulletHitbox, midnightMan.sweepHitbox))
+                                    {
+                                        hit = true;
+                                    }
+                                }
+
+                                if (hit)
+                                {
+                                    midnightMan.health -= dmg;
+                                    if (midnightMan.health < 0) midnightMan.health = 0;
+                                    projectiles.items[j].active = false;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 
                 if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
