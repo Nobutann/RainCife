@@ -1,19 +1,27 @@
-TARGET = bin/RainCife.exe
+TARGET ?= bin/RainCife
 
-CC = C:/raylib/w64devkit/bin/gcc.exe
+CC = gcc
+PKG_CONFIG ?= pkg-config
 
 SRC_DIR = src
 OBJ_DIR = objects
 
-INCLUDES = -I./include \
-           -I./external/raydial/include \
-           -IC:/raylib-5.5_win64_mingw-w64/include \
-           -IC:/raylib/raylib/src
+INCLUDES = -I./include
 
-CFLAGS = -std=c99 -Wall -Wextra -g -O0 -DDEBUG -DPLATFORM_DESKTOP $(INCLUDES)
+ifneq ($(wildcard external/raydial/include),)
+INCLUDES += -I./external/raydial/include
+endif
 
-LIBS = -LC:/raylib-5.5_win64_mingw-w64/lib \
-       -lraylib -lopengl32 -lgdi32 -lwinmm
+RAYLIB_CFLAGS = $(shell $(PKG_CONFIG) --cflags raylib 2>/dev/null)
+RAYLIB_LIBS = $(shell $(PKG_CONFIG) --libs raylib 2>/dev/null)
+
+ifeq ($(strip $(RAYLIB_LIBS)),)
+RAYLIB_LIBS = -lraylib -lGL -lm -lpthread -ldl -lrt -lX11
+endif
+
+CFLAGS ?= -std=c99 -Wall -Wextra -g -O0 -DDEBUG -DPLATFORM_DESKTOP
+CPPFLAGS ?= $(INCLUDES) $(RAYLIB_CFLAGS)
+LDLIBS ?= $(RAYLIB_LIBS) -lm
 
 SRC = $(wildcard $(SRC_DIR)/*.c) \
       $(wildcard $(SRC_DIR)/*/*.c)
@@ -27,16 +35,16 @@ ALL_OBJ = $(OBJ) $(RAYDIAL_OBJ)
 
 all: dirs $(TARGET)
 
-$(TARGET): $(ALL_OBJ)
-	$(CC) $(ALL_OBJ) -o $(TARGET) $(LIBS)
+$(TARGET): $(ALL_OBJ) | dirs
+	$(CC) $(ALL_OBJ) -o $(TARGET) $(LDLIBS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/raydial/%.o: external/raydial/src/%.c
 	mkdir -p $(dir $@)
-	$(CC) -w $(CFLAGS) -c $< -o $@
+	$(CC) -w $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 dirs:
 	mkdir -p bin

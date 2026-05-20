@@ -1319,13 +1319,13 @@ int main(void)
                             retryPhase = PHASE_BOSS;
                         }
 
-                        if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.rect))
+                        if (pernaCabeluda.waveLeft.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveLeft.hitbox))
                         {
                             deathScreenActive = true;
                             retryPhase = PHASE_BOSS;
                         }
 
-                        if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.rect))
+                        if (pernaCabeluda.waveRight.active && CheckCollisionRecs(playerHitbox, pernaCabeluda.waveRight.hitbox))
                         {
                             deathScreenActive = true;
                             retryPhase = PHASE_BOSS;
