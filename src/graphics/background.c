@@ -10,6 +10,9 @@
 #define FLOOR_WATER_START_Y 317.0f
 #define BAR_WIDTH_RATIO 0.5f
 #define BAR_Y_RATIO 0.03f
+#define BAR_FRAME_WIDTH_EXTRA_RATIO 0.05f
+#define BAR_TRACK_SRC_X 18.0f
+#define BAR_TRACK_SRC_RIGHT 330.0f
 #define LEVEL6_BOTTOM_TRIM_RATIO 0.030f
 #define BUEIRO_INTERVAL 2000.0f
 #define COLOR_FRONT_TINT_ALPHA 145
@@ -386,12 +389,17 @@ void DrawProgressBar(Background *bg, float progress, int screenWidth, int screen
     float barH = (bg->barFrame.id > 0) ? barW * ((float)bg->barFrame.height / bg->barFrame.width) : screenHeight * 0.06f;
     float barX = (screenWidth - barW) / 2.0f;
     float barY = screenHeight * BAR_Y_RATIO;
+    float barDrawW = barW + barW * BAR_FRAME_WIDTH_EXTRA_RATIO;
+    float barTextureW = (bg->barFrame.id > 0) ? (float)bg->barFrame.width : 383.0f;
+    float trackSrcW = BAR_TRACK_SRC_RIGHT - BAR_TRACK_SRC_X + 1.0f;
+    float trackX = barX + barDrawW * (BAR_TRACK_SRC_X / barTextureW);
+    float trackW = barDrawW * (trackSrcW / barTextureW);
 
     Rectangle dest = 
     {
         barX,
         barY,
-        barW,
+        barDrawW,
         barH
     };
 
@@ -399,21 +407,29 @@ void DrawProgressBar(Background *bg, float progress, int screenWidth, int screen
     {
         Rectangle src = 
         {
+            BAR_TRACK_SRC_X,
             0,
-            0,
-            (float)bg->barBackground.width,
+            trackSrcW,
             (float)bg->barBackground.height
         };
 
-        DrawTexturePro(bg->barBackground, src, dest, (Vector2){0, 0}, 0.0f, WHITE);
+        Rectangle backgroundDest =
+        {
+            trackX,
+            barY,
+            trackW,
+            barH
+        };
+
+        DrawTexturePro(bg->barBackground, src, backgroundDest, (Vector2){0, 0}, 0.0f, WHITE);
     }
 
     if (bg->barFill.id > 0 && progress > 0.0f)
     {
-        float fillSrcW = bg->barFill.width * progress;
+        float fillSrcW = trackSrcW * progress;
         Rectangle src = 
         {
-            0,
+            BAR_TRACK_SRC_X,
             0,
             fillSrcW,
             (float)bg->barFill.height
@@ -421,9 +437,9 @@ void DrawProgressBar(Background *bg, float progress, int screenWidth, int screen
 
         Rectangle fillDest = 
         {
-            barX,
+            trackX,
             barY,
-            barW * progress,
+            trackW * progress,
             barH
         };
 
@@ -440,8 +456,7 @@ void DrawProgressBar(Background *bg, float progress, int screenWidth, int screen
             (float)bg->barFrame.height
         };
 
-        Rectangle frameDest = { dest.x, dest.y, dest.width + barW * 0.05f, dest.height };
-        DrawTexturePro(bg->barFrame, src, frameDest, (Vector2){0, 0}, 0.0f, WHITE);
+        DrawTexturePro(bg->barFrame, src, dest, (Vector2){0, 0}, 0.0f, WHITE);
     }
 }
 

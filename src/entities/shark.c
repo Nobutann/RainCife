@@ -9,6 +9,11 @@
 // Increase to delay the shot; decrease to fire earlier in the animation cycle.
 #define SHARK_SHOOT_FIRE_FRAME 7
 
+// Frame duration (in seconds) for dash animations (DASH_LEFT, DASH_RIGHT, PREP_LEFT).
+// Increase to slow down the frame transitions and make the movement more fluid and natural.
+#define SHARK_DASH_ANIM_TIME 0.12f
+
+
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
@@ -121,19 +126,22 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         shark->animTimer += deltaTime;
         if (shark->animTimer >= 0.1f) {
             shark->animTimer = 0.0f;
-            shark->animFrame = (shark->animFrame + 1) % 9;
+            int nextFrame = (shark->animFrame + 1) % 9;
 
-            // Fire projectile on the exact frame where the bubble appears.
-            if (shark->animFrame == SHARK_SHOOT_FIRE_FRAME) {
-                if (shark->shootCount < shark->targetShootCount) {
-                    FireProjectile(shark, playerRect);
-                    shark->shootCount++;
-                } else {
-                    // All shots done — wait for this cycle to finish, then go idle.
-                    shark->state = SHARK_IDLE;
-                    shark->timer = 0.0f;
-                    shark->animFrame = 0;
-                    shark->animTimer = 0.0f;
+            if (nextFrame == 0 && shark->shootCount >= shark->targetShootCount) {
+                shark->state = SHARK_IDLE;
+                shark->timer = 0.0f;
+                shark->animFrame = 0;
+                shark->animTimer = 0.0f;
+            } else {
+                shark->animFrame = nextFrame;
+
+                // Fire projectile on the exact frame where the bubble appears.
+                if (shark->animFrame == SHARK_SHOOT_FIRE_FRAME) {
+                    if (shark->shootCount < shark->targetShootCount) {
+                        FireProjectile(shark, playerRect);
+                        shark->shootCount++;
+                    }
                 }
             }
         }
@@ -145,13 +153,13 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         }
     } else if (shark->state == SHARK_DASH_RIGHT) {
         shark->animTimer += deltaTime;
-        if (shark->animTimer >= 0.06f) {
+        if (shark->animTimer >= SHARK_DASH_ANIM_TIME) {
             shark->animTimer = 0.0f;
             shark->animFrame = (shark->animFrame + 1) % 6;
         }
     } else if (shark->state == SHARK_DASH_LEFT || shark->state == SHARK_PREP_LEFT) {
         shark->animTimer += deltaTime;
-        if (shark->animTimer >= 0.06f) {
+        if (shark->animTimer >= SHARK_DASH_ANIM_TIME) {
             shark->animTimer = 0.0f;
             shark->animFrame = (shark->animFrame + 1) % 6;
         }
@@ -163,10 +171,10 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         
         float yOffset = 0.0f;
         if (shark->state == SHARK_PREP_LEFT || shark->state == SHARK_DASH_LEFT) {
-            float dashLeftOffsets[6] = { 35.0f, 10.0f, -20.0f, -45.0f, -20.0f, 10.0f };
+            float dashLeftOffsets[6] = { 80.0f, 200.0f, 80.0f, -50.0f, -100.0f, -50.0f };
             yOffset = dashLeftOffsets[shark->animFrame % 6];
         } else if (shark->state == SHARK_DASH_RIGHT) {
-            float dashRightOffsets[6] = { 35.0f, 10.0f, -20.0f, -45.0f, -20.0f, 10.0f };
+            float dashRightOffsets[6] = { 80.0f, 200.0f, 80.0f, -50.0f, -100.0f, -50.0f };
             yOffset = dashRightOffsets[shark->animFrame % 6];
         }
         
