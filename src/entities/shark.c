@@ -4,13 +4,7 @@
 
 #define SHARK_DEATH_DURATION 2.3f
 #define SHARK_DEATH_SINK_DISTANCE 100.0f
-
-// Frame (0-indexed, 0-8) at which the projectile fires during SHARK_SHOOTING.
-// Increase to delay the shot; decrease to fire earlier in the animation cycle.
 #define SHARK_SHOOT_FIRE_FRAME 7
-
-// Frame duration (in seconds) for dash animations (DASH_LEFT, DASH_RIGHT, PREP_LEFT).
-// Increase to slow down the frame transitions and make the movement more fluid and natural.
 #define SHARK_DASH_ANIM_TIME 0.12f
 
 
@@ -24,12 +18,13 @@ static void FireProjectile(Shark *shark, Rectangle playerRect) {
             shark->balls[i].rect = (Rectangle){ spawnX, spawnY, visualSize, visualSize };
             shark->balls[i].hitbox = (Rectangle){ spawnX + (visualSize - hitboxSize) / 2, spawnY + (visualSize - hitboxSize) / 2, hitboxSize, hitboxSize };
             
-            Vector2 playerCenter = { playerRect.x + playerRect.width / 2, playerRect.y + playerRect.height / 2 };
-            Vector2 shootPos = { shark->balls[i].rect.x, shark->balls[i].rect.y };
-            Vector2 dir = Vector2Subtract(playerCenter, shootPos);
+            Vector2 playerBody = { playerRect.x + playerRect.width / 2, playerRect.y + playerRect.height * 0.35f };
+            Vector2 shootPos = { shark->balls[i].rect.x + visualSize / 2, shark->balls[i].rect.y + visualSize / 2 };
+            Vector2 dir = Vector2Subtract(playerBody, shootPos);
             shark->balls[i].direction = Vector2Normalize(dir);
-            shark->balls[i].speed = 20.0f * 60.0f; 
-            
+            shark->balls[i].speed = 24.0f * 60.0f;
+
+            shark->balls[i].isWaterBubble = false;
             shark->balls[i].active = true;
             break;
         }
@@ -40,10 +35,17 @@ static void FireBubble(Shark *shark) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
             float bubbleSize = 120.0f;
+            float hitboxSize = 80.0f;
             shark->balls[i].rect = (Rectangle){ shark->rect.x + shark->rect.width / 2 - bubbleSize / 2, shark->rect.y + shark->rect.height / 2, bubbleSize, bubbleSize };
-            shark->balls[i].hitbox = shark->balls[i].rect;
+            shark->balls[i].hitbox = (Rectangle){
+                shark->balls[i].rect.x + (bubbleSize - hitboxSize) / 2,
+                shark->balls[i].rect.y + (bubbleSize - hitboxSize) / 2,
+                hitboxSize,
+                hitboxSize
+            };
             shark->balls[i].direction = (Vector2){ 0, 1.0f }; 
             shark->balls[i].speed = 12.5f * 60.0f; 
+            shark->balls[i].isWaterBubble = true;
             shark->balls[i].active = true;
             break;
         }
@@ -82,6 +84,7 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     shark->texDashRight = LoadTexture("assets/sprites/Boss/Shark_angry-Sheet.png");
     shark->texJump = LoadTexture("assets/sprites/Boss/tubarao_flying-Sheet.png");
     shark->texBubble = LoadTexture("assets/sprites/Boss/bubble.png");
+    shark->texWaterBubble = LoadTexture("assets/sprites/Boss/water_bubble.png");
     shark->texDeath = LoadTexture("assets/sprites/Boss/Shark_death.png");
 }
 
@@ -135,8 +138,6 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 shark->animTimer = 0.0f;
             } else {
                 shark->animFrame = nextFrame;
-
-                // Fire projectile on the exact frame where the bubble appears.
                 if (shark->animFrame == SHARK_SHOOT_FIRE_FRAME) {
                     if (shark->shootCount < shark->targetShootCount) {
                         FireProjectile(shark, playerRect);
@@ -168,14 +169,22 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
     float size = 300.0f;
     if (shark->state != SHARK_ARC_ATTACK && shark->state != SHARK_WAIT_RETURN) {
         shark->startPos.y = (float)screenHeight - size - 50.0f;
-        
+
         float yOffset = 0.0f;
         if (shark->state == SHARK_PREP_LEFT || shark->state == SHARK_DASH_LEFT) {
-            float dashLeftOffsets[6] = { 80.0f, 200.0f, 80.0f, -50.0f, -100.0f, -50.0f };
-            yOffset = dashLeftOffsets[shark->animFrame % 6];
+            float progress = (float)(shark->animFrame % 6) + (shark->animTimer / SHARK_DASH_ANIM_TIME);
+            float angle = (progress / 6.0f) * 2.0f * 3.14159265f;
+            yOffset = 50.0f + 150.0f * sinf(angle);
+
+            float diff = shark->rect.x - shark->startPos.x;
+            float distance = diff < 0.0f ? -diff : diff;
+            float damp = distance / 400.0f;
+            if (damp > 1.0f) damp = 1.0f;
+            yOffset *= damp;
         } else if (shark->state == SHARK_DASH_RIGHT) {
-            float dashRightOffsets[6] = { 80.0f, 200.0f, 80.0f, -50.0f, -100.0f, -50.0f };
-            yOffset = dashRightOffsets[shark->animFrame % 6];
+            float progress = (float)(shark->animFrame % 6) + (shark->animTimer / SHARK_DASH_ANIM_TIME);
+            float angle = (progress / 6.0f) * 2.0f * 3.14159265f;
+            yOffset = 50.0f + 150.0f * sinf(angle);
         }
         
         shark->rect.y = shark->startPos.y + yOffset;
@@ -268,13 +277,16 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             shark->velocity.y += 1200.0f * deltaTime; 
             shark->timer += deltaTime;
 
-            if (shark->arcDrops == 0 && shark->timer >= 0.4f) {
+            if (shark->arcDrops == 0 && shark->timer >= 0.2f) {
                 FireBubble(shark);
                 shark->arcDrops++;
-            } else if (shark->arcDrops == 1 && shark->timer >= 0.8f) {
+            } else if (shark->arcDrops == 1 && shark->timer >= 0.5f) {
                 FireBubble(shark);
                 shark->arcDrops++;
-            } else if (shark->arcDrops == 2 && shark->timer >= 1.35f) {
+            } else if (shark->arcDrops == 2 && shark->timer >= 0.8f) {
+                FireBubble(shark);
+                shark->arcDrops++;
+            } else if (shark->arcDrops == 3 && shark->timer >= 1.2f) {
                 FireBubble(shark);
                 shark->arcDrops++;
             }
@@ -331,8 +343,9 @@ void DrawShark(Shark *shark) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) continue;
         Rectangle ballRect = shark->balls[i].rect;
-        Rectangle bubbleSource = { 0, 0, (float)shark->texBubble.width, (float)shark->texBubble.height };
-        DrawTexturePro(shark->texBubble, bubbleSource, ballRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
+        Texture2D tex = shark->balls[i].isWaterBubble ? shark->texWaterBubble : shark->texBubble;
+        Rectangle bubbleSource = { 0, 0, (float)tex.width, (float)tex.height };
+        DrawTexturePro(tex, bubbleSource, ballRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
         DrawRectangleLinesEx(shark->balls[i].hitbox, 2.0f, RED);
     }
 
@@ -388,6 +401,7 @@ void UnloadShark(Shark *shark) {
     UnloadTexture(shark->texDashRight);
     UnloadTexture(shark->texJump);
     UnloadTexture(shark->texBubble);
+    UnloadTexture(shark->texWaterBubble);
     UnloadTexture(shark->texDeath);
 }
 
