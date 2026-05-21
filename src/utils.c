@@ -36,6 +36,83 @@ void BuildOptionRects(Rectangle* rects, const char** options, int count, int fon
     }
 }
 
+Rectangle ScaleUiRect(float x, float y, float width, float height, int screenWidth, int screenHeight)
+{
+    const float baseWidth = 640.0f;
+    const float baseHeight = 360.0f;
+
+    return (Rectangle)
+    {
+        x * screenWidth / baseWidth,
+        y * screenHeight / baseHeight,
+        width * screenWidth / baseWidth,
+        height * screenHeight / baseHeight
+    };
+}
+
+void DrawFullscreenTexture(Texture2D texture, int screenWidth, int screenHeight)
+{
+    if (texture.id <= 0)
+    {
+        return;
+    }
+
+    DrawTexturePro(
+        texture,
+        (Rectangle){0.0f, 0.0f, (float)texture.width, (float)texture.height},
+        (Rectangle){0.0f, 0.0f, (float)screenWidth, (float)screenHeight},
+        (Vector2){0.0f, 0.0f},
+        0.0f,
+        WHITE
+    );
+}
+
+void DrawFullscreenTextureOffset(Texture2D texture, float baseOffsetX, float baseOffsetY, int screenWidth, int screenHeight)
+{
+    if (texture.id <= 0)
+    {
+        return;
+    }
+
+    DrawTexturePro(
+        texture,
+        (Rectangle){0.0f, 0.0f, (float)texture.width, (float)texture.height},
+        (Rectangle)
+        {
+            baseOffsetX * screenWidth / 640.0f,
+            baseOffsetY * screenHeight / 360.0f,
+            (float)screenWidth,
+            (float)screenHeight
+        },
+        (Vector2){0.0f, 0.0f},
+        0.0f,
+        WHITE
+    );
+}
+
+void DrawFullscreenTextureClipped(Texture2D texture, Rectangle baseClip, int screenWidth, int screenHeight)
+{
+    if (texture.id <= 0 || baseClip.width <= 0.0f || baseClip.height <= 0.0f)
+    {
+        return;
+    }
+
+    DrawTexturePro(
+        texture,
+        baseClip,
+        (Rectangle)
+        {
+            baseClip.x * screenWidth / 640.0f,
+            baseClip.y * screenHeight / 360.0f,
+            baseClip.width * screenWidth / 640.0f,
+            baseClip.height * screenHeight / 360.0f
+        },
+        (Vector2){0.0f, 0.0f},
+        0.0f,
+        WHITE
+    );
+}
+
 void DrawSlider(Rectangle bounds, float value)
 {
     Rectangle fill = { bounds.x, bounds.y, bounds.width * value, bounds.height };

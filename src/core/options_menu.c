@@ -3,7 +3,6 @@
 #include "utils.h"
 #include "core/config_manager.h"
 #include "core/cursor.h"
-#include "core/window_mode.h"
 #include "core/sounds.h"
 
 static const char *GetControlKeyLabel(int key)
@@ -46,7 +45,7 @@ static const char *GetControlKeyLabel(int key)
         case KEY_SEVEN: return "7";
         case KEY_EIGHT: return "8";
         case KEY_NINE: return "9";
-        case KEY_SPACE: return "ESPAÇO";
+        case KEY_SPACE: return "ESP";
         case KEY_UP: return "CIMA";
         case KEY_DOWN: return "BAIXO";
         case KEY_LEFT: return "ESQ";
@@ -55,14 +54,35 @@ static const char *GetControlKeyLabel(int key)
     }
 }
 
-static int GetFittedFontSize(const char *text, int preferredSize, int maxWidth, int minSize)
+static void UnloadOptionsTextures(Texture2D optionsScreen, Texture2D volumeBar, Texture2D backButton, Texture2D backHover)
 {
-    int fontSize = preferredSize;
-    while (fontSize > minSize && MeasureText(text, fontSize) > maxWidth)
+    UnloadTexture(optionsScreen);
+    UnloadTexture(volumeBar);
+    UnloadTexture(backButton);
+    UnloadTexture(backHover);
+}
+
+static Rectangle GetBasePoint(float x, float y, int screenWidth, int screenHeight)
+{
+    return ScaleUiRect(x, y, 1.0f, 1.0f, screenWidth, screenHeight);
+}
+
+static void DrawVolumeFill(Texture2D volumeBar, float value, float baseY, int screenWidth, int screenHeight)
+{
+    float width = 187.0f * value;
+    if (width <= 0.0f)
     {
-        fontSize--;
+        return;
     }
-    return fontSize;
+
+    DrawTexturePro(
+        volumeBar,
+        (Rectangle){213.0f, 147.0f, width, 12.0f},
+        ScaleUiRect(222.0f, baseY, width, 12.0f, screenWidth, screenHeight),
+        (Vector2){0.0f, 0.0f},
+        0.0f,
+        WHITE
+    );
 }
 
 GameScreen RunOptions(Config *config, GameScreen returnScreen)
@@ -71,96 +91,41 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
     bool draggingMusica = false;
     bool aceitarClique = false;
     int controleSelecionado = -1;
+    Texture2D optionsScreen = LoadTexture("assets/sprites/ui/options/options_screen.png");
+    Texture2D volumeBar = LoadTexture("assets/sprites/ui/options/volume_bar.png");
+    Texture2D backButtonTexture = LoadTexture("assets/sprites/ui/options/back.png");
+    Texture2D backHoverTexture = LoadTexture("assets/sprites/ui/options/back_hover.png");
 
     while (!WindowShouldClose())
     {
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
-
-        int labelFontSize = currentHeight / 16;
         int smallFontSize = currentHeight / 31;
-        float centerX = currentWidth / 2.0f;
+        Vector2 mouse = GetMousePosition();
 
-        int titleFontSize = currentHeight / 13;
-        int titleY = currentHeight / 28;
-        int contentShiftY = currentHeight / 28;
-        int somLabelY = titleY + titleFontSize + currentHeight / 18 + contentShiftY;
-        Rectangle barSom =
-        {
-            centerX - 180.0f,
-            somLabelY + labelFontSize + 18.0f,
-            360.0f,
-            24.0f
-        };
-
-        int musicaLabelY = (int)barSom.y + 74;
-        Rectangle barMusica =
-        {
-            centerX - 180.0f,
-            musicaLabelY + labelFontSize + 18.0f,
-            360.0f,
-            24.0f
-        };
-
-        int telaLabelY = (int)barMusica.y + 84;
-        float screenButtonWidth = currentWidth * 0.34f;
-        if (screenButtonWidth < 220.0f) screenButtonWidth = 220.0f;
-        if (screenButtonWidth > 320.0f) screenButtonWidth = 320.0f;
-
-        Rectangle btnScreen =
-        {
-            centerX - screenButtonWidth / 2.0f,
-            telaLabelY + labelFontSize + 16.0f,
-            screenButtonWidth,
-            58.0f
-        };
-        Rectangle btnScreenHitbox = btnScreen;
-        Rectangle leftArrowHitbox =
-        {
-            btnScreen.x - 58.0f,
-            btnScreen.y,
-            44.0f,
-            btnScreen.height
-        };
-        Rectangle rightArrowHitbox =
-        {
-            btnScreen.x + btnScreen.width + 14.0f,
-            btnScreen.y,
-            44.0f,
-            btnScreen.height
-        };
-
-        int controlesY = (int)btnScreen.y + (int)btnScreen.height + 68;
-        float boxSize = 108.0f;
-        float boxGap = 22.0f;
-        float totalBoxesWidth = boxSize * 4.0f + boxGap * 3.0f;
-        float boxesStartX = centerX - totalBoxesWidth / 2.0f;
+        Rectangle barSom = ScaleUiRect(213.0f, 94.0f, 200.0f, 22.0f, currentWidth, currentHeight);
+        Rectangle barMusica = ScaleUiRect(213.0f, 147.0f, 200.0f, 22.0f, currentWidth, currentHeight);
+        Rectangle backButton = ScaleUiRect(7.0f, 8.0f, 24.0f, 30.0f, currentWidth, currentHeight);
         Rectangle controlBoxes[4] =
         {
-            { boxesStartX, controlesY + labelFontSize + 18.0f, boxSize, boxSize },
-            { boxesStartX + boxSize + boxGap, controlesY + labelFontSize + 18.0f, boxSize, boxSize },
-            { boxesStartX + (boxSize + boxGap) * 2.0f, controlesY + labelFontSize + 18.0f, boxSize, boxSize },
-            { boxesStartX + (boxSize + boxGap) * 3.0f, controlesY + labelFontSize + 18.0f, boxSize, boxSize }
+            ScaleUiRect(213.0f, 208.0f, 55.0f, 82.0f, currentWidth, currentHeight),
+            ScaleUiRect(269.0f, 208.0f, 55.0f, 82.0f, currentWidth, currentHeight),
+            ScaleUiRect(324.0f, 208.0f, 55.0f, 82.0f, currentWidth, currentHeight),
+            ScaleUiRect(380.0f, 208.0f, 55.0f, 82.0f, currentWidth, currentHeight)
         };
-        Rectangle backButton = { 28.0f, 26.0f, 70.0f, 54.0f };
         int *teclas[4] =
         {
             &config->teclaPular,
             &config->teclaTras,
-            &config->teclaAgachar,
-            &config->teclaFrente
+            &config->teclaFrente,
+            &config->teclaAgachar
         };
 
-        Vector2 mouse = GetMousePosition();
         if (!aceitarClique && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
         {
             aceitarClique = true;
         }
 
-        bool hoveringScreenToggle =
-            CheckCollisionPointRec(mouse, btnScreenHitbox) ||
-            CheckCollisionPointRec(mouse, leftArrowHitbox) ||
-            CheckCollisionPointRec(mouse, rightArrowHitbox);
         bool hoveringBack = CheckCollisionPointRec(mouse, backButton);
         bool hoveringControl = false;
         for (int i = 0; i < 4; i++)
@@ -170,19 +135,13 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
                 hoveringControl = true;
             }
         }
-        bool hoveringInteractive = hoveringScreenToggle || hoveringBack || hoveringControl;
-
-        if (aceitarClique && hoveringScreenToggle && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-        {
-            bool fullscreen = config->telaCheia != 0;
-            ToggleWindowMode(&fullscreen);
-            config->telaCheia = fullscreen ? 1 : 0;
-            SalvarConfig(*config);
-        }
+        bool hoveringSlider = CheckCollisionPointRec(mouse, barSom) || CheckCollisionPointRec(mouse, barMusica);
+        bool hoveringInteractive = hoveringBack || hoveringControl || hoveringSlider;
 
         if (aceitarClique && hoveringBack && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             SalvarConfig(*config);
+            UnloadOptionsTextures(optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
             return returnScreen;
         }
 
@@ -219,76 +178,48 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
         if (IsKeyPressed(KEY_ESCAPE))
         {
             SalvarConfig(*config);
+            UnloadOptionsTextures(optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
             return returnScreen;
         }
+
         BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground((Color){43, 56, 106, 255});
+            DrawFullscreenTexture(optionsScreen, currentWidth, currentHeight);
+            DrawVolumeFill(volumeBar, config->volume, 99.0f, currentWidth, currentHeight);
+            DrawVolumeFill(volumeBar, config->musica, 153.0f, currentWidth, currentHeight);
+            DrawFullscreenTexture(hoveringBack ? backHoverTexture : backButtonTexture, currentWidth, currentHeight);
 
-            DrawText("<", 40, 18, 58, hoveringBack ? RED : DARKGRAY);
+            Rectangle soundPercentPos = GetBasePoint(386.0f, 99.0f, currentWidth, currentHeight);
+            Rectangle musicPercentPos = GetBasePoint(386.0f, 152.0f, currentWidth, currentHeight);
+            DrawText(TextFormat("%d%%", (int)(config->volume * 100 + 0.5f)), (int)soundPercentPos.x, (int)soundPercentPos.y, smallFontSize, DARKGRAY);
+            DrawText(TextFormat("%d%%", (int)(config->musica * 100 + 0.5f)), (int)musicPercentPos.x, (int)musicPercentPos.y, smallFontSize, DARKGRAY);
 
-            const char *titleLabel = "Opções";
-            DrawText(
-                titleLabel,
-                (int)(centerX - MeasureText(titleLabel, titleFontSize) / 2),
-                titleY,
-                titleFontSize,
-                DARKBLUE
-            );
-
-            const char *somLabel = "SOM";
-            DrawText(somLabel, (int)(centerX - MeasureText(somLabel, labelFontSize) / 2), somLabelY, labelFontSize, DARKGRAY);
-            DrawSlider(barSom, config->volume);
-            DrawText(TextFormat("%d%%", (int)(config->volume * 100 + 0.5f)), (int)barSom.x + (int)barSom.width + 18, (int)barSom.y - 1, smallFontSize, DARKGRAY);
-
-            const char *musicaLabel = "MÚSICA";
-            DrawText(musicaLabel, (int)(centerX - MeasureText(musicaLabel, labelFontSize) / 2), musicaLabelY, labelFontSize, DARKGRAY);
-            DrawSlider(barMusica, config->musica);
-            DrawText(TextFormat("%d%%", (int)(config->musica * 100 + 0.5f)), (int)barMusica.x + (int)barMusica.width + 18, (int)barMusica.y - 1, smallFontSize, DARKGRAY);
-
-            const char *telaLabel = "TELA";
-            DrawText(telaLabel, (int)(centerX - MeasureText(telaLabel, labelFontSize) / 2), telaLabelY, labelFontSize, DARKGRAY);
-            DrawRectangleRec(btnScreen, WHITE);
-            DrawRectangleLinesEx(btnScreen, 3.0f, hoveringScreenToggle ? RED : DARKGRAY);
-            DrawText("<", (int)leftArrowHitbox.x + 8, (int)leftArrowHitbox.y + 2, 46, hoveringScreenToggle ? RED : DARKGRAY);
-            DrawText(">", (int)rightArrowHitbox.x + 8, (int)rightArrowHitbox.y + 2, 46, hoveringScreenToggle ? RED : DARKGRAY);
-            const char *screenLabel = config->telaCheia ? "FULLSCREEN" : "JANELA";
-            int screenFontSize = GetFittedFontSize(screenLabel, smallFontSize + 4, (int)btnScreen.width - 28, 14);
-            DrawText(
-                screenLabel,
-                (int)(btnScreen.x + (btnScreen.width - MeasureText(screenLabel, screenFontSize)) / 2.0f),
-                (int)(btnScreen.y + (btnScreen.height - screenFontSize) / 2.0f),
-                screenFontSize,
-                DARKGRAY
-            );
-
-            const char *controlesLabel = "CONTROLES";
-            DrawText(controlesLabel, (int)(centerX - MeasureText(controlesLabel, labelFontSize) / 2), controlesY, labelFontSize, DARKGRAY);
             for (int i = 0; i < 4; i++)
             {
-                bool hoverBox = CheckCollisionPointRec(mouse, controlBoxes[i]);
-                Color borderColor = LIGHTGRAY;
-                if (hoverBox)
-                {
-                    borderColor = RED;
-                }
-                if (controleSelecionado == i)
-                {
-                    borderColor = BLUE;
-                }
-
-                DrawRectangleRec(controlBoxes[i], WHITE);
-                DrawRectangleLinesEx(controlBoxes[i], 3.0f, borderColor);
-
                 const char *teclaAtual = GetControlKeyLabel(*teclas[i]);
                 int keyFontSize = smallFontSize + 3;
+                Rectangle keySlots[4] =
+                {
+                    ScaleUiRect(216.0f, 250.0f, 39.0f, 35.0f, currentWidth, currentHeight),
+                    ScaleUiRect(271.0f, 250.0f, 39.0f, 35.0f, currentWidth, currentHeight),
+                    ScaleUiRect(325.0f, 250.0f, 39.0f, 35.0f, currentWidth, currentHeight),
+                    ScaleUiRect(380.0f, 250.0f, 38.0f, 35.0f, currentWidth, currentHeight)
+                };
                 int keyTextWidth = MeasureText(teclaAtual, keyFontSize);
-                int keyTextX = (int)(controlBoxes[i].x + (controlBoxes[i].width - keyTextWidth) / 2.0f);
-                int keyTextY = (int)(controlBoxes[i].y + controlBoxes[i].height + 12.0f);
+                int keyTextX = (int)(keySlots[i].x + (keySlots[i].width - keyTextWidth) / 2.0f);
+                int keyTextY = (int)(keySlots[i].y + (keySlots[i].height - keyFontSize) / 2.0f);
                 DrawText(teclaAtual, keyTextX, keyTextY, keyFontSize, DARKGRAY);
+
+                if (controleSelecionado == i)
+                {
+                    DrawRectangleLinesEx(controlBoxes[i], 3.0f, BLUE);
+                }
             }
 
             DrawMenuCursor(hoveringInteractive);
         EndDrawing();
     }
+
+    UnloadOptionsTextures(optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
     return SCREEN_EXIT;
 }

@@ -94,8 +94,8 @@ GameScreen RunIntro(void)
         // --- Skip input ------------------------------------------------------
         if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER))
         {
-            fading    = true;
-            fadeAlpha = 0.0f;
+            result = SCREEN_START;
+            break;
         }
 
         // --- Frame advance ---------------------------------------------------
