@@ -8,6 +8,7 @@
 extern Rectangle GetHairyLegKickFrameHitbox(const HairyLeg *leg, float scale);
 extern Rectangle GetHairyLegBodyFrameHitbox(const HairyLeg *leg, float scale);
 extern Rectangle GetHairyLegSweepFrameHitbox(const HairyLeg *leg, float scale);
+extern float GetHairyLegSpriteOffsetY(const HairyLeg *leg, float scale);
 
 bool IsPlayerAttackHitboxActive(const Player *player)
 {
@@ -77,6 +78,24 @@ static HairyLeg MakeSweepingLeg(int direction, int frame)
     return leg;
 }
 
+static HairyLeg MakeDeadLegWithDeathSprite(void)
+{
+    HairyLeg leg = {0};
+
+    leg.rect = (Rectangle){100.0f, 273.2f, 40.0f, 206.64f};
+    leg.bodyHitbox = leg.rect;
+    leg.state = HL_DEAD;
+    leg.direction = -1;
+    leg.groundY = 500.0f;
+    leg.sprites.death.frameCount = 1;
+    leg.sprites.death.frameWidth = 252;
+    leg.sprites.death.currentFrame = 0;
+    leg.sprites.death.sheet.width = 252;
+    leg.sprites.death.sheet.height = 252;
+
+    return leg;
+}
+
 static HairyLeg MakeVulnerableLeg(int direction)
 {
     HairyLeg leg = {0};
@@ -129,6 +148,8 @@ int main(void)
     HairyLeg rightSweepFrame4 = MakeSweepingLeg(1, 4);
     HairyLeg rightSweepFrame5 = MakeSweepingLeg(1, 5);
     HairyLeg sweepStartLeg = MakeSweepingLeg(-1, 0);
+    HairyLeg deadLeg = MakeDeadLegWithDeathSprite();
+    deadLeg.currentAnim = &deadLeg.sprites.death;
     Rectangle leftFrame5Hitbox = GetHairyLegKickFrameHitbox(&leftKickFrame5, 1.0f);
     Rectangle leftFrame6Hitbox = GetHairyLegKickFrameHitbox(&leftKickFrame6, 1.0f);
     Rectangle rightFrame5Hitbox = GetHairyLegKickFrameHitbox(&rightKickFrame5, 1.0f);
@@ -179,6 +200,8 @@ int main(void)
     assert(fabsf(rightSweepFrame5Hitbox.y - 428.0f) < 0.001f);
     assert(fabsf(rightSweepFrame5Hitbox.width - 146.0f) < 0.001f);
     assert(fabsf(rightSweepFrame5Hitbox.height - 55.0f) < 0.001f);
+    float deathVisibleBottomY = deadLeg.rect.y + GetHairyLegSpriteOffsetY(&deadLeg, 1.0f) + 221.0f;
+    assert(fabsf(deathVisibleBottomY - deadLeg.groundY) < 0.001f);
 
     UpdateHairyLeg(&vulnerableLeg, playerOnRight, 0.1f, vulnerableLeg.groundY, 1.0f);
     assert(vulnerableLeg.state == HL_VULNERABLE);

@@ -23,6 +23,7 @@
 #define HAIRY_LEG_SHOCKWAVE_HITBOX_BOTTOM_MARGIN_RATIO 0.06f
 #define HAIRY_LEG_SHOCKWAVE_VERTICAL_OFFSET 14.0f
 #define HAIRY_LEG_SWEEP_RIGHT_HITBOX_VERTICAL_OFFSET 12.0f
+#define HAIRY_LEG_DEATH_SPRITE_BOTTOM_TRANSPARENT_PIXELS 31.0f
 
 static const Rectangle HAIRY_LEG_KICK_FRAME_HITBOXES[HAIRY_LEG_KICK_FRAME_COUNT] = {
     {174.0f, 214.0f, 105.0f, 27.0f},
@@ -236,6 +237,18 @@ float GetHairyLegSpriteOffsetX(const HairyLeg *leg, float scale) {
     }
 
     return flipX ? -(scale * 90.0f) : -(scale * 115.0f);
+}
+
+float GetHairyLegSpriteOffsetY(const HairyLeg *leg, float scale) {
+    float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
+    float emptyBottom = currentSpriteH * 0.08f;
+    float offsetY = -(currentSpriteH - emptyBottom - leg->rect.height);
+
+    if (leg->state == HL_DEAD) {
+        offsetY += HAIRY_LEG_DEATH_SPRITE_BOTTOM_TRANSPARENT_PIXELS * scale;
+    }
+
+    return offsetY;
 }
 
 static Rectangle GetHairyLegFrameHitbox(const HairyLeg *leg, float scale, const Animation *animation, const Rectangle *localHitboxes, int frameCount) {
@@ -730,9 +743,7 @@ static void DrawHairyLegShockwave(const HairyLeg *leg, const Shockwave *wave, bo
 void DrawHairyLeg(HairyLeg *leg, float scale) {
     bool flipX = (leg->direction == 1);
     float offsetX = GetHairyLegSpriteOffsetX(leg, scale);
-    float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
-    float emptyBottom = currentSpriteH * 0.08f;
-    float offsetY = -(currentSpriteH - emptyBottom - leg->rect.height);
+    float offsetY = GetHairyLegSpriteOffsetY(leg, scale);
 
     Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->rect.y + offsetY };
     DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
