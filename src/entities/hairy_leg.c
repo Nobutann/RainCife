@@ -1,6 +1,7 @@
 #include "entities/hairy_leg.h"
 #include "entities/player.h"
 #include <stdbool.h>
+#include "core/sounds.h"
 
 #define HAIRY_LEG_JUMP_STARTUP_FRAMES 3
 #define HAIRY_LEG_JUMP_LOCKED_FRAME 3
@@ -361,6 +362,7 @@ void ResetHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float sc
     leg->sprites.death.currentFrame = 0;
     leg->sprites.death.timer = 0.0f;
     ResetHairyLegShadowWarning(leg);
+    StopLegSweepSound();
 }
 
 void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale) {
@@ -391,6 +393,7 @@ void DamageHairyLeg(HairyLeg *leg, int damage) {
         leg->sprites.death.currentFrame = 0;
         leg->sprites.death.timer = 0.0f;
         leg->currentAnim = &leg->sprites.death;
+        StopLegSweepSound();
     }
 }
 
@@ -476,19 +479,19 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
                 int chance = GetRandomValue(1, 100);
 
                 if (leg->health > 70) {
-                    if (chance <= 60) { leg->state = HL_KICKING; leg->sprites.kick.currentFrame = 0; leg->sprites.kick.timer = 0.0f; }
+                    if (chance <= 60) { leg->state = HL_KICKING; leg->sprites.kick.currentFrame = 0; leg->sprites.kick.timer = 0.0f; PlayLegStompSound(); }
                     else if (chance <= 80) { leg->state = HL_SWEEPING; leg->sprites.rasteira.currentFrame = 0; leg->sprites.rasteira.timer = 0.0f; }
-                    else { leg->state = HL_JUMPING_UP; leg->sprites.jump.currentFrame = 0; leg->sprites.jump.timer = 0.0f; }
+                    else { leg->state = HL_JUMPING_UP; leg->sprites.jump.currentFrame = 0; leg->sprites.jump.timer = 0.0f; PlayLegJumpSound(); }
                 }
                 else if (leg->health > 40) {
-                    if (chance <= 33) { leg->state = HL_KICKING; leg->sprites.kick.currentFrame = 0; leg->sprites.kick.timer = 0.0f; }
+                    if (chance <= 33) { leg->state = HL_KICKING; leg->sprites.kick.currentFrame = 0; leg->sprites.kick.timer = 0.0f; PlayLegStompSound(); }
                     else if (chance <= 66) { leg->state = HL_SWEEPING; leg->sprites.rasteira.currentFrame = 0; leg->sprites.rasteira.timer = 0.0f; }
-                    else { leg->state = HL_JUMPING_UP; leg->sprites.jump.currentFrame = 0; leg->sprites.jump.timer = 0.0f; }
+                    else { leg->state = HL_JUMPING_UP; leg->sprites.jump.currentFrame = 0; leg->sprites.jump.timer = 0.0f; PlayLegJumpSound(); }
                 }
                 else {
-                    if (chance <= 40) { leg->state = HL_JUMPING_UP; leg->sprites.jump.currentFrame = 0; leg->sprites.jump.timer = 0.0f; }
+                    if (chance <= 40) { leg->state = HL_JUMPING_UP; leg->sprites.jump.currentFrame = 0; leg->sprites.jump.timer = 0.0f; PlayLegJumpSound(); }
                     else if (chance <= 80) { leg->state = HL_SWEEPING; leg->sprites.rasteira.currentFrame = 0; leg->sprites.rasteira.timer = 0.0f; }
-                    else { leg->state = HL_KICKING; leg->sprites.kick.currentFrame = 0; leg->sprites.kick.timer = 0.0f; }
+                    else { leg->state = HL_KICKING; leg->sprites.kick.currentFrame = 0; leg->sprites.kick.timer = 0.0f; PlayLegStompSound(); }
                 }
                 }
                 leg->timer = 0.0f;
@@ -568,6 +571,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
 
                         leg->waveLeft = MakeHairyLegShockwave((Rectangle){leg->rect.x - waveW, waveY, waveW, waveH}, (Vector2){HAIRY_LEG_SHOCKWAVE_SPEED, 0});
                         leg->waveRight = MakeHairyLegShockwave((Rectangle){leg->rect.x + leg->rect.width, waveY, waveW, waveH}, (Vector2){HAIRY_LEG_SHOCKWAVE_SPEED, 0});
+                        PlayLegShockwaveSound();
 
                         leg->sprites.fall.currentFrame = 1;
                         leg->timer = 0.0f;
@@ -702,6 +706,13 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
         }
     } else {
         leg->bodyHitbox = leg->rect;
+    }
+
+    // Sweep sound management
+    if (leg->state == HL_SWEEPING) {
+        if (leg->timer >= 0.5f && (leg->timer - deltaTime) < 0.5f) {
+            PlayLegSweepSound();
+        }
     }
 }
 

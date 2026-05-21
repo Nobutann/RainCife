@@ -1,6 +1,7 @@
 #include "entities/shark.h"
 #include "entities/player.h"
 #include "raymath.h"
+#include "core/sounds.h"
 
 #define SHARK_DEATH_DURATION 2.3f
 #define SHARK_DEATH_SINK_DISTANCE 100.0f
@@ -26,6 +27,7 @@ static void FireProjectile(Shark *shark, Rectangle playerRect) {
 
             shark->balls[i].isWaterBubble = false;
             shark->balls[i].active = true;
+            PlaySharkShootSound();
             break;
         }
     }
@@ -47,6 +49,7 @@ static void FireBubble(Shark *shark) {
             shark->balls[i].speed = 12.5f * 60.0f; 
             shark->balls[i].isWaterBubble = true;
             shark->balls[i].active = true;
+            PlaySharkBubbleSound();
             break;
         }
     }
@@ -74,6 +77,8 @@ void ResetShark(Shark *shark, int screenWidth, int screenHeight) {
 
     shark->animTimer = 0.0f;
     shark->animFrame = 0;
+    shark->dashStartX = 0.0f;
+    shark->dashSoundCount = 0;
 }
 
 void InitShark(Shark *shark, int screenWidth, int screenHeight) {
@@ -98,10 +103,14 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
         if (shark->deathTimer >= SHARK_DEATH_DURATION) {
             shark->dying = false;
         }
+        StopSharkSwimmingSound();
         return;
     }
 
-    if (!shark->active) return;
+    if (!shark->active) {
+        StopSharkSwimmingSound();
+        return;
+    }
 
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (shark->balls[i].active) {
@@ -201,6 +210,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                     shark->state = SHARK_PREP_LEFT;
                     shark->animFrame = 0;
                     shark->animTimer = 0.0f;
+                    shark->dashStartX = shark->rect.x;
+                    shark->dashSoundCount = 0;
                 } else if (chance <= 66) {
                     shark->state = SHARK_SHOOTING;
                     shark->shootCount = 0;
@@ -214,19 +225,29 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                     shark->arcDrops = 0;
                     shark->animFrame = 0;
                     shark->animTimer = 0.0f;
+                    PlaySharkJumpSound();
                 }
                 shark->timer = 0.0f;
             }
             break;
 
-        case SHARK_PREP_LEFT:
+        case SHARK_PREP_LEFT: {
             shark->rect.x -= 1500.0f * deltaTime;
+            float endX = -1200.0f;
+            float dist = shark->dashStartX - endX;
+            if (dist > 0.0f) {
+                float t = (shark->dashStartX - shark->rect.x) / dist;
+                if (shark->dashSoundCount == 0 && t >= 0.0f) { PlaySharkSwimmingSound(); shark->dashSoundCount++; }
+                else if (shark->dashSoundCount == 1 && t >= 0.33f) { PlaySharkSwimmingSound(); shark->dashSoundCount++; }
+                else if (shark->dashSoundCount == 2 && t >= 0.66f) { PlaySharkSwimmingSound(); shark->dashSoundCount++; }
+            }
             if (shark->rect.x < -1200.0f) {
                 shark->rect.x = -1200.0f;
                 shark->state = SHARK_DASH_WAIT;
                 shark->timer = 0.0f;
             }
             break;
+        }
 
         case SHARK_DASH_WAIT:
             shark->timer += deltaTime;
@@ -235,11 +256,21 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 shark->timer = 0.0f;
                 shark->animFrame = 0;
                 shark->animTimer = 0.0f;
+                shark->dashStartX = shark->rect.x;
+                shark->dashSoundCount = 0;
             }
             break;
 
-        case SHARK_DASH_RIGHT:
+        case SHARK_DASH_RIGHT: {
             shark->rect.x += 2000.0f * deltaTime;
+            float endX = (float)screenWidth + 100.0f;
+            float dist = endX - shark->dashStartX;
+            if (dist > 0.0f) {
+                float t = (shark->rect.x - shark->dashStartX) / dist;
+                if (shark->dashSoundCount == 0 && t >= 0.0f) { PlaySharkSwimmingSound(); shark->dashSoundCount++; }
+                else if (shark->dashSoundCount == 1 && t >= 0.33f) { PlaySharkSwimmingSound(); shark->dashSoundCount++; }
+                else if (shark->dashSoundCount == 2 && t >= 0.66f) { PlaySharkSwimmingSound(); shark->dashSoundCount++; }
+            }
             if (shark->rect.x > (float)screenWidth + 100.0f) {
                 shark->state = SHARK_DASH_LEFT;
                 shark->timer = 0.0f;
@@ -247,6 +278,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 shark->animTimer = 0.0f;
             }
             break;
+        }
 
         case SHARK_DASH_LEFT:
             shark->startPos.x = (float)screenWidth - size - 50.0f;
@@ -295,6 +327,8 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 shark->rect.y = shark->startPos.y;
                 shark->state = SHARK_DASH_RIGHT;
                 shark->timer = 0.0f;
+                shark->dashStartX = shark->rect.x;
+                shark->dashSoundCount = 0;
             }
             break;
 
