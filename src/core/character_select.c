@@ -49,9 +49,9 @@ GameScreen RunCharacterSelect()
         Vector2 mouse = GetMousePosition();
         Rectangle slots[CHARACTER_SLOT_COUNT] =
         {
-            ScaleUiRect(58.0f, 132.0f, 130.0f, 126.0f, currentWidth, currentHeight),
-            ScaleUiRect(223.0f, 132.0f, 130.0f, 126.0f, currentWidth, currentHeight),
-            ScaleUiRect(388.0f, 132.0f, 130.0f, 126.0f, currentWidth, currentHeight)
+            ScaleUiRect(30.0f, 72.0f, 192.0f, 214.0f, currentWidth, currentHeight),
+            ScaleUiRect(228.0f, 72.0f, 193.0f, 214.0f, currentWidth, currentHeight),
+            ScaleUiRect(429.0f, 72.0f, 192.0f, 214.0f, currentWidth, currentHeight)
         };
         bool hoveringSlot = false;
         int hoveredSlot = -1;
