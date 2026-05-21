@@ -38,6 +38,7 @@ static void AssertSharkTextureIdsPreserved(const Shark *shark)
     assert(shark->texDashRight.id == 203);
     assert(shark->texJump.id == 204);
     assert(shark->texBubble.id == 205);
+    assert(shark->texWaterBubble.id == 206);
 }
 
 int main(void)
@@ -75,6 +76,7 @@ int main(void)
     shark.texDashRight.id = 203;
     shark.texJump.id = 204;
     shark.texBubble.id = 205;
+    shark.texWaterBubble.id = 206;
     shark.active = false;
     shark.health = 0;
     shark.balls[0].active = true;
