@@ -346,12 +346,9 @@ void DrawShark(Shark *shark) {
         Texture2D tex = shark->balls[i].isWaterBubble ? shark->texWaterBubble : shark->texBubble;
         Rectangle bubbleSource = { 0, 0, (float)tex.width, (float)tex.height };
         DrawTexturePro(tex, bubbleSource, ballRect, (Vector2){ 0, 0 }, 0.0f, WHITE);
-        DrawRectangleLinesEx(shark->balls[i].hitbox, 2.0f, RED);
     }
 
     if (shark->state == SHARK_WAIT_RETURN) return;
-
-    DrawRectangleLinesEx(GetSharkHitbox(shark), 2.0f, RED);
 
     float shootSpriteWidth = 800.0f, shootSpriteHeight = 800.0f;
     Rectangle destShoot = { shark->rect.x - 300.0f, shark->rect.y - 450.0f, shootSpriteWidth, shootSpriteHeight };
