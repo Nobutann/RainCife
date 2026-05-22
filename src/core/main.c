@@ -352,7 +352,9 @@ static void DrawGameplayScene(
     }
 
     DrawWater(bg, currentWidth, currentHeight, groundY);
+    DrawWaterSplashes(bg);
     DrawObjetos(bg, currentWidth, currentHeight, groundY);
+    DrawRain(bg, currentWidth, currentHeight);
     if (showStageFront)
     {
         DrawStageFront(bg, currentWidth, currentHeight);
@@ -950,7 +952,9 @@ int main(void)
                         }
 
                         DrawWater(&bg, currentWidth, currentHeight, groundY);
+                        DrawWaterSplashes(&bg);
                         DrawObjetos(&bg, currentWidth, currentHeight, groundY);
+                        DrawRain(&bg, currentWidth, currentHeight);
                         DrawStageFront(&bg, currentWidth, currentHeight);
 
                         DrawDeathScreenOverlay(currentWidth, currentHeight, deathOptionRects, deathOptions, deathOptionCount, hoveringButton);
@@ -1238,6 +1242,7 @@ int main(void)
 
                 UpdateBackground(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, phase);
                 UpdateObjetos(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, currentWidth, currentHeight, groundY, phase);
+                UpdateWaterSplashes(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, currentWidth, currentHeight, groundY);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
 
@@ -1569,6 +1574,7 @@ int main(void)
 
                     }
 
+                    DrawRain(&bg, currentWidth, currentHeight);
                     DrawStageFront(&bg, currentWidth, currentHeight);
                     if (infiniteMode)
                     {
