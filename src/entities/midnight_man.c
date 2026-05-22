@@ -744,38 +744,6 @@ void DrawMidnightMan(const MidnightMan *mm)
         }
     }
 
-    // Debug hitboxes
-    #ifdef DEBUG
-    for (int i = 0; i < MM_HAND_COUNT; i++)
-    {
-        if (mm->handActive[i])
-        {
-            DrawRectangleLinesEx(mm->handHitboxes[i], 2.0f, RED);
-        }
-    }
-    if (mm->state == MM_SWEEP_MOVE)
-    {
-        DrawRectangleLinesEx(mm->sweepHitbox, 2.0f, RED);
-    }
-    if (mm->state == MM_UMBRELLA_STORM)
-    {
-        for (int i = 0; i < MM_MAX_UMBRELLAS; i++)
-        {
-            if (mm->umbrellas[i].active)
-            {
-                float uW = 186.0f * mm->umbrellas[i].scale;
-                float uH = 141.0f * mm->umbrellas[i].scale;
-                Rectangle umbrellaHitbox = {
-                    mm->umbrellas[i].position.x - uW * 0.35f,
-                    mm->umbrellas[i].position.y - uH * 0.35f,
-                    uW * 0.7f,
-                    uH * 0.7f
-                };
-                DrawRectangleLinesEx(umbrellaHitbox, 1.0f, ORANGE);
-            }
-        }
-    }
-    #endif
 }
 
 void UnloadMidnightMan(MidnightMan *mm)
