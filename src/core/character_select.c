@@ -91,7 +91,7 @@ GameScreen RunCharacterSelect()
         }
 
         BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground((Color){43, 56, 106, 255});
             DrawFullscreenTexture(hoveredSlot >= 0 ? hoverScreens[hoveredSlot] : baseScreen, currentWidth, currentHeight);
             DrawMenuCursor(hoveringSlot);
         EndDrawing();

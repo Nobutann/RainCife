@@ -5,22 +5,19 @@
 
 #define MENU_CANVAS_WIDTH 640.0f
 #define MENU_CANVAS_HEIGHT 360.0f
-#define MENU_COVER_OVERSCAN 1.015f
-#define MENU_HORIZONTAL_OFFSET 65.0f
-#define MENU_VERTICAL_OFFSET 8.0f
 
 static Rectangle GetMenuCanvasRect(int screenWidth, int screenHeight)
 {
     float scaleX = (float)screenWidth / MENU_CANVAS_WIDTH;
     float scaleY = (float)screenHeight / MENU_CANVAS_HEIGHT;
-    float scale = (scaleX > scaleY ? scaleX : scaleY) * MENU_COVER_OVERSCAN;
+    float scale = scaleX > scaleY ? scaleX : scaleY;
     float width = MENU_CANVAS_WIDTH * scale;
     float height = MENU_CANVAS_HEIGHT * scale;
 
     return (Rectangle)
     {
-        ((float)screenWidth - width) * 0.5f + MENU_HORIZONTAL_OFFSET,
-        ((float)screenHeight - height) * 0.5f + MENU_VERTICAL_OFFSET,
+        ((float)screenWidth - width) * 0.5f,
+        ((float)screenHeight - height) * 0.5f,
         width,
         height
     };

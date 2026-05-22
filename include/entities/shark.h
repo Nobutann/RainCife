@@ -57,6 +57,8 @@ typedef struct {
 
     float animTimer;
     int animFrame;
+    float dashStartX;
+    int dashSoundCount;
 } Shark;
 
 void InitShark(Shark *shark, int screenWidth, int screenHeight);
