@@ -1332,7 +1332,33 @@ int main(void)
                                     }
                                 }
 
-                                if (hit)
+                                // Check umbrella collisions for bullets
+                                bool umbrellaHit = false;
+                                for (int u = 0; u < MM_MAX_UMBRELLAS; u++)
+                                {
+                                    if (midnightMan.umbrellas[u].active)
+                                    {
+                                        float uW = 186.0f * midnightMan.umbrellas[u].scale;
+                                        float uH = 141.0f * midnightMan.umbrellas[u].scale;
+                                        Rectangle umbrellaHitbox = {
+                                            midnightMan.umbrellas[u].position.x - uW * 0.45f,
+                                            midnightMan.umbrellas[u].position.y - uH * 0.45f,
+                                            uW * 0.9f,
+                                            uH * 0.9f
+                                        };
+                                        if (CheckCollisionRecs(bulletHitbox, umbrellaHitbox))
+                                        {
+                                            midnightMan.umbrellas[u].active = false; // Destroy umbrella
+                                            umbrellaHit = true;
+                                        }
+                                    }
+                                }
+
+                                if (umbrellaHit)
+                                {
+                                    projectiles.items[j].active = false; // Destroy bullet
+                                }
+                                else if (hit)
                                 {
                                     midnightMan.health -= dmg;
                                     if (midnightMan.health < 0) midnightMan.health = 0;

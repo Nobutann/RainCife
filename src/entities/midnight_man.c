@@ -277,9 +277,11 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 else if (nextAttack == 2)
                 {
                     mm->sweepDirection = (GetRandomValue(0, 1) == 0) ? 1 : -1;
-                    mm->sweepWidth = mm->handDrawHeight;
-                    mm->sweepHeight = mm->handDrawWidth;
-                    mm->sweepY = groundY - mm->sweepHeight + 20.0f;
+                    // sweepWidth = full width of the hand sprite (long side, 581*scale)
+                    // sweepHeight = height of the hand sprite (short side, 274*scale)
+                    mm->sweepWidth = mm->handDrawWidth;
+                    mm->sweepHeight = mm->handDrawHeight;
+                    mm->sweepY = groundY - mm->sweepHeight;
 
                     if (mm->sweepDirection == 1)
                     {
@@ -489,13 +491,9 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             float endX = (mm->sweepDirection == 1) ? (float)screenWidth : -mm->sweepWidth;
             mm->sweepX = Lerpf(startX, endX, progress);
 
+            // Hitbox covers the lower portion of the hand (30% of sweep height)
             float hitboxHeight = mm->sweepHeight * 0.30f;
-            mm->sweepHitbox = (Rectangle){
-                mm->sweepX,
-                groundY + 20.0f - hitboxHeight,
-                mm->sweepWidth,
-                hitboxHeight
-            };
+            mm->sweepHitbox = (Rectangle){mm->sweepX, groundY + 20.0f - hitboxHeight, mm->sweepWidth, hitboxHeight};
 
             if (mm->timer >= MM_SWEEP_MOVE_DURATION)
             {
@@ -644,81 +642,84 @@ void DrawMidnightMan(const MidnightMan *mm)
     }
     else if (mm->state == MM_SWEEP_TELEGRAPH)
     {
+        // telegraph: draw a red band matching the hitbox height (30% of sweepHeight)
         float telegraphHeight = mm->sweepHeight * 0.30f;
-        DrawRectangle(0, (int)(groundY + 20.0f - telegraphHeight), screenWidth, (int)telegraphHeight, Fade(RED, 0.4f));
+        DrawRectangle(0, (int)(groundY + 20.0f - telegraphHeight), screenWidth, (int)telegraphHeight, Fade(RED, 0.3f));
     }
 
-    // 2. Draw Hands/Fists
-    if (mm->state == MM_CEILING_SLAM || mm->state == MM_CEILING_RETREAT)
-    {
-        // Draw ceiling slams as fists pointing down
-        if (mm->texFist.id > 0)
-        {
-            float texW = (float)mm->texFist.width;
-            float texH = (float)mm->texFist.height;
-            float scale = mm->handDrawHeight / texH;
-            float drawW = texW * scale;
-            float drawH = mm->handDrawHeight;
+  // 2. Draw Hands/Fists
+  if (mm->state == MM_CEILING_SLAM || mm->state == MM_CEILING_RETREAT) {
+    // Draw ceiling slams as fists pointing down
+    if (mm->texFist.id > 0) {
+      float texW = (float)mm->texFist.width;
+      float texH = (float)mm->texFist.height;
+      float scale = mm->handDrawHeight / texH;
+      float drawW = texW * scale;
+      float drawH = mm->handDrawHeight;
 
-            for (int i = 0; i < MM_HAND_COUNT; i++)
-            {
-                if (mm->handActive[i])
-                {
-                    float centerX = mm->handXPositions[i] + mm->handDrawHeight / 2.0f;
-                    float centerY = mm->handsY + mm->handDrawWidth / 2.0f;
-                    Rectangle src = { 0.0f, 0.0f, texW, texH };
-                    Rectangle dest = { centerX, centerY, drawW, drawH };
-                    Vector2 pivot = { drawW / 2.0f, drawH / 2.0f };
-                    DrawTexturePro(mm->texFist, src, dest, pivot, 90.0f, WHITE);
-                }
-            }
+      for (int i = 0; i < MM_HAND_COUNT; i++) {
+        if (mm->handActive[i]) {
+          float centerX = mm->handXPositions[i] + mm->handDrawHeight / 2.0f;
+          float centerY = mm->handsY + mm->handDrawWidth / 2.0f;
+
+          Rectangle src = {0.0f, 0.0f, texW, texH};
+          Rectangle dest = {centerX, centerY, drawW, drawH};
+          Vector2 pivot = {drawW / 2.0f, drawH / 2.0f};
+          DrawTexturePro(mm->texFist, src, dest, pivot, 90.0f, WHITE);
         }
+      }
     }
-    else if (mm->state == MM_SWEEP_MOVE)
-    {
-        // Draw sweeping claw horizontally
-        if (mm->texHandOpen.id > 0)
-        {
-            float texW = (float)mm->texHandOpen.width;
-            float texH = (float)mm->texHandOpen.height;
-            float hitboxHeight = mm->sweepHeight * 0.30f;
-            float drawY = groundY + 20.0f - hitboxHeight;
-            float centerX = mm->sweepX + mm->sweepWidth / 2.0f;
-            float centerY = drawY + hitboxHeight / 2.0f;
-            // Flip texture vertically if sweeping from right to left
-            Rectangle src = { 0.0f, 0.0f, texW, (mm->sweepDirection == 1) ? texH : -texH };
-            Rectangle dest = { centerX, centerY, mm->sweepWidth, hitboxHeight };
-            Vector2 pivot = { mm->sweepWidth / 2.0f, hitboxHeight / 2.0f };
-            float rotation = (mm->sweepDirection == 1) ? 0.0f : 180.0f;
-            DrawTexturePro(mm->texHandOpen, src, dest, pivot, rotation, WHITE);
-        }
-    }
-    else
-    {
-        // Draw ground claws / hovering claws
-        if (mm->texHandOpen.id > 0)
-        {
-            float texW = (float)mm->texHandOpen.width;
-            float texH = (float)mm->texHandOpen.height;
+  } else if (mm->state == MM_SWEEP_MOVE) {
+    // Draw sweeping claw horizontally at ground level
+    if (mm->texHandOpen.id > 0) {
+      float texW = (float)mm->texHandOpen.width;
+      float texH = (float)mm->texHandOpen.height;
+      // Bottom of hand aligns to groundY + 20
+      float drawY = groundY + 20.0f - mm->sweepHeight;
+      float drawW = mm->sweepWidth;
+      float drawH = mm->sweepHeight;
 
-            float halfOrigW = mm->handDrawWidth / 2.0f;
-            float halfOrigH = mm->handDrawHeight / 2.0f;
-            float visualW = mm->handDrawHeight;
-
-            for (int i = 0; i < MM_HAND_COUNT; i++)
-            {
-                if (mm->handActive[i] || mm->state == MM_GROUND_RISE || mm->state == MM_GROUND_RETREAT)
-                {
-                    float centerX = mm->handXPositions[i] + visualW / 2.0f;
-                    float centerY = mm->handsY + mm->handDrawWidth / 2.0f;
-                    Rectangle src = { 0.0f, 0.0f, texW, texH };
-                    Rectangle dest = { centerX, centerY, mm->handDrawWidth, mm->handDrawHeight };
-                    Vector2 pivot = { halfOrigW, halfOrigH };
-                    DrawTexturePro(mm->texHandOpen, src, dest, pivot, -90.0f, WHITE);
-                }
-            }
-        }
+      if (mm->sweepDirection == 1) {
+        // Left-to-right: draw normally, left edge at sweepX
+        Rectangle src = {0.0f, 0.0f, texW, texH};
+        Rectangle dest = {mm->sweepX, drawY, drawW, drawH};
+        DrawTexturePro(mm->texHandOpen, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+      } else {
+        // Right-to-left: mirror horizontally (flip x in source)
+        Rectangle src = {0.0f, 0.0f, -texW, texH};
+        Rectangle dest = {mm->sweepX, drawY, drawW, drawH};
+        DrawTexturePro(mm->texHandOpen, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+      }
     }
+  } else {
+    // Draw ground claws / hovering claws
+    if (mm->texHandOpen.id > 0) {
+      float texW = (float)mm->texHandOpen.width;
+      float texH = (float)mm->texHandOpen.height;
+
+      float halfOrigW = mm->handDrawWidth / 2.0f;
+      float halfOrigH = mm->handDrawHeight / 2.0f;
+      float visualW = mm->handDrawHeight;
+
+      for (int i = 0; i < MM_HAND_COUNT; i++) {
+        if (mm->handActive[i] || mm->state == MM_GROUND_RISE ||
+            mm->state == MM_GROUND_RETREAT) {
+          float centerX = mm->handXPositions[i] + visualW / 2.0f;
+          float centerY = mm->handsY + mm->handDrawWidth / 2.0f;
+
+          float currentTexH = texH;
+          if (mm->state == MM_UMBRELLA_STORM && i == 1) {
+            currentTexH = -texH;
+          }
+          Rectangle src = {0.0f, 0.0f, texW, currentTexH};
+          Rectangle dest = {centerX, centerY, mm->handDrawWidth,
+                            mm->handDrawHeight};
+          Vector2 pivot = {halfOrigW, halfOrigH};
+          DrawTexturePro(mm->texHandOpen, src, dest, pivot, -90.0f, WHITE);
+        }
+      }
+    }
+  }
 
     // 3. Draw umbrellas
     if (mm->texUmbrella.id > 0)
@@ -814,10 +815,36 @@ bool TryDamageMidnightManFromPlayerAttack(MidnightMan *mm, Player *player, float
             mm->health = 0;
         }
         player->weapon.hitConnected = true;
-        return true;
     }
 
-    return false;
+    // Destroy ALL umbrellas overlapping the weapon hitbox (independent of boss hit)
+    bool hitUmbrella = false;
+    for (int i = 0; i < MM_MAX_UMBRELLAS; i++)
+    {
+        if (mm->umbrellas[i].active)
+        {
+            float uW = 186.0f * mm->umbrellas[i].scale;
+            float uH = 141.0f * mm->umbrellas[i].scale;
+            Rectangle umbrellaHitbox = {
+                mm->umbrellas[i].position.x - uW * 0.45f,
+                mm->umbrellas[i].position.y - uH * 0.45f,
+                uW * 0.9f,
+                uH * 0.9f
+            };
+            if (CheckCollisionRecs(attackHitbox, umbrellaHitbox))
+            {
+                mm->umbrellas[i].active = false;
+                hitUmbrella = true;
+            }
+        }
+    }
+
+    if (hitUmbrella)
+    {
+        player->weapon.hitConnected = true;
+    }
+
+    return (hit || hitUmbrella);
 }
 
 bool IsMidnightManColliding(const MidnightMan *mm, Rectangle playerHitbox)
