@@ -531,6 +531,7 @@ GameScreen RunInfiniteMenu()
     bool acceptClick = false;
     bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
     RankingInfinito ranking = CarregarRankingInfinito();
+    Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
     Texture2D rankingScreen = LoadTexture("assets/sprites/ui/infinite_menu/ranking_screen.png");
     Texture2D playButton = LoadTexture("assets/sprites/ui/main_menu/play.png");
     Texture2D playHoverButton = LoadTexture("assets/sprites/ui/main_menu/play_hover.png");
@@ -632,6 +633,7 @@ GameScreen RunInfiniteMenu()
 
         BeginDrawing();
             ClearBackground((Color){43, 56, 106, 255});
+            DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
             DrawFullscreenTexture(rankingScreen, currentWidth, currentHeight);
             DrawInfiniteRankingRows(&ranking, currentWidth, currentHeight);
             DrawScreenButton(playButton, playHoverButton, sourceRects[0], optionBaseRects[0], CheckCollisionPointRec(mouse, optionRects[0]), currentWidth, currentHeight);
@@ -644,6 +646,7 @@ GameScreen RunInfiniteMenu()
         EndDrawing();
     }
 
+    UnloadTexture(blueBackground);
     UnloadTexture(rankingScreen);
     UnloadTexture(playButton);
     UnloadTexture(playHoverButton);
@@ -660,40 +663,43 @@ GameScreen RunInfiniteMenu()
 
 static void DrawDailyChallengeRow(Rectangle row, const DailyChallenge *challenge, int fontSize, int smallFontSize)
 {
-    Color fill = challenge->completed ? (Color){218, 238, 218, 255} : (Color){236, 236, 236, 255};
-    Color border = challenge->completed ? DARKGREEN : DARKGRAY;
-    const char *check = challenge->completed ? "[x]" : "[ ]";
-    char progressText[32];
+    const char *check = challenge->completed ? "X" : "";
+    Color textColor = (Color){31, 37, 65, 255};
+    char progressValue[16];
+    char targetValue[16];
 
-    snprintf(progressText, sizeof(progressText), "%d/%d", challenge->progress, challenge->target);
+    snprintf(progressValue, sizeof(progressValue), "%d", challenge->progress);
+    snprintf(targetValue, sizeof(targetValue), "%d", challenge->target);
 
-    DrawRectangleRec(row, fill);
-    DrawRectangleLinesEx(row, 2.0f, border);
-    DrawText(check, (int)(row.x + row.width * 0.04f), (int)(row.y + row.height * 0.26f), fontSize, border);
+    int checkW = MeasureText(check, fontSize);
+    int checkX = (int)(row.x + row.width * 0.063f - checkW * 0.5f);
+    int checkY = (int)(row.y + (row.height - fontSize) * 0.50f);
+    DrawText(check, checkX, checkY, fontSize, textColor);
 
-    int textX = (int)(row.x + row.width * 0.17f);
-    int textY = (int)(row.y + row.height * 0.18f);
-    int maxTextW = (int)(row.width * 0.60f);
+    int textX = (int)(row.x + row.width * 0.16f);
+    int maxTextW = (int)(row.width * 0.48f);
     int challengeFontSize = fontSize;
-    while (challengeFontSize > 12 && MeasureText(challenge->text, challengeFontSize) > maxTextW)
+    while (challengeFontSize > 14 && MeasureText(challenge->text, challengeFontSize) > maxTextW)
     {
         challengeFontSize--;
     }
 
-    DrawText(challenge->text, textX, textY, challengeFontSize, DARKGRAY);
-    DrawText(
-        progressText,
-        (int)(row.x + row.width * 0.83f),
-        (int)(row.y + row.height * 0.32f),
-        smallFontSize,
-        challenge->completed ? DARKGREEN : GRAY
-    );
+    int textY = (int)(row.y + (row.height - challengeFontSize) * 0.42f);
+    DrawText(challenge->text, textX, textY, challengeFontSize, textColor);
+
+    int progressY = (int)(row.y + (row.height - smallFontSize) * 0.46f);
+    int slashX = (int)(row.x + row.width * 0.833f);
+    int gap = (int)(row.width * 0.014f);
+    int progressW = MeasureText(progressValue, smallFontSize);
+    DrawText(progressValue, slashX - gap - progressW, progressY, smallFontSize, textColor);
+    DrawText(targetValue, slashX + gap, progressY, smallFontSize, textColor);
 }
 
 GameScreen RunDailyChallenges()
 {
     bool acceptClick = false;
     DailyChallengeState state = CarregarDesafiosDiarios();
+    Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
     Texture2D challengesScreen = LoadTexture("assets/sprites/ui/infinite_menu/daily_challenges_screen.png");
     Texture2D backButtonTexture = LoadTexture("assets/sprites/ui/options/back.png");
     Texture2D backHoverTexture = LoadTexture("assets/sprites/ui/options/back_hover.png");
@@ -710,17 +716,9 @@ GameScreen RunDailyChallenges()
 
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
-        int titleSize = currentHeight / 12;
-        int rowFontSize = currentHeight / 32;
-        int smallFontSize = currentHeight / 36;
+        int rowFontSize = currentHeight / 27;
+        int smallFontSize = currentHeight / 29;
         Rectangle backButton = ScaleUiRect(7.0f, 8.0f, 24.0f, 30.0f, currentWidth, currentHeight);
-        Rectangle panel =
-        {
-            currentWidth * 0.12f,
-            currentHeight * 0.20f,
-            currentWidth * 0.76f,
-            currentHeight * 0.58f
-        };
         Vector2 mouse = GetMousePosition();
         bool hoveringInteractive = CheckCollisionPointRec(mouse, backButton);
 
@@ -743,23 +741,9 @@ GameScreen RunDailyChallenges()
             ClearBackground((Color){43, 56, 106, 255});
 
             bool backHovered = CheckCollisionPointRec(mouse, backButton);
+            DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
             DrawFullscreenTexture(challengesScreen, currentWidth, currentHeight);
             DrawFullscreenTexture(backHovered ? backHoverTexture : backButtonTexture, currentWidth, currentHeight);
-
-            const char *sourceText = state.generatedByAi ? "Gerados por IA - reset as 03h" : "Padrao local - reset as 03h";
-            DrawText(
-                sourceText,
-                (int)(panel.x + (panel.width - MeasureText(sourceText, smallFontSize)) * 0.5f),
-                (int)(panel.y + panel.height * 0.08f),
-                smallFontSize,
-                GRAY
-            );
-
-            float rowW = panel.width * 0.84f;
-            float rowH = panel.height * 0.18f;
-            float rowX = panel.x + (panel.width - rowW) * 0.5f;
-            float rowStartY = panel.y + panel.height * 0.22f;
-            float rowGap = panel.height * 0.07f;
 
             for (int i = 0; i < DAILY_CHALLENGE_COUNT; i++)
             {
@@ -771,6 +755,7 @@ GameScreen RunDailyChallenges()
         EndDrawing();
     }
 
+    UnloadTexture(blueBackground);
     UnloadTexture(challengesScreen);
     UnloadTexture(backButtonTexture);
     UnloadTexture(backHoverTexture);
@@ -780,6 +765,7 @@ GameScreen RunDailyChallenges()
 GameScreen RunItems()
 {
     bool acceptClick = false;
+    Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
     Texture2D itemText = LoadTexture("assets/sprites/ui/items/texto.png");
     Texture2D itemButtons = LoadTexture("assets/sprites/ui/items/botoes.png");
     Texture2D itemIcons = LoadTexture("assets/sprites/ui/items/icons.png");
@@ -875,6 +861,7 @@ GameScreen RunItems()
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
+            DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
             int selectedCharacterIndexForUi = GetSelectedCharacterId() - 1;
             int selectedClothingIndexForUi = selectedClothingId - 1;
             int selectedWeaponIndexForUi = selectedWeaponId - 1;
@@ -901,6 +888,7 @@ GameScreen RunItems()
         EndDrawing();
     }
 
+    UnloadTexture(blueBackground);
     UnloadTexture(itemText);
     UnloadTexture(itemButtons);
     UnloadTexture(itemIcons);

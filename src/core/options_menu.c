@@ -54,8 +54,9 @@ static const char *GetControlKeyLabel(int key)
     }
 }
 
-static void UnloadOptionsTextures(Texture2D optionsScreen, Texture2D volumeBar, Texture2D backButton, Texture2D backHover)
+static void UnloadOptionsTextures(Texture2D blueBackground, Texture2D optionsScreen, Texture2D volumeBar, Texture2D backButton, Texture2D backHover)
 {
+    UnloadTexture(blueBackground);
     UnloadTexture(optionsScreen);
     UnloadTexture(volumeBar);
     UnloadTexture(backButton);
@@ -91,6 +92,7 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
     bool draggingMusica = false;
     bool aceitarClique = false;
     int controleSelecionado = -1;
+    Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
     Texture2D optionsScreen = LoadTexture("assets/sprites/ui/options/options_screen.png");
     Texture2D volumeBar = LoadTexture("assets/sprites/ui/options/volume_bar.png");
     Texture2D backButtonTexture = LoadTexture("assets/sprites/ui/options/back.png");
@@ -141,7 +143,7 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
         if (aceitarClique && hoveringBack && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             SalvarConfig(*config);
-            UnloadOptionsTextures(optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
+            UnloadOptionsTextures(blueBackground, optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
             return returnScreen;
         }
 
@@ -178,12 +180,13 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
         if (IsKeyPressed(KEY_ESCAPE))
         {
             SalvarConfig(*config);
-            UnloadOptionsTextures(optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
+            UnloadOptionsTextures(blueBackground, optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
             return returnScreen;
         }
 
         BeginDrawing();
             ClearBackground((Color){43, 56, 106, 255});
+            DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
             DrawFullscreenTexture(optionsScreen, currentWidth, currentHeight);
             DrawVolumeFill(volumeBar, config->volume, 99.0f, currentWidth, currentHeight);
             DrawVolumeFill(volumeBar, config->musica, 153.0f, currentWidth, currentHeight);
@@ -220,6 +223,6 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
         EndDrawing();
     }
 
-    UnloadOptionsTextures(optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
+    UnloadOptionsTextures(blueBackground, optionsScreen, volumeBar, backButtonTexture, backHoverTexture);
     return SCREEN_EXIT;
 }
