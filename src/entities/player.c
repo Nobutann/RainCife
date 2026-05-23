@@ -699,16 +699,6 @@ void DrawPlayer(Player *player, float scale)
         DrawLayeredAnimation(player->currentAnim, drawPosition, scale, !player->facingRight, WHITE);
     }
 
-    Rectangle hitbox = GetPlayerHitbox(player, scale);
-    DrawRectangleLines((int)hitbox.x, (int)hitbox.y, (int)hitbox.width, (int)hitbox.height, GREEN);
-
-    if (IsPlayerAttackHitboxActive(player))
-    {
-        Rectangle attackHitbox = GetPlayerAttackHitbox(player, scale);
-        DrawRectangleLinesEx(attackHitbox, 2.0f, YELLOW);
-    }
-
-    DrawCircle((int)player->armPivot.x, (int)player->armPivot.y, 5, RED);
 }
 
 void UnloadPlayer(Player *player)

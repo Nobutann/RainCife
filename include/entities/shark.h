@@ -23,6 +23,7 @@ typedef struct {
     Vector2 direction;
     float speed;
     bool active;
+    bool isWaterBubble;
 } WaterBall;
 
 #define MAX_WATER_BALLS 30
@@ -50,11 +51,14 @@ typedef struct {
     Texture2D texDashRight;  // Shark_angry-Sheet.png — spritesheet 6 frames (dash direita)
     Texture2D texJump;       // tubarao_flying-Sheet.png — spritesheet 12 frames
     Texture2D texBubble;     // bubble.png — projétil
+    Texture2D texWaterBubble;// water_bubble.png — projétil menor da arc attack
 
     Texture2D texDeath;
 
     float animTimer;
     int animFrame;
+    float dashStartX;
+    int dashSoundCount;
 } Shark;
 
 void InitShark(Shark *shark, int screenWidth, int screenHeight);

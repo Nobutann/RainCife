@@ -226,6 +226,22 @@ static void DrawSelectionArrow(Rectangle stageRect)
     DrawLineEx((Vector2){tip.x, tip.y - 72.0f}, tip, 7.0f, RED);
 }
 
+static Rectangle ScaleBaseRect(Rectangle rect, int screenWidth, int screenHeight)
+{
+    return ScaleUiRect(rect.x, rect.y, rect.width, rect.height, screenWidth, screenHeight);
+}
+
+static void DrawScreenButton(Texture2D normal, Texture2D hover, Rectangle baseSource, Rectangle baseDest, bool hovered, int screenWidth, int screenHeight)
+{
+    Texture2D texture = hovered && hover.id > 0 ? hover : normal;
+    if (texture.id <= 0)
+    {
+        return;
+    }
+
+    DrawTexturePro(texture, baseSource, ScaleBaseRect(baseDest, screenWidth, screenHeight), (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+}
+
 static void DrawInfiniteRankingPanel(Rectangle panel, const RankingInfinito *ranking, int screenHeight)
 {
     int titleSize = screenHeight / 30;
@@ -302,6 +318,35 @@ static void DrawInfiniteRankingPanel(Rectangle panel, const RankingInfinito *ran
     }
 }
 
+static void DrawInfiniteRankingRows(const RankingInfinito *ranking, int screenWidth, int screenHeight)
+{
+    int fontSize = screenHeight / 34;
+    int rowGap = screenHeight / 25;
+    int startY = (int)(92.0f * screenHeight / 360.0f);
+    int posX = (int)(114.0f * screenWidth / 640.0f);
+    int nameX = (int)(198.0f * screenWidth / 640.0f);
+    int metersX = (int)(420.0f * screenWidth / 640.0f);
+
+    if (ranking->quantidade == 0)
+    {
+        const char *emptyText = "Sem recordes ainda";
+        DrawText(emptyText, (screenWidth - MeasureText(emptyText, fontSize)) / 2, startY + rowGap * 2, fontSize, (Color){31, 35, 64, 255});
+        return;
+    }
+
+    for (int i = 0; i < ranking->quantidade && i < 4; i++)
+    {
+        char posText[8];
+        char scoreText[24];
+        snprintf(posText, sizeof(posText), "%d.", i + 1);
+        snprintf(scoreText, sizeof(scoreText), "%.0fm", ranking->entradas[i].metros);
+        int y = startY + i * rowGap;
+        DrawText(posText, posX, y, fontSize, (Color){31, 35, 64, 255});
+        DrawText(ranking->entradas[i].nome, nameX, y, fontSize, (Color){31, 35, 64, 255});
+        DrawText(scoreText, metersX, y, fontSize, (Color){31, 35, 64, 255});
+    }
+}
+
 GameScreen RunLevelSelect()
 {
     const char *menuOptions[] =
@@ -314,6 +359,41 @@ GameScreen RunLevelSelect()
     bool acceptClick = false;
     bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
     Vector2 lastMousePosition = GetMousePosition();
+    Texture2D maps[STORY_LEVEL_COUNT] =
+    {
+        LoadTexture("assets/sprites/ui/story_map/map_stage_1.png"),
+        LoadTexture("assets/sprites/ui/story_map/map_stage_2.png"),
+        LoadTexture("assets/sprites/ui/story_map/map_stage_3.png")
+    };
+    Texture2D selectorArrow = LoadTexture("assets/sprites/ui/story_map/selector_arrow.png");
+    Texture2D playButton = LoadTexture("assets/sprites/ui/main_menu/play.png");
+    Texture2D playHoverButton = LoadTexture("assets/sprites/ui/main_menu/play_hover.png");
+    Texture2D itemsButton = LoadTexture("assets/sprites/ui/main_menu/items.png");
+    Texture2D itemsHoverButton = LoadTexture("assets/sprites/ui/main_menu/items_hover.png");
+    Texture2D optionsButton = LoadTexture("assets/sprites/ui/main_menu/options.png");
+    Texture2D optionsHoverButton = LoadTexture("assets/sprites/ui/main_menu/options_hover.png");
+    Texture2D menuButton = LoadTexture("assets/sprites/ui/main_menu/menu.png");
+    Texture2D menuHoverButton = LoadTexture("assets/sprites/ui/main_menu/menu_hover.png");
+    Rectangle stageBaseRects[STORY_LEVEL_COUNT] =
+    {
+        {184.0f, 86.0f, 30.0f, 30.0f},
+        {314.0f, 86.0f, 30.0f, 30.0f},
+        {445.0f, 86.0f, 30.0f, 30.0f}
+    };
+    Rectangle optionBaseRects[4] =
+    {
+        {288.0f, 217.0f, 60.0f, 31.0f},
+        {288.0f, 252.0f, 57.0f, 29.0f},
+        {279.0f, 286.0f, 75.0f, 32.0f},
+        {285.0f, 323.0f, 59.0f, 27.0f}
+    };
+    Rectangle optionBaseSources[4] =
+    {
+        {288.0f, 217.0f, 60.0f, 31.0f},
+        {288.0f, 252.0f, 57.0f, 29.0f},
+        {279.0f, 286.0f, 75.0f, 32.0f},
+        {285.0f, 323.0f, 59.0f, 27.0f}
+    };
 
     while (!WindowShouldClose())
     {
@@ -331,6 +411,14 @@ GameScreen RunLevelSelect()
 
         BuildStageRects(stageRects, currentWidth, currentHeight);
         BuildOptionRects(optionRects, menuOptions, 4, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
+        for (int i = 0; i < STORY_LEVEL_COUNT; i++)
+        {
+            stageRects[i] = ScaleBaseRect(stageBaseRects[i], currentWidth, currentHeight);
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            optionRects[i] = ScaleBaseRect(optionBaseRects[i], currentWidth, currentHeight);
+        }
 
         if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
         {
@@ -397,25 +485,16 @@ GameScreen RunLevelSelect()
         }
 
         BeginDrawing();
-            ClearBackground(RAYWHITE);
-            DrawStagePanel(currentWidth, currentHeight);
-
-            for (int i = 0; i < STORY_LEVEL_COUNT; i++)
-            {
-                bool unlocked = (i + 1) <= maxUnlockedStoryLevelId;
-                bool selected = selectedStoryLevelId == (i + 1);
-                bool hovered = unlocked && CheckCollisionPointRec(mouse, stageRects[i]);
-                DrawStageNode(stageRects[i], i + 1, unlocked, selected, hovered, stageFontSize);
-            }
-
-            DrawSelectionArrow(stageRects[selectedStoryLevelId - 1]);
-
-            for (int i = 0; i < 4; i++)
-            {
-                bool hovered = CheckCollisionPointRec(mouse, optionRects[i]);
-                Color color = hovered ? YELLOW : DARKGRAY;
-                DrawText(menuOptions[i], optionRects[i].x, optionRects[i].y, menuFontSize, color);
-            }
+            ClearBackground((Color){43, 56, 106, 255});
+            int mapIndex = maxUnlockedStoryLevelId - 1;
+            if (mapIndex < 0) mapIndex = 0;
+            if (mapIndex >= STORY_LEVEL_COUNT) mapIndex = STORY_LEVEL_COUNT - 1;
+            DrawFullscreenTexture(maps[mapIndex], currentWidth, currentHeight);
+            DrawFullscreenTextureOffset(selectorArrow, (float)(selectedStoryLevelId - 1) * 130.0f, 0.0f, currentWidth, currentHeight);
+            DrawScreenButton(playButton, playHoverButton, optionBaseSources[0], optionBaseRects[0], CheckCollisionPointRec(mouse, optionRects[0]), currentWidth, currentHeight);
+            DrawScreenButton(itemsButton, itemsHoverButton, optionBaseSources[1], optionBaseRects[1], CheckCollisionPointRec(mouse, optionRects[1]), currentWidth, currentHeight);
+            DrawScreenButton(optionsButton, optionsHoverButton, optionBaseSources[2], optionBaseRects[2], CheckCollisionPointRec(mouse, optionRects[2]), currentWidth, currentHeight);
+            DrawScreenButton(menuButton, menuHoverButton, optionBaseSources[3], optionBaseRects[3], CheckCollisionPointRec(mouse, optionRects[3]), currentWidth, currentHeight);
 
             DrawMenuCursor(hoveringInteractive);
         EndDrawing();
@@ -423,6 +502,19 @@ GameScreen RunLevelSelect()
         lastMousePosition = mouse;
     }
 
+    for (int i = 0; i < STORY_LEVEL_COUNT; i++)
+    {
+        UnloadTexture(maps[i]);
+    }
+    UnloadTexture(selectorArrow);
+    UnloadTexture(playButton);
+    UnloadTexture(playHoverButton);
+    UnloadTexture(itemsButton);
+    UnloadTexture(itemsHoverButton);
+    UnloadTexture(optionsButton);
+    UnloadTexture(optionsHoverButton);
+    UnloadTexture(menuButton);
+    UnloadTexture(menuHoverButton);
     return SCREEN_EXIT;
 }
 
@@ -439,6 +531,34 @@ GameScreen RunInfiniteMenu()
     bool acceptClick = false;
     bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
     RankingInfinito ranking = CarregarRankingInfinito();
+    Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
+    Texture2D rankingScreen = LoadTexture("assets/sprites/ui/infinite_menu/ranking_screen.png");
+    Texture2D playButton = LoadTexture("assets/sprites/ui/main_menu/play.png");
+    Texture2D playHoverButton = LoadTexture("assets/sprites/ui/main_menu/play_hover.png");
+    Texture2D challengeButton = LoadTexture("assets/sprites/ui/infinite_menu/daily_challenges_button.png");
+    Texture2D challengeHoverButton = LoadTexture("assets/sprites/ui/infinite_menu/daily_challenges_button_hover.png");
+    Texture2D itemsButton = LoadTexture("assets/sprites/ui/main_menu/items.png");
+    Texture2D itemsHoverButton = LoadTexture("assets/sprites/ui/main_menu/items_hover.png");
+    Texture2D optionsButton = LoadTexture("assets/sprites/ui/main_menu/options.png");
+    Texture2D optionsHoverButton = LoadTexture("assets/sprites/ui/main_menu/options_hover.png");
+    Texture2D menuButton = LoadTexture("assets/sprites/ui/main_menu/menu.png");
+    Texture2D menuHoverButton = LoadTexture("assets/sprites/ui/main_menu/menu_hover.png");
+    Rectangle optionBaseRects[5] =
+    {
+        {288.0f, 216.0f, 60.0f, 31.0f},
+        {276.0f, 248.0f, 88.0f, 27.0f},
+        {288.0f, 278.0f, 57.0f, 29.0f},
+        {279.0f, 309.0f, 75.0f, 32.0f},
+        {285.0f, 338.0f, 59.0f, 27.0f}
+    };
+    Rectangle sourceRects[5] =
+    {
+        {288.0f, 217.0f, 60.0f, 31.0f},
+        {6.0f, 12.0f, 88.0f, 27.0f},
+        {288.0f, 252.0f, 57.0f, 29.0f},
+        {279.0f, 286.0f, 75.0f, 32.0f},
+        {285.0f, 323.0f, 59.0f, 27.0f}
+    };
 
     while (!WindowShouldClose())
     {
@@ -460,6 +580,10 @@ GameScreen RunInfiniteMenu()
         bool hoveringInteractive = false;
 
         BuildOptionRects(optionRects, menuOptions, 5, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
+        for (int i = 0; i < 5; i++)
+        {
+            optionRects[i] = ScaleBaseRect(optionBaseRects[i], currentWidth, currentHeight);
+        }
 
         if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
         {
@@ -508,68 +632,83 @@ GameScreen RunInfiniteMenu()
         }
 
         BeginDrawing();
-            ClearBackground(RAYWHITE);
-            const char *title = "Modo Infinito";
-            DrawText(
-                title,
-                (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
-                (int)(currentHeight * 0.06f),
-                titleSize,
-                DARKBLUE
-            );
-
-            DrawInfiniteRankingPanel(panel, &ranking, currentHeight);
-
-            for (int i = 0; i < 5; i++)
-            {
-                bool hovered = CheckCollisionPointRec(mouse, optionRects[i]);
-                Color color = hovered ? YELLOW : DARKGRAY;
-                DrawText(menuOptions[i], optionRects[i].x, optionRects[i].y, menuFontSize, color);
-            }
+            ClearBackground((Color){43, 56, 106, 255});
+            DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
+            DrawFullscreenTexture(rankingScreen, currentWidth, currentHeight);
+            DrawInfiniteRankingRows(&ranking, currentWidth, currentHeight);
+            DrawScreenButton(playButton, playHoverButton, sourceRects[0], optionBaseRects[0], CheckCollisionPointRec(mouse, optionRects[0]), currentWidth, currentHeight);
+            DrawScreenButton(challengeButton, challengeHoverButton, sourceRects[1], optionBaseRects[1], CheckCollisionPointRec(mouse, optionRects[1]), currentWidth, currentHeight);
+            DrawScreenButton(itemsButton, itemsHoverButton, sourceRects[2], optionBaseRects[2], CheckCollisionPointRec(mouse, optionRects[2]), currentWidth, currentHeight);
+            DrawScreenButton(optionsButton, optionsHoverButton, sourceRects[3], optionBaseRects[3], CheckCollisionPointRec(mouse, optionRects[3]), currentWidth, currentHeight);
+            DrawScreenButton(menuButton, menuHoverButton, sourceRects[4], optionBaseRects[4], CheckCollisionPointRec(mouse, optionRects[4]), currentWidth, currentHeight);
 
             DrawMenuCursor(hoveringInteractive);
         EndDrawing();
     }
 
+    UnloadTexture(blueBackground);
+    UnloadTexture(rankingScreen);
+    UnloadTexture(playButton);
+    UnloadTexture(playHoverButton);
+    UnloadTexture(challengeButton);
+    UnloadTexture(challengeHoverButton);
+    UnloadTexture(itemsButton);
+    UnloadTexture(itemsHoverButton);
+    UnloadTexture(optionsButton);
+    UnloadTexture(optionsHoverButton);
+    UnloadTexture(menuButton);
+    UnloadTexture(menuHoverButton);
     return SCREEN_EXIT;
 }
 
 static void DrawDailyChallengeRow(Rectangle row, const DailyChallenge *challenge, int fontSize, int smallFontSize)
 {
-    Color fill = challenge->completed ? (Color){218, 238, 218, 255} : (Color){236, 236, 236, 255};
-    Color border = challenge->completed ? DARKGREEN : DARKGRAY;
-    const char *check = challenge->completed ? "[x]" : "[ ]";
-    char progressText[32];
+    const char *check = challenge->completed ? "X" : "";
+    Color textColor = (Color){31, 37, 65, 255};
+    char progressValue[16];
+    char targetValue[16];
 
-    snprintf(progressText, sizeof(progressText), "%d/%d", challenge->progress, challenge->target);
+    snprintf(progressValue, sizeof(progressValue), "%d", challenge->progress);
+    snprintf(targetValue, sizeof(targetValue), "%d", challenge->target);
 
-    DrawRectangleRec(row, fill);
-    DrawRectangleLinesEx(row, 2.0f, border);
-    DrawText(check, (int)(row.x + row.width * 0.04f), (int)(row.y + row.height * 0.26f), fontSize, border);
+    int checkW = MeasureText(check, fontSize);
+    int checkX = (int)(row.x + row.width * 0.063f - checkW * 0.5f);
+    int checkY = (int)(row.y + (row.height - fontSize) * 0.50f);
+    DrawText(check, checkX, checkY, fontSize, textColor);
 
-    int textX = (int)(row.x + row.width * 0.17f);
-    int textY = (int)(row.y + row.height * 0.18f);
-    int maxTextW = (int)(row.width * 0.60f);
+    int textX = (int)(row.x + row.width * 0.16f);
+    int maxTextW = (int)(row.width * 0.48f);
     int challengeFontSize = fontSize;
-    while (challengeFontSize > 12 && MeasureText(challenge->text, challengeFontSize) > maxTextW)
+    while (challengeFontSize > 14 && MeasureText(challenge->text, challengeFontSize) > maxTextW)
     {
         challengeFontSize--;
     }
 
-    DrawText(challenge->text, textX, textY, challengeFontSize, DARKGRAY);
-    DrawText(
-        progressText,
-        (int)(row.x + row.width * 0.83f),
-        (int)(row.y + row.height * 0.32f),
-        smallFontSize,
-        challenge->completed ? DARKGREEN : GRAY
-    );
+    int textY = (int)(row.y + (row.height - challengeFontSize) * 0.42f);
+    DrawText(challenge->text, textX, textY, challengeFontSize, textColor);
+
+    int progressY = (int)(row.y + (row.height - smallFontSize) * 0.46f);
+    int slashX = (int)(row.x + row.width * 0.833f);
+    int gap = (int)(row.width * 0.014f);
+    int progressW = MeasureText(progressValue, smallFontSize);
+    DrawText(progressValue, slashX - gap - progressW, progressY, smallFontSize, textColor);
+    DrawText(targetValue, slashX + gap, progressY, smallFontSize, textColor);
 }
 
 GameScreen RunDailyChallenges()
 {
     bool acceptClick = false;
     DailyChallengeState state = CarregarDesafiosDiarios();
+    Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
+    Texture2D challengesScreen = LoadTexture("assets/sprites/ui/infinite_menu/daily_challenges_screen.png");
+    Texture2D backButtonTexture = LoadTexture("assets/sprites/ui/options/back.png");
+    Texture2D backHoverTexture = LoadTexture("assets/sprites/ui/options/back_hover.png");
+    Rectangle challengeBaseRows[DAILY_CHALLENGE_COUNT] =
+    {
+        {105.0f, 76.0f, 431.0f, 56.0f},
+        {105.0f, 143.0f, 431.0f, 56.0f},
+        {105.0f, 210.0f, 431.0f, 56.0f}
+    };
 
     while (!WindowShouldClose())
     {
@@ -577,17 +716,9 @@ GameScreen RunDailyChallenges()
 
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
-        int titleSize = currentHeight / 12;
-        int rowFontSize = currentHeight / 32;
-        int smallFontSize = currentHeight / 36;
-        Rectangle backButton = { 28.0f, 26.0f, 70.0f, 54.0f };
-        Rectangle panel =
-        {
-            currentWidth * 0.12f,
-            currentHeight * 0.20f,
-            currentWidth * 0.76f,
-            currentHeight * 0.58f
-        };
+        int rowFontSize = currentHeight / 27;
+        int smallFontSize = currentHeight / 29;
+        Rectangle backButton = ScaleUiRect(7.0f, 8.0f, 24.0f, 30.0f, currentWidth, currentHeight);
         Vector2 mouse = GetMousePosition();
         bool hoveringInteractive = CheckCollisionPointRec(mouse, backButton);
 
@@ -607,47 +738,16 @@ GameScreen RunDailyChallenges()
         }
 
         BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground((Color){43, 56, 106, 255});
 
             bool backHovered = CheckCollisionPointRec(mouse, backButton);
-            DrawText("<", 40, 18, 58, backHovered ? RED : DARKGRAY);
-
-            const char *title = "Desafios Diarios";
-            DrawText(
-                title,
-                (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
-                (int)(currentHeight * 0.07f),
-                titleSize,
-                DARKBLUE
-            );
-
-            DrawRectangleRec(panel, (Color){232, 232, 232, 255});
-            DrawRectangleLinesEx(panel, 3.0f, DARKGRAY);
-
-            const char *sourceText = state.generatedByAi ? "Gerados por IA - reset as 03h" : "Padrao local - reset as 03h";
-            DrawText(
-                sourceText,
-                (int)(panel.x + (panel.width - MeasureText(sourceText, smallFontSize)) * 0.5f),
-                (int)(panel.y + panel.height * 0.08f),
-                smallFontSize,
-                GRAY
-            );
-
-            float rowW = panel.width * 0.84f;
-            float rowH = panel.height * 0.18f;
-            float rowX = panel.x + (panel.width - rowW) * 0.5f;
-            float rowStartY = panel.y + panel.height * 0.22f;
-            float rowGap = panel.height * 0.07f;
+            DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
+            DrawFullscreenTexture(challengesScreen, currentWidth, currentHeight);
+            DrawFullscreenTexture(backHovered ? backHoverTexture : backButtonTexture, currentWidth, currentHeight);
 
             for (int i = 0; i < DAILY_CHALLENGE_COUNT; i++)
             {
-                Rectangle row =
-                {
-                    rowX,
-                    rowStartY + i * (rowH + rowGap),
-                    rowW,
-                    rowH
-                };
+                Rectangle row = ScaleBaseRect(challengeBaseRows[i], currentWidth, currentHeight);
                 DrawDailyChallengeRow(row, &state.challenges[i], rowFontSize, smallFontSize);
             }
 
@@ -655,109 +755,79 @@ GameScreen RunDailyChallenges()
         EndDrawing();
     }
 
+    UnloadTexture(blueBackground);
+    UnloadTexture(challengesScreen);
+    UnloadTexture(backButtonTexture);
+    UnloadTexture(backHoverTexture);
     return SCREEN_EXIT;
 }
 
 GameScreen RunItems()
 {
-    const char *weaponNames[ITEMS_EQUIPMENT_SLOT_COUNT] =
-    {
-        "Martelo",
-        "Espada",
-        "Arma"
-    };
-    Rectangle characterSlots[ITEMS_CHARACTER_SLOT_COUNT];
-    Rectangle clothingSlots[ITEMS_CLOTHING_SLOT_COUNT];
-    Rectangle weaponSlots[ITEMS_EQUIPMENT_SLOT_COUNT];
     bool acceptClick = false;
-    Animation idleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
-    Animation clothedIdleAnimations[ITEMS_CHARACTER_SLOT_COUNT];
-    Texture2D weaponTextures[ITEMS_CHARACTER_SLOT_COUNT][ITEMS_EQUIPMENT_SLOT_COUNT];
-    for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+    Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
+    Texture2D itemText = LoadTexture("assets/sprites/ui/items/texto.png");
+    Texture2D itemButtons = LoadTexture("assets/sprites/ui/items/botoes.png");
+    Texture2D itemIcons = LoadTexture("assets/sprites/ui/items/icons.png");
+    Texture2D itemSelected = LoadTexture("assets/sprites/ui/items/botao_ligado.png");
+    Texture2D itemHover = LoadTexture("assets/sprites/ui/items/botao_hover.png");
+    Texture2D itemBack = LoadTexture("assets/sprites/ui/items/sair.png");
+    Texture2D itemBackHover = LoadTexture("assets/sprites/ui/items/sair_hover.png");
+    Texture2D itemWeapons[ITEMS_EQUIPMENT_SLOT_COUNT] =
     {
-        const PlayerSpriteSet *sprites = GetPlayerSpriteSet(i + 1);
-        idleAnimations[i] = LoadAnimation(sprites->idle, 6, 0.10f);
-        clothedIdleAnimations[i] = LoadAnimation(sprites->idleClothed, 6, 0.10f);
-        weaponTextures[i][0] = LoadTexture(sprites->attackHammer);
-        weaponTextures[i][1] = LoadTexture(sprites->attackSword);
-        weaponTextures[i][2] = LoadTexture(GetPlayerGunSpritePath(i + 1));
-    }
+        LoadTexture("assets/sprites/ui/items/martelo_grande.png"),
+        LoadTexture("assets/sprites/ui/items/sword_grande.png"),
+        LoadTexture("assets/sprites/ui/items/gun_grande.png")
+    };
+    Texture2D itemCharacters[ITEMS_CHARACTER_SLOT_COUNT][ITEMS_CLOTHING_SLOT_COUNT] =
+    {
+        {
+            LoadTexture("assets/sprites/ui/items/rato_grande.png"),
+            LoadTexture("assets/sprites/ui/items/rato_grande_cesar.png")
+        },
+        {
+            LoadTexture("assets/sprites/ui/items/capi_grande.png"),
+            LoadTexture("assets/sprites/ui/items/capi_grande_cesar.png")
+        },
+        {
+            LoadTexture("assets/sprites/ui/items/guai_grande.png"),
+            LoadTexture("assets/sprites/ui/items/guai_grande_cesar.png")
+        }
+    };
+    Rectangle uiSlots[8] =
+    {
+        {335.0f, 68.0f, 69.0f, 68.0f},
+        {413.0f, 68.0f, 69.0f, 68.0f},
+        {491.0f, 68.0f, 69.0f, 68.0f},
+        {374.0f, 157.0f, 69.0f, 68.0f},
+        {452.0f, 157.0f, 69.0f, 68.0f},
+        {335.0f, 245.0f, 69.0f, 68.0f},
+        {413.0f, 245.0f, 69.0f, 68.0f},
+        {491.0f, 245.0f, 69.0f, 68.0f}
+    };
+    GameScreen nextScreen = SCREEN_EXIT;
 
-    while (!WindowShouldClose())
+    while (!WindowShouldClose() && nextScreen == SCREEN_EXIT)
     {
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
         Vector2 mouse = GetMousePosition();
-        int titleSize = currentHeight / 14;
-        int sectionSize = currentHeight / 27;
-        int slotLabelSize = currentHeight / 38;
-        float frameMargin = currentWidth * 0.035f;
-        Rectangle outerFrame =
-        {
-            frameMargin,
-            frameMargin,
-            currentWidth - frameMargin * 2.0f,
-            currentHeight - frameMargin * 2.0f
-        };
-        Rectangle previewPanel =
-        {
-            outerFrame.x + outerFrame.width * 0.035f,
-            outerFrame.y + outerFrame.height * 0.14f,
-            outerFrame.width * 0.40f,
-            outerFrame.height * 0.74f
-        };
-        Rectangle rightPanel =
-        {
-            outerFrame.x + outerFrame.width * 0.50f,
-            outerFrame.y + outerFrame.height * 0.12f,
-            outerFrame.width * 0.43f,
-            outerFrame.height * 0.78f
-        };
-        float characterSlotW = rightPanel.width * 0.25f;
-        float characterSlotGap = rightPanel.width * 0.055f;
-        float characterSlotsWidth = characterSlotW * ITEMS_CHARACTER_SLOT_COUNT + characterSlotGap * (ITEMS_CHARACTER_SLOT_COUNT - 1);
-        float equipmentSlotW = rightPanel.width * 0.25f;
-        float equipmentSlotGap = rightPanel.width * 0.055f;
-        float clothingSlotsWidth = equipmentSlotW * ITEMS_CLOTHING_SLOT_COUNT + equipmentSlotGap * (ITEMS_CLOTHING_SLOT_COUNT - 1);
-        float weaponSlotsWidth = equipmentSlotW * ITEMS_EQUIPMENT_SLOT_COUNT + equipmentSlotGap * (ITEMS_EQUIPMENT_SLOT_COUNT - 1);
-        Rectangle backButton = { 28.0f, 26.0f, 70.0f, 54.0f };
+        Rectangle backButton = ScaleUiRect(7.0f, 8.0f, 24.0f, 30.0f, currentWidth, currentHeight);
         bool hoveringInteractive = false;
-        for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
-        {
-            UpdateAnimation(&idleAnimations[i], GetFrameTime());
-            UpdateAnimation(&clothedIdleAnimations[i], GetFrameTime());
-        }
+        bool backHovered = CheckCollisionPointRec(mouse, backButton);
 
-        if (CheckCollisionPointRec(mouse, backButton))
+        if (backHovered)
         {
             hoveringInteractive = true;
             if (acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
             {
-                for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
-                {
-                    UnloadAnimation(&idleAnimations[i]);
-                    UnloadAnimation(&clothedIdleAnimations[i]);
-                    for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
-                    {
-                        UnloadTexture(weaponTextures[i][j]);
-                    }
-                }
-                return itemsReturnScreen;
+                nextScreen = itemsReturnScreen;
             }
         }
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
-            for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
-            {
-                UnloadAnimation(&idleAnimations[i]);
-                UnloadAnimation(&clothedIdleAnimations[i]);
-                for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
-                {
-                    UnloadTexture(weaponTextures[i][j]);
-                }
-            }
-            return itemsReturnScreen;
+            nextScreen = itemsReturnScreen;
         }
 
         if (!acceptClick && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
@@ -765,229 +835,77 @@ GameScreen RunItems()
             acceptClick = true;
         }
 
-        for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
+        for (int i = 0; i < 8; i++)
         {
-            characterSlots[i] = (Rectangle)
-            {
-                rightPanel.x + (rightPanel.width - characterSlotsWidth) * 0.5f + i * (characterSlotW + characterSlotGap),
-                rightPanel.y + rightPanel.height * 0.12f,
-                characterSlotW,
-                characterSlotW
-            };
-
-            if (CheckCollisionPointRec(mouse, characterSlots[i]))
+            Rectangle slot = ScaleBaseRect(uiSlots[i], currentWidth, currentHeight);
+            if (CheckCollisionPointRec(mouse, slot))
             {
                 hoveringInteractive = true;
                 if (acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
                 {
-                    SetSelectedCharacterId(i + 1);
-                }
-            }
-        }
-
-        for (int i = 0; i < ITEMS_CLOTHING_SLOT_COUNT; i++)
-        {
-            clothingSlots[i] = (Rectangle)
-            {
-                rightPanel.x + (rightPanel.width - clothingSlotsWidth) * 0.5f + i * (equipmentSlotW + equipmentSlotGap),
-                rightPanel.y + rightPanel.height * 0.47f,
-                equipmentSlotW,
-                equipmentSlotW
-            };
-            if (CheckCollisionPointRec(mouse, clothingSlots[i]))
-            {
-                hoveringInteractive = true;
-                if (acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-                {
-                    selectedClothingId = i + 1;
-                }
-            }
-        }
-
-        for (int i = 0; i < ITEMS_EQUIPMENT_SLOT_COUNT; i++)
-        {
-            weaponSlots[i] = (Rectangle)
-            {
-                rightPanel.x + (rightPanel.width - weaponSlotsWidth) * 0.5f + i * (equipmentSlotW + equipmentSlotGap),
-                rightPanel.y + rightPanel.height * 0.77f,
-                equipmentSlotW,
-                equipmentSlotW
-            };
-            if (CheckCollisionPointRec(mouse, weaponSlots[i]))
-            {
-                hoveringInteractive = true;
-                if (acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-                {
-                    selectedWeaponId = i + 1;
+                    if (i < 3)
+                    {
+                        SetSelectedCharacterId(i + 1);
+                    }
+                    else if (i < 5)
+                    {
+                        selectedClothingId = i - 2;
+                    }
+                    else
+                    {
+                        selectedWeaponId = i - 4;
+                    }
                 }
             }
         }
 
         BeginDrawing();
             ClearBackground(RAYWHITE);
-            bool backHovered = CheckCollisionPointRec(mouse, backButton);
-            DrawText("<", 40, 18, 58, backHovered ? RED : DARKGRAY);
-
-            const char *title = "Itens";
-            int textWidth = MeasureText(title, titleSize);
-            DrawText(
-                title,
-                (currentWidth / 2) - (textWidth / 2),
-                (int)(outerFrame.y + outerFrame.height * 0.035f),
-                titleSize,
-                DARKBLUE
-            );
-
-            const char *previewLabel = GetPlayerCharacterName(GetSelectedCharacterId());
-            int previewLabelWidth = MeasureText(previewLabel, sectionSize);
-            DrawText(
-                previewLabel,
-                (int)(previewPanel.x + (previewPanel.width - previewLabelWidth) * 0.5f),
-                (int)(previewPanel.y + previewPanel.height * 0.08f),
-                sectionSize,
-                DARKBLUE
-            );
-
-            Rectangle stage =
+            DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
+            int selectedCharacterIndexForUi = GetSelectedCharacterId() - 1;
+            int selectedClothingIndexForUi = selectedClothingId - 1;
+            int selectedWeaponIndexForUi = selectedWeaponId - 1;
+            DrawFullscreenTexture(itemCharacters[selectedCharacterIndexForUi][selectedClothingIndexForUi], currentWidth, currentHeight);
+            DrawFullscreenTexture(itemWeapons[selectedWeaponIndexForUi], currentWidth, currentHeight);
+            DrawFullscreenTexture(itemButtons, currentWidth, currentHeight);
+            int selectedUiSlots[3] = { GetSelectedCharacterId() - 1, 3 + selectedClothingId - 1, 5 + selectedWeaponId - 1 };
+            for (int i = 0; i < 3; i++)
             {
-                previewPanel.x + previewPanel.width * 0.16f,
-                previewPanel.y + previewPanel.height * 0.23f,
-                previewPanel.width * 0.68f,
-                previewPanel.height * 0.50f
-            };
-            DrawEllipse(
-                (int)(stage.x + stage.width * 0.5f),
-                (int)(stage.y + stage.height * 0.88f),
-                stage.width * 0.38f,
-                stage.height * 0.10f,
-                BLACK
-            );
-            int selectedCharacterIndex = GetSelectedCharacterId() - 1;
-            Animation *previewAnimation = selectedClothingId == 2
-                ? &clothedIdleAnimations[selectedCharacterIndex]
-                : &idleAnimations[selectedCharacterIndex];
-            DrawRatPreview(previewAnimation, stage, 1.18f, 1.18f, -0.10f);
-
-            const char *charactersTitle = "Personagens";
-            DrawText(
-                charactersTitle,
-                (int)(rightPanel.x + (rightPanel.width - MeasureText(charactersTitle, sectionSize)) * 0.5f),
-                (int)(characterSlots[0].y - sectionSize - 10.0f),
-                sectionSize,
-                DARKBLUE
-            );
-
-            for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
-            {
-                bool selected = GetSelectedCharacterId() == (i + 1);
-                bool hovered = CheckCollisionPointRec(mouse, characterSlots[i]);
-                Color fill = selected ? (Color){245, 232, 150, 255} : (Color){232, 232, 232, 255};
-                if (hovered)
-                {
-                    fill = (Color){255, 242, 170, 255};
-                }
-                DrawRectangleRec(characterSlots[i], fill);
-                DrawRectangleLinesEx(characterSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
-
-                DrawRatPreview(&idleAnimations[i], characterSlots[i], 1.08f, 1.00f, 0.02f);
-
-                const char *slotTitle = GetPlayerCharacterName(i + 1);
-                int slotTitleSize = slotLabelSize;
-                while (slotTitleSize > 10 && MeasureText(slotTitle, slotTitleSize) > characterSlots[i].width - 8.0f)
-                {
-                    slotTitleSize--;
-                }
-                DrawText(
-                    slotTitle,
-                    (int)(characterSlots[i].x + (characterSlots[i].width - MeasureText(slotTitle, slotTitleSize)) * 0.5f),
-                    (int)(characterSlots[i].y + characterSlots[i].height + 6.0f),
-                    slotTitleSize,
-                    DARKGRAY
-                );
+                int slotIndex = selectedUiSlots[i];
+                DrawFullscreenTextureOffset(itemSelected, uiSlots[slotIndex].x - 335.0f, uiSlots[slotIndex].y - 68.0f, currentWidth, currentHeight);
             }
-
-            const char *clothingTitle = "Roupas";
-            DrawText(
-                clothingTitle,
-                (int)(rightPanel.x + (rightPanel.width - MeasureText(clothingTitle, sectionSize)) * 0.5f),
-                (int)(clothingSlots[0].y - sectionSize - 8.0f),
-                sectionSize,
-                DARKBLUE
-            );
-
-            const char *weaponTitle = "Armas";
-            DrawText(
-                weaponTitle,
-                (int)(rightPanel.x + (rightPanel.width - MeasureText(weaponTitle, sectionSize)) * 0.5f),
-                (int)(weaponSlots[0].y - sectionSize - 8.0f),
-                sectionSize,
-                DARKBLUE
-            );
-
-            for (int i = 0; i < ITEMS_CLOTHING_SLOT_COUNT; i++)
+            for (int i = 0; i < 8; i++)
             {
-                bool hovered = CheckCollisionPointRec(mouse, clothingSlots[i]);
-                bool selected = selectedClothingId == (i + 1);
-                Color fill = selected ? (Color){245, 232, 150, 255} : (Color){236, 236, 236, 255};
-                if (hovered)
+                if (CheckCollisionPointRec(mouse, ScaleBaseRect(uiSlots[i], currentWidth, currentHeight)))
                 {
-                    fill = (Color){255, 242, 170, 255};
-                }
-                DrawRectangleRec(clothingSlots[i], fill);
-                DrawRectangleLinesEx(clothingSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
-                int currentCharacterIndex = GetSelectedCharacterId() - 1;
-                if (i == 0)
-                {
-                    DrawRatPreview(&idleAnimations[currentCharacterIndex], clothingSlots[i], 0.96f, 0.96f, 0.00f);
-                }
-                else if (i == 1)
-                {
-                    DrawRatPreview(&clothedIdleAnimations[currentCharacterIndex], clothingSlots[i], 0.96f, 0.96f, 0.00f);
+                    DrawFullscreenTextureOffset(itemHover, uiSlots[i].x - 335.0f, uiSlots[i].y - 68.0f, currentWidth, currentHeight);
                 }
             }
-
-            for (int i = 0; i < ITEMS_EQUIPMENT_SLOT_COUNT; i++)
-            {
-                bool hovered = CheckCollisionPointRec(mouse, weaponSlots[i]);
-                bool selected = selectedWeaponId == (i + 1);
-                Color fill = selected ? (Color){245, 232, 150, 255} : (Color){236, 236, 236, 255};
-                if (hovered)
-                {
-                    fill = (Color){255, 242, 170, 255};
-                }
-                DrawRectangleRec(weaponSlots[i], fill);
-                DrawRectangleLinesEx(weaponSlots[i], selected ? 4.0f : 3.0f, selected ? GOLD : DARKGRAY);
-                int currentCharacterIndex = GetSelectedCharacterId() - 1;
-                int frameCount = i == 2 ? 1 : 5;
-                int frameIndex = i == 2 ? 0 : 2;
-                DrawWeaponPreview(weaponTextures[currentCharacterIndex][i], weaponSlots[i], frameCount, frameIndex);
-
-                int weaponNameSize = slotLabelSize;
-                while (weaponNameSize > 10 && MeasureText(weaponNames[i], weaponNameSize) > weaponSlots[i].width - 8.0f)
-                {
-                    weaponNameSize--;
-                }
-                DrawText(
-                    weaponNames[i],
-                    (int)(weaponSlots[i].x + (weaponSlots[i].width - MeasureText(weaponNames[i], weaponNameSize)) * 0.5f),
-                    (int)(weaponSlots[i].y + weaponSlots[i].height + 6.0f),
-                    weaponNameSize,
-                    DARKGRAY
-                );
-            }
-
+            DrawFullscreenTexture(itemIcons, currentWidth, currentHeight);
+            DrawFullscreenTexture(itemText, currentWidth, currentHeight);
+            DrawFullscreenTexture(backHovered ? itemBackHover : itemBack, currentWidth, currentHeight);
             DrawMenuCursor(hoveringInteractive);
         EndDrawing();
     }
 
+    UnloadTexture(blueBackground);
+    UnloadTexture(itemText);
+    UnloadTexture(itemButtons);
+    UnloadTexture(itemIcons);
+    UnloadTexture(itemSelected);
+    UnloadTexture(itemHover);
+    UnloadTexture(itemBack);
+    UnloadTexture(itemBackHover);
+    for (int i = 0; i < ITEMS_EQUIPMENT_SLOT_COUNT; i++)
+    {
+        UnloadTexture(itemWeapons[i]);
+    }
     for (int i = 0; i < ITEMS_CHARACTER_SLOT_COUNT; i++)
     {
-        UnloadAnimation(&idleAnimations[i]);
-        UnloadAnimation(&clothedIdleAnimations[i]);
-        for (int j = 0; j < ITEMS_EQUIPMENT_SLOT_COUNT; j++)
+        for (int j = 0; j < ITEMS_CLOTHING_SLOT_COUNT; j++)
         {
-            UnloadTexture(weaponTextures[i][j]);
+            UnloadTexture(itemCharacters[i][j]);
         }
     }
-    return SCREEN_EXIT;
+    return nextScreen;
 }

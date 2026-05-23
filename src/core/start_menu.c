@@ -3,44 +3,104 @@
 #include "utils.h"
 #include "core/cursor.h"
 
+#define MENU_CANVAS_WIDTH 640.0f
+#define MENU_CANVAS_HEIGHT 360.0f
+
+static Rectangle GetMenuCanvasRect(int screenWidth, int screenHeight)
+{
+    float scaleX = (float)screenWidth / MENU_CANVAS_WIDTH;
+    float scaleY = (float)screenHeight / MENU_CANVAS_HEIGHT;
+    float scale = scaleX > scaleY ? scaleX : scaleY;
+    float width = MENU_CANVAS_WIDTH * scale;
+    float height = MENU_CANVAS_HEIGHT * scale;
+
+    return (Rectangle)
+    {
+        ((float)screenWidth - width) * 0.5f,
+        ((float)screenHeight - height) * 0.5f,
+        width,
+        height
+    };
+}
+
+static Vector2 GetMenuCanvasMouse(Rectangle canvasRect)
+{
+    Vector2 mouse = GetMousePosition();
+    return (Vector2)
+    {
+        (mouse.x - canvasRect.x) * MENU_CANVAS_WIDTH / canvasRect.width,
+        (mouse.y - canvasRect.y) * MENU_CANVAS_HEIGHT / canvasRect.height
+    };
+}
+
+static void DrawTextureSourceCentered(Texture2D texture, Rectangle source, float centerX, float y, Color tint)
+{
+    Rectangle dest =
+    {
+        centerX - source.width * 0.5f,
+        y,
+        source.width,
+        source.height
+    };
+    DrawTexturePro(texture, source, dest, (Vector2){0.0f, 0.0f}, 0.0f, tint);
+}
+
 GameScreen RunStart()
 {
-    const char* optionsPT[] = 
+    Texture2D titleScreen = LoadTexture("assets/sprites/ui/title/title_screen.png");
+    Texture2D storyLabel = LoadTexture("assets/sprites/ui/main_menu/story_mode.png");
+    Texture2D infiniteLabel = LoadTexture("assets/sprites/ui/main_menu/infinite_mode.png");
+    Texture2D optionsLabel = LoadTexture("assets/sprites/ui/main_menu/options.png");
+    Texture2D optionsHoverLabel = LoadTexture("assets/sprites/ui/main_menu/options_hover.png");
+    RenderTexture2D menuCanvas = LoadRenderTexture((int)MENU_CANVAS_WIDTH, (int)MENU_CANVAS_HEIGHT);
+
+    Rectangle optionRects[] =
     {
-        "Modo História",
-        "Modo Infinito",
-        "Opções",
-        "Créditos",
-        "Sair"
+        {248.0f, 169.0f, 144.0f, 28.0f},
+        {248.0f, 211.0f, 144.0f, 28.0f},
+        {248.0f, 253.0f, 144.0f, 28.0f}
     };
 
     while (!WindowShouldClose())
     {
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
-
-        int startY = currentHeight / 2.5;
-        int menuFontSize = currentHeight / 20;
-        int spacing = menuFontSize + 20;
-
-        int optionsCount = sizeof(optionsPT) / sizeof(optionsPT[0]);
-        Rectangle optionsRects[optionsCount];
-        BuildOptionRects(optionsRects, optionsPT, optionsCount, menuFontSize, currentWidth / 2, startY, spacing);
-        Vector2 mouse = GetMousePosition();
+        Rectangle canvasRect = GetMenuCanvasRect(currentWidth, currentHeight);
+        Vector2 mouse = GetMenuCanvasMouse(canvasRect);
         bool hoveringButton = false;
+        int hovered = -1;
 
-        for (int i = 0; i < optionsCount; i++)
+        for (int i = 0; i < 3; i++)
         {
-            if (CheckCollisionPointRec(mouse, optionsRects[i]))
+            if (CheckCollisionPointRec(mouse, optionRects[i]))
             {
                 hoveringButton = true;
+                hovered = i;
                 break;
             }
         }
 
-        int clicked = GetClickedOption(optionsRects, optionsCount);
+        int clicked = -1;
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            for (int i = 0; i < 3; i++)
+            {
+                if (CheckCollisionPointRec(mouse, optionRects[i]))
+                {
+                    clicked = i;
+                    break;
+                }
+            }
+        }
+
         if (clicked >= 0)
         {
+            UnloadRenderTexture(menuCanvas);
+            UnloadTexture(titleScreen);
+            UnloadTexture(storyLabel);
+            UnloadTexture(infiniteLabel);
+            UnloadTexture(optionsLabel);
+            UnloadTexture(optionsHoverLabel);
             if (clicked == 0)
             {
                 SetCharacterSelectNextScreen(SCREEN_LEVEL_SELECT);
@@ -53,35 +113,56 @@ GameScreen RunStart()
             }
             if (clicked == 2)
             {
-                return SCREEN_OPTIONS; 
-            }
-            if (clicked == 3)
-            {
-                return SCREEN_CREDITS;
-            }
-            if (clicked == 4)
-            {
-                return SCREEN_EXIT;
+                return SCREEN_OPTIONS;
             }
         }
 
+        BeginTextureMode(menuCanvas);
+            ClearBackground((Color){43, 56, 106, 255});
+            DrawTexture(titleScreen, 0, 0, WHITE);
+            DrawTextureSourceCentered(
+                storyLabel,
+                (Rectangle){272.0f, 113.0f, 143.0f, 31.0f},
+                MENU_CANVAS_WIDTH * 0.5f,
+                optionRects[0].y - 2.0f,
+                hovered == 0 ? YELLOW : WHITE
+            );
+            DrawTextureSourceCentered(
+                infiniteLabel,
+                (Rectangle){277.0f, 174.0f, 137.0f, 31.0f},
+                MENU_CANVAS_WIDTH * 0.5f,
+                optionRects[1].y - 2.0f,
+                hovered == 1 ? YELLOW : WHITE
+            );
+            DrawTextureSourceCentered(
+                hovered == 2 ? optionsHoverLabel : optionsLabel,
+                (Rectangle){279.0f, 286.0f, 75.0f, 32.0f},
+                MENU_CANVAS_WIDTH * 0.5f,
+                optionRects[2].y - 2.0f,
+                WHITE
+            );
+        EndTextureMode();
+
         BeginDrawing();
-            ClearBackground(RAYWHITE);
-
-            const char* title = "RainCife";
-            int titleSize = currentHeight / 10;
-            DrawText(title, (currentWidth / 2) - (MeasureText(title, titleSize) / 2), currentHeight / 6, titleSize, DARKBLUE);
-
-            for (int i = 0; i < optionsCount; i++)
-            {
-                bool hover = CheckCollisionPointRec(mouse, optionsRects[i]);
-                Color color = hover ? YELLOW : DARKGRAY;
-                DrawText(optionsPT[i], optionsRects[i].x, optionsRects[i].y, menuFontSize, color);
-            }
+            ClearBackground((Color){43, 56, 106, 255});
+            DrawTexturePro(
+                menuCanvas.texture,
+                (Rectangle){0.0f, 0.0f, MENU_CANVAS_WIDTH, -MENU_CANVAS_HEIGHT},
+                canvasRect,
+                (Vector2){0.0f, 0.0f},
+                0.0f,
+                WHITE
+            );
             DrawMenuCursor(hoveringButton);
         EndDrawing();
     }
 
+    UnloadRenderTexture(menuCanvas);
+    UnloadTexture(titleScreen);
+    UnloadTexture(storyLabel);
+    UnloadTexture(infiniteLabel);
+    UnloadTexture(optionsLabel);
+    UnloadTexture(optionsHoverLabel);
     return SCREEN_EXIT;
 }
 

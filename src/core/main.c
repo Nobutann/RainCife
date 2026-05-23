@@ -232,6 +232,26 @@ static void DrawDeathScreenOverlay(int currentWidth, int currentHeight, Rectangl
         DrawText(options[i], optionRects[i].x, optionRects[i].y, currentHeight / 20, color);
     }
 
+    static Texture2D deathScreen = {0};
+    static Texture2D deathHome = {0};
+    static Texture2D deathRetry = {0};
+    if (deathScreen.id <= 0)
+    {
+        deathScreen = LoadTexture("assets/sprites/ui/result/morreu.png");
+        deathHome = LoadTexture("assets/sprites/ui/result/morreu_home.png");
+        deathRetry = LoadTexture("assets/sprites/ui/result/morreu_retry.png");
+    }
+    Texture2D deathOverlay = deathScreen;
+    if (optionCount >= 2 && CheckCollisionPointRec(mouse, optionRects[0]))
+    {
+        deathOverlay = deathRetry;
+    }
+    else if (optionCount >= 2 && CheckCollisionPointRec(mouse, optionRects[1]))
+    {
+        deathOverlay = deathHome;
+    }
+    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.72f));
+    DrawFullscreenTexture(deathOverlay, currentWidth, currentHeight);
     DrawMenuCursor(hoveringButton);
 }
 
@@ -332,7 +352,9 @@ static void DrawGameplayScene(
     }
 
     DrawWater(bg, currentWidth, currentHeight, groundY);
+    DrawWaterSplashes(bg);
     DrawObjetos(bg, currentWidth, currentHeight, groundY);
+    DrawRain(bg, currentWidth, currentHeight);
     if (showStageFront)
     {
         DrawStageFront(bg, currentWidth, currentHeight);
@@ -483,7 +505,27 @@ static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rect
     DrawText("Menu", (int)menuRect.x, (int)menuRect.y, btnFontSize, hoverMenu ? YELLOW : RAYWHITE);
 
     bool hoverAdvance = CheckCollisionPointRec(mouse, advanceRect);
-    DrawText("Avançar", (int)advanceRect.x, (int)advanceRect.y, btnFontSize, hoverAdvance ? YELLOW : RAYWHITE);
+    static Texture2D passedScreen = {0};
+    static Texture2D passedHome = {0};
+    static Texture2D passedNext = {0};
+    if (passedScreen.id <= 0)
+    {
+        passedScreen = LoadTexture("assets/sprites/ui/result/passou.png");
+        passedHome = LoadTexture("assets/sprites/ui/result/passou_home.png");
+        passedNext = LoadTexture("assets/sprites/ui/result/passou_passou.png");
+    }
+    Texture2D passedOverlay = passedScreen;
+    if (CheckCollisionPointRec(mouse, menuRect))
+    {
+        passedOverlay = passedHome;
+    }
+    else if (CheckCollisionPointRec(mouse, advanceRect))
+    {
+        passedOverlay = passedNext;
+    }
+    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.55f));
+    DrawFullscreenTexture(passedOverlay, currentWidth, currentHeight);
+    (void)hoverAdvance;
 
     DrawMenuCursor(hoveringButton);
 }
@@ -801,6 +843,8 @@ int main(void)
                     int deathStartY = currentHeight / 2;
                     Rectangle deathOptionRects[deathOptionCount];
                     BuildOptionRects(deathOptionRects, deathOptions, deathOptionCount, deathFontSize, currentWidth / 2, deathStartY, deathSpacing);
+                    deathOptionRects[0] = ScaleUiRect(334.0f, 151.0f, 70.0f, 54.0f, currentWidth, currentHeight);
+                    deathOptionRects[1] = ScaleUiRect(250.0f, 153.0f, 51.0f, 51.0f, currentWidth, currentHeight);
 
                     Vector2 mouse = GetMousePosition();
                     bool hoveringButton = false;
@@ -908,7 +952,9 @@ int main(void)
                         }
 
                         DrawWater(&bg, currentWidth, currentHeight, groundY);
+                        DrawWaterSplashes(&bg);
                         DrawObjetos(&bg, currentWidth, currentHeight, groundY);
+                        DrawRain(&bg, currentWidth, currentHeight);
                         DrawStageFront(&bg, currentWidth, currentHeight);
 
                         DrawDeathScreenOverlay(currentWidth, currentHeight, deathOptionRects, deathOptions, deathOptionCount, hoveringButton);
@@ -942,6 +988,8 @@ int main(void)
                         (float)menuTextW,
                         (float)btnFontSize
                     };
+                    advanceRect = ScaleUiRect(333.0f, 153.0f, 72.0f, 50.0f, currentWidth, currentHeight);
+                    menuRect = ScaleUiRect(250.0f, 153.0f, 51.0f, 51.0f, currentWidth, currentHeight);
 
                     Vector2 mouse = GetMousePosition();
                     bool hoveringButton = CheckCollisionPointRec(mouse, advanceRect) || CheckCollisionPointRec(mouse, menuRect);
@@ -1194,6 +1242,7 @@ int main(void)
 
                 UpdateBackground(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, phase);
                 UpdateObjetos(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, currentWidth, currentHeight, groundY, phase);
+                UpdateWaterSplashes(&bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, currentWidth, currentHeight, groundY);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
 
@@ -1551,6 +1600,7 @@ int main(void)
 
                     }
 
+                    DrawRain(&bg, currentWidth, currentHeight);
                     DrawStageFront(&bg, currentWidth, currentHeight);
                     if (infiniteMode)
                     {

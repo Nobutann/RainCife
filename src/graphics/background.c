@@ -16,6 +16,12 @@
 #define LEVEL6_BOTTOM_TRIM_RATIO 0.030f
 #define BUEIRO_INTERVAL 2000.0f
 #define COLOR_FRONT_TINT_ALPHA 145
+#define RAIN_MIN_DROPS 140
+#define RAIN_MAX_DROPS 260
+#define RAIN_FALL_SPEED 980.0f
+#define RAIN_WIND_SPEED -250.0f
+#define WATER_SPLASH_FRAME_COUNT 4
+#define WATER_SPLASH_FRAME_TIME 0.055f
 
 void InitBackground(Background *bg)
 {
@@ -37,6 +43,10 @@ void InitBackground(Background *bg)
         bg->waterFrames[i] = LoadTexture(path);
     }
     bg->waterStatic = LoadTexture("assets/sprites/background/Water.png");
+    bg->waterSplashSheet = LoadTexture("assets/sprites/background/Water_splash-Sheet.png");
+    for (int i = 0; i < MAX_WATER_SPLASHES; i++) bg->waterSplashes[i].active = false;
+    bg->waterSplashSpawnTimer = 0.0f;
+    bg->waterSplashSpawnInterval = 0.12f;
     bg->barFrame = LoadTexture("assets/sprites/background/Barra_Boss.png");
     bg->barBackground = LoadTexture("assets/sprites/background/Fundo_Barra_Boss.png");
     bg->barFill = LoadTexture("assets/sprites/background/Porcentagem_Barra_Boss.png");
@@ -73,6 +83,68 @@ void UpdateBackground(Background *bg, float dt, GamePhase phase)
         bg->scrollX += FLOOR_SCROLL_SPEED * dt;
         bg->waterScrollX += FLOOR_SCROLL_SPEED * dt;
         bg->runningBgScrollX += RUNNING_BG_SCROLL_SPEED * dt;
+    }
+}
+
+static float GetWaterSurfaceY(Background *bg, int screenWidth, float groundY)
+{
+    float waterY = groundY;
+    if (bg->floor.id > 0)
+    {
+        float floorScale = (float)screenWidth / bg->floor.width;
+        float floorY = groundY - (bg->floor.height * floorScale * FLOOR_VISIBLE_TOP_RATIO);
+        waterY = floorY + (FLOOR_WATER_START_Y * floorScale);
+    }
+    return waterY;
+}
+
+void UpdateWaterSplashes(Background *bg, float dt, int screenWidth, int screenHeight, float groundY)
+{
+    if (bg->waterSplashSheet.id == 0) return;
+
+    for (int i = 0; i < MAX_WATER_SPLASHES; i++)
+    {
+        if (!bg->waterSplashes[i].active) continue;
+
+        bg->waterSplashes[i].frameTimer += dt;
+        while (bg->waterSplashes[i].frameTimer >= WATER_SPLASH_FRAME_TIME)
+        {
+            bg->waterSplashes[i].frameTimer -= WATER_SPLASH_FRAME_TIME;
+            bg->waterSplashes[i].frame++;
+            if (bg->waterSplashes[i].frame >= WATER_SPLASH_FRAME_COUNT)
+            {
+                bg->waterSplashes[i].active = false;
+                break;
+            }
+        }
+    }
+
+    bg->waterSplashSpawnTimer += dt;
+    if (bg->waterSplashSpawnTimer < bg->waterSplashSpawnInterval) return;
+
+    bg->waterSplashSpawnTimer = 0.0f;
+    bg->waterSplashSpawnInterval = (float)GetRandomValue(5, 16) / 100.0f;
+
+    for (int i = 0; i < MAX_WATER_SPLASHES; i++)
+    {
+        if (bg->waterSplashes[i].active) continue;
+
+        float frameW = (float)bg->waterSplashSheet.width / WATER_SPLASH_FRAME_COUNT;
+        float frameH = (float)bg->waterSplashSheet.height;
+        float scale = (float)screenHeight / 430.0f;
+        scale *= (float)GetRandomValue(60, 100) / 100.0f;
+        float splashW = frameW * scale;
+        float splashH = frameH * scale;
+        float waterY = GetWaterSurfaceY(bg, screenWidth, groundY);
+        float surfaceBand = fmaxf(10.0f, screenHeight * 0.055f);
+
+        bg->waterSplashes[i].active = true;
+        bg->waterSplashes[i].x = (float)GetRandomValue(0, screenWidth) - splashW * 0.5f;
+        bg->waterSplashes[i].y = waterY + (float)GetRandomValue(0, (int)surfaceBand) - splashH * 0.55f;
+        bg->waterSplashes[i].scale = scale;
+        bg->waterSplashes[i].frameTimer = 0.0f;
+        bg->waterSplashes[i].frame = 0;
+        break;
     }
 }
 
@@ -233,14 +305,7 @@ void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY)
         float tileW = (float)bg->waterStatic.width;
         float scale = (float)screenWidth / tileW;
         float scaledW = tileW * scale;
-        float waterY = groundY;
-
-        if (bg->floor.id > 0)
-        {
-            float floorScale = (float)screenWidth / bg->floor.width;
-            float floorY = groundY - (bg->floor.height * floorScale * FLOOR_VISIBLE_TOP_RATIO);
-            waterY = floorY + (FLOOR_WATER_START_Y * floorScale);
-        }
+        float waterY = GetWaterSurfaceY(bg, screenWidth, groundY);
 
         float offset = fmodf(bg->waterScrollX, scaledW);
         float startX = -offset;
@@ -296,6 +361,38 @@ void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY)
             EndBlendMode();
         }
     }
+}
+
+void DrawWaterSplashes(Background *bg)
+{
+    if (bg->waterSplashSheet.id == 0) return;
+
+    float frameW = (float)bg->waterSplashSheet.width / WATER_SPLASH_FRAME_COUNT;
+    float frameH = (float)bg->waterSplashSheet.height;
+
+    BeginBlendMode(BLEND_ALPHA);
+    for (int i = 0; i < MAX_WATER_SPLASHES; i++)
+    {
+        if (!bg->waterSplashes[i].active) continue;
+
+        Rectangle src =
+        {
+            bg->waterSplashes[i].frame * frameW,
+            0.0f,
+            frameW,
+            frameH
+        };
+        Rectangle dest =
+        {
+            bg->waterSplashes[i].x,
+            bg->waterSplashes[i].y,
+            frameW * bg->waterSplashes[i].scale,
+            frameH * bg->waterSplashes[i].scale
+        };
+
+        DrawTexturePro(bg->waterSplashSheet, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+    }
+    EndBlendMode();
 }
 
 void UpdateObjetos(Background *bg, float dt, int screenWidth, int screenHeight, float groundY, GamePhase phase)
@@ -370,6 +467,56 @@ void DrawStageFront(Background *bg, int screenWidth, int screenHeight)
 
     BeginBlendMode(BLEND_ALPHA);
         DrawTexturePro(bg->colorFront, src, dest, (Vector2){ 0, 0 }, 0.0f, (Color){ 255, 255, 255, COLOR_FRONT_TINT_ALPHA });
+    EndBlendMode();
+}
+
+static float RainNoise(int index, float salt)
+{
+    float value = sinf((float)index * 12.9898f + salt * 78.233f) * 43758.5453f;
+    return value - floorf(value);
+}
+
+void DrawRain(Background *bg, int screenWidth, int screenHeight)
+{
+    int dropCount = screenWidth / 11;
+    if (dropCount < RAIN_MIN_DROPS)
+    {
+        dropCount = RAIN_MIN_DROPS;
+    }
+    if (dropCount > RAIN_MAX_DROPS)
+    {
+        dropCount = RAIN_MAX_DROPS;
+    }
+
+    float pad = screenHeight * 0.18f;
+    float travelW = (float)screenWidth + pad * 2.0f;
+    float travelH = (float)screenHeight + pad * 2.0f;
+    Color rainColor = { 78, 100, 185, 150 };
+
+    BeginBlendMode(BLEND_ALPHA);
+    for (int i = 0; i < dropCount; i++)
+    {
+        float depth = RainNoise(i, 0.7f);
+        float speed = RAIN_FALL_SPEED * (0.65f + depth * 0.65f);
+        float wind = RAIN_WIND_SPEED * (0.75f + depth * 0.5f);
+        float length = screenHeight * (0.035f + depth * 0.035f);
+        float thickness = 2.0f + depth * 1.8f;
+
+        float baseX = RainNoise(i, 1.3f) * travelW;
+        float baseY = RainNoise(i, 2.1f) * travelH;
+        float x = fmodf(baseX + bg->time * wind, travelW);
+        float y = fmodf(baseY + bg->time * speed, travelH);
+        if (x < 0.0f) x += travelW;
+        if (y < 0.0f) y += travelH;
+        x -= pad;
+        y -= pad;
+
+        Vector2 start = { x, y };
+        Vector2 end = { x - length * 0.42f, y + length };
+        Color tint = rainColor;
+        tint.a = (unsigned char)(70 + depth * 85);
+        DrawLineEx(start, end, thickness, tint);
+    }
     EndBlendMode();
 }
 
@@ -474,6 +621,7 @@ void UnloadBackground(Background *bg)
         UnloadTexture(bg->waterFrames[i]);
     }
     UnloadTexture(bg->waterStatic);
+    UnloadTexture(bg->waterSplashSheet);
     UnloadTexture(bg->barFrame);
     UnloadTexture(bg->barBackground);
     UnloadTexture(bg->barFill);

@@ -5,12 +5,21 @@
 #include "sprites.h"
 
 #define MAX_OBJETOS 10
+#define MAX_WATER_SPLASHES 18
 
 typedef struct {
     float x, y;
     int frame;
     bool active;
 } ObjetoInstance;
+
+typedef struct {
+    float x, y;
+    float scale;
+    float frameTimer;
+    int frame;
+    bool active;
+} WaterSplashInstance;
 
 typedef enum
 {
@@ -33,6 +42,10 @@ typedef struct {
     float waterFrameTime;
     Texture2D waterStatic;
     float waterScrollX;
+    Texture2D waterSplashSheet;
+    WaterSplashInstance waterSplashes[MAX_WATER_SPLASHES];
+    float waterSplashSpawnTimer;
+    float waterSplashSpawnInterval;
     Texture2D barFrame;
     Texture2D barBackground;
     Texture2D barFill;
@@ -50,10 +63,13 @@ typedef struct {
 void InitBackground(Background *bg);
 void UpdateBackground(Background *bg, float dt, GamePhase phase);
 void UpdateObjetos(Background *bg, float dt, int screenWidth, int screenHeight, float groundY, GamePhase phase);
+void UpdateWaterSplashes(Background *bg, float dt, int screenWidth, int screenHeight, float groundY);
 void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY);
+void DrawWaterSplashes(Background *bg);
 void DrawObjetos(Background *bg, int screenWidth, int screenHeight, float groundY);
 void DrawStageFront(Background *bg, int screenWidth, int screenHeight);
+void DrawRain(Background *bg, int screenWidth, int screenHeight);
 void DrawProgressBar(Background *bg, float progress, int screenWidth, int screenHeight);
 void UnloadBackground(Background *bg);
 

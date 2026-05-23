@@ -454,7 +454,6 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
                 DrawTexturePro(assets->posteCabecas, source, dest, origin, 0.0f, WHITE);
             }
         }
-        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;
     }
     
@@ -477,7 +476,6 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             }
             
         }
-        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;
     }
     
@@ -490,7 +488,6 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             Vector2 origin = { 0.0f, 0.0f };
             DrawTexturePro(assets->textures[ENEMY_SAFE_POSTE], source, dest, origin, 0.0f, WHITE);
         }
-        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, DARKGRAY);
         return;
     }
     
@@ -507,7 +504,6 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
             Vector2 origin = { 0.0f, 0.0f };
             DrawTexturePro(texture, source, dest, origin, 0.0f, WHITE);
         }
-        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;
     }
     
@@ -516,7 +512,6 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
         UpdateAnimation(&assets->birdAnimation, GetFrameTime());
         float scale = enemy->size.x / (float)assets->birdAnimation.frameWidth;
         DrawAnimationFrame(&assets->birdAnimation, enemy->position, scale, false, WHITE);
-        DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
         return;
     }
 
@@ -532,5 +527,4 @@ void DrawEnemy(Enemy *enemy, EnemyAssets *assets)
     {
         DrawRectangleV(enemy->position, enemy->size, RED);
     }
-    DrawRectangleLinesEx(GetEnemyHitbox(enemy), 2.0f, RED);
 }
