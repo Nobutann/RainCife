@@ -515,6 +515,10 @@ int main(void)
             }
             currentScreen = nextScreen;
         }
+        else if (currentScreen == SCREEN_HISTORY_ANIMATION)
+        {
+            currentScreen = RunHistoryAnimation();
+        }
         else if (currentScreen == SCREEN_OPTIONS)
         {
             currentScreen = RunOptions(&config, optionsReturnScreen);

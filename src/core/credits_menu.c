@@ -13,6 +13,12 @@ GameScreen RunCredits()
         {
             return SCREEN_START;
         }
+
+        if (IsKeyPressed(KEY_ENTER))
+        {
+            SetHistoryAnimationReturnScreen(SCREEN_CREDITS);
+            return SCREEN_HISTORY_ANIMATION;
+        }
     
         BeginDrawing();
             ClearBackground(RAYWHITE);

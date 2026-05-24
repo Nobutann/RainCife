@@ -9,6 +9,7 @@ typedef enum
     SCREEN_INTRO,
     SCREEN_GAME,
     SCREEN_START,
+    SCREEN_HISTORY_ANIMATION,
     SCREEN_CHARACTER_SELECT,
     SCREEN_LEVEL_SELECT,
     SCREEN_ITEMS,
@@ -22,6 +23,8 @@ typedef enum
 } GameScreen;
 
 GameScreen RunIntro();
+GameScreen RunHistoryAnimation();
+void SetHistoryAnimationReturnScreen(GameScreen returnScreen);
 GameScreen RunStart();
 GameScreen RunCharacterSelect();
 void SetCharacterSelectNextScreen(GameScreen nextScreen);

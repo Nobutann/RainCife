@@ -95,6 +95,20 @@ GameScreen RunStart()
             }
         }
 
+        // ENTER key anywhere on the start menu launches the history animation
+        // and returns to the start menu afterwards.
+        if (IsKeyPressed(KEY_ENTER))
+        {
+            UnloadRenderTexture(menuCanvas);
+            UnloadTexture(titleScreen);
+            UnloadTexture(storyLabel);
+            UnloadTexture(infiniteLabel);
+            UnloadTexture(optionsLabel);
+            UnloadTexture(exitLabel);
+            SetHistoryAnimationReturnScreen(SCREEN_START);
+            return SCREEN_HISTORY_ANIMATION;
+        }
+
         if (clicked >= 0)
         {
             UnloadRenderTexture(menuCanvas);
@@ -105,8 +119,10 @@ GameScreen RunStart()
             UnloadTexture(exitLabel);
             if (clicked == 0)
             {
+                // "Modo Historia" clicked — play animation then go to Character Select
                 SetCharacterSelectNextScreen(SCREEN_LEVEL_SELECT);
-                return SCREEN_CHARACTER_SELECT;
+                SetHistoryAnimationReturnScreen(SCREEN_CHARACTER_SELECT);
+                return SCREEN_HISTORY_ANIMATION;
             }
             if (clicked == 1)
             {
