@@ -41,6 +41,7 @@ typedef struct {
     bool active;
     bool dying;
     int health;
+    float hitFlashTimer;
     float deathTimer;
     float deathStartY;
     WaterBall balls[MAX_WATER_BALLS];

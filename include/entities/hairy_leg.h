@@ -34,6 +34,7 @@ typedef struct {
     HairyLegState state;
     float timer;
     int health;
+    float hitFlashTimer;
     Shockwave waveLeft;
     Shockwave waveRight;
     Rectangle kickHitbox;

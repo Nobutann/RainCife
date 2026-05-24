@@ -25,6 +25,7 @@
 #define HAIRY_LEG_SHOCKWAVE_VERTICAL_OFFSET 14.0f
 #define HAIRY_LEG_SWEEP_RIGHT_HITBOX_VERTICAL_OFFSET 12.0f
 #define HAIRY_LEG_DEATH_SPRITE_BOTTOM_TRANSPARENT_PIXELS 31.0f
+#define HAIRY_LEG_HIT_FLASH_DURATION 0.12f
 
 static const Rectangle HAIRY_LEG_KICK_FRAME_HITBOXES[HAIRY_LEG_KICK_FRAME_COUNT] = {
     {174.0f, 214.0f, 105.0f, 27.0f},
@@ -343,6 +344,7 @@ void ResetHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float sc
     leg->state = HL_IDLE;
     leg->timer = 0.0f;
     leg->health = 100;
+    leg->hitFlashTimer = 0.0f;
     leg->waveLeft = (Shockwave){0};
     leg->waveRight = (Shockwave){0};
     leg->isKickActive = false;
@@ -380,6 +382,7 @@ void DamageHairyLeg(HairyLeg *leg, int damage) {
     }
 
     leg->health -= damage;
+    leg->hitFlashTimer = HAIRY_LEG_HIT_FLASH_DURATION;
     if (leg->health < 0) {
         leg->health = 0;
     }
@@ -438,6 +441,12 @@ bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float play
 
 void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale) {
     leg->groundY = groundY;
+    if (leg->hitFlashTimer > 0.0f) {
+        leg->hitFlashTimer -= deltaTime;
+        if (leg->hitFlashTimer < 0.0f) {
+            leg->hitFlashTimer = 0.0f;
+        }
+    }
     SyncHairyLegAnimation(leg);
 
     float currentSpriteH = (float)leg->currentAnim->sheet.height * scale;
@@ -757,7 +766,7 @@ void DrawHairyLeg(HairyLeg *leg, float scale) {
     float offsetY = GetHairyLegSpriteOffsetY(leg, scale);
 
     Vector2 posicaoBoss = { leg->rect.x + offsetX, leg->rect.y + offsetY };
-    DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, WHITE);
+    DrawAnimationFrame(leg->currentAnim, posicaoBoss, scale, flipX, leg->hitFlashTimer > 0.0f ? RED : WHITE);
 
     if (leg->waveLeft.active) {
         DrawHairyLegShockwave(leg, &leg->waveLeft, true);

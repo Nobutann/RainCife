@@ -38,6 +38,7 @@ typedef struct Player Player;
 typedef struct {
     bool active;
     int health;
+    float hitFlashTimer;
     MidnightManState state;
     float timer;
 

@@ -51,15 +51,17 @@ GameScreen RunStart()
     Texture2D storyLabel = LoadTexture("assets/sprites/ui/main_menu/story_mode.png");
     Texture2D infiniteLabel = LoadTexture("assets/sprites/ui/main_menu/infinite_mode.png");
     Texture2D optionsLabel = LoadTexture("assets/sprites/ui/main_menu/options.png");
-    Texture2D optionsHoverLabel = LoadTexture("assets/sprites/ui/main_menu/options_hover.png");
+    Texture2D exitLabel = LoadTexture("assets/sprites/ui/main_menu/sair.png");
     RenderTexture2D menuCanvas = LoadRenderTexture((int)MENU_CANVAS_WIDTH, (int)MENU_CANVAS_HEIGHT);
 
     Rectangle optionRects[] =
     {
         {248.0f, 169.0f, 144.0f, 28.0f},
         {248.0f, 211.0f, 144.0f, 28.0f},
-        {248.0f, 253.0f, 144.0f, 28.0f}
+        {248.0f, 253.0f, 144.0f, 28.0f},
+        {290.0f, 292.0f, 50.0f, 26.0f}
     };
+    int optionCount = sizeof(optionRects) / sizeof(optionRects[0]);
 
     while (!WindowShouldClose())
     {
@@ -70,7 +72,7 @@ GameScreen RunStart()
         bool hoveringButton = false;
         int hovered = -1;
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < optionCount; i++)
         {
             if (CheckCollisionPointRec(mouse, optionRects[i]))
             {
@@ -83,7 +85,7 @@ GameScreen RunStart()
         int clicked = -1;
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < optionCount; i++)
             {
                 if (CheckCollisionPointRec(mouse, optionRects[i]))
                 {
@@ -100,7 +102,7 @@ GameScreen RunStart()
             UnloadTexture(storyLabel);
             UnloadTexture(infiniteLabel);
             UnloadTexture(optionsLabel);
-            UnloadTexture(optionsHoverLabel);
+            UnloadTexture(exitLabel);
             if (clicked == 0)
             {
                 SetCharacterSelectNextScreen(SCREEN_LEVEL_SELECT);
@@ -114,6 +116,10 @@ GameScreen RunStart()
             if (clicked == 2)
             {
                 return SCREEN_OPTIONS;
+            }
+            if (clicked == 3)
+            {
+                return SCREEN_EXIT;
             }
         }
 
@@ -135,11 +141,18 @@ GameScreen RunStart()
                 hovered == 1 ? YELLOW : WHITE
             );
             DrawTextureSourceCentered(
-                hovered == 2 ? optionsHoverLabel : optionsLabel,
+                optionsLabel,
                 (Rectangle){279.0f, 286.0f, 75.0f, 32.0f},
                 MENU_CANVAS_WIDTH * 0.5f,
                 optionRects[2].y - 2.0f,
-                WHITE
+                hovered == 2 ? YELLOW : WHITE
+            );
+            DrawTextureSourceCentered(
+                exitLabel,
+                (Rectangle){290.0f, 322.0f, 50.0f, 26.0f},
+                MENU_CANVAS_WIDTH * 0.5f,
+                optionRects[3].y,
+                hovered == 3 ? YELLOW : WHITE
             );
         EndTextureMode();
 
@@ -162,7 +175,7 @@ GameScreen RunStart()
     UnloadTexture(storyLabel);
     UnloadTexture(infiniteLabel);
     UnloadTexture(optionsLabel);
-    UnloadTexture(optionsHoverLabel);
+    UnloadTexture(exitLabel);
     return SCREEN_EXIT;
 }
 

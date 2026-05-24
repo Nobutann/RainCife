@@ -7,6 +7,7 @@
 #define SHARK_DEATH_SINK_DISTANCE 100.0f
 #define SHARK_SHOOT_FIRE_FRAME 7
 #define SHARK_DASH_ANIM_TIME 0.12f
+#define SHARK_HIT_FLASH_DURATION 0.12f
 
 
 static void FireProjectile(Shark *shark, Rectangle playerRect) {
@@ -68,6 +69,7 @@ void ResetShark(Shark *shark, int screenWidth, int screenHeight) {
     shark->active = true;
     shark->dying = false;
     shark->health = 100;
+    shark->hitFlashTimer = 0.0f;
     shark->deathTimer = 0.0f;
     shark->deathStartY = shark->rect.y;
 
@@ -94,6 +96,13 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
 }
 
 void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight) {
+    if (shark->hitFlashTimer > 0.0f) {
+        shark->hitFlashTimer -= deltaTime;
+        if (shark->hitFlashTimer < 0.0f) {
+            shark->hitFlashTimer = 0.0f;
+        }
+    }
+
     if (shark->dying) {
         shark->deathTimer += deltaTime;
         float progress = shark->deathTimer / SHARK_DEATH_DURATION;
@@ -348,21 +357,21 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
     }
 }
 
-static void DrawSharkTexture(Texture2D tex, Rectangle dest, bool flipX) {
+static void DrawSharkTexture(Texture2D tex, Rectangle dest, bool flipX, Color tint) {
     if (tex.id == 0) return;
     float texWidth = (float)tex.width;
     float texHeight = (float)tex.height;
     Rectangle source = { flipX ? texWidth : 0.0f, 0.0f, flipX ? -texWidth : texWidth, texHeight };
-    DrawTexturePro(tex, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
+    DrawTexturePro(tex, source, dest, (Vector2){ 0, 0 }, 0.0f, tint);
 }
 
-static void DrawSharkFrame(Texture2D sheet, int frame, int totalFrames, Rectangle dest, bool flipX) {
+static void DrawSharkFrame(Texture2D sheet, int frame, int totalFrames, Rectangle dest, bool flipX, Color tint) {
     if (sheet.id == 0) return;
     float frameWidth = (float)sheet.width / (float)totalFrames;
     float frameHeight = (float)sheet.height;
     float frameOffsetX = frame * frameWidth;
     Rectangle source = { flipX ? frameOffsetX + frameWidth : frameOffsetX, 0.0f, flipX ? -frameWidth : frameWidth, frameHeight };
-    DrawTexturePro(sheet, source, dest, (Vector2){ 0, 0 }, 0.0f, WHITE);
+    DrawTexturePro(sheet, source, dest, (Vector2){ 0, 0 }, 0.0f, tint);
 }
 
 void DrawShark(Shark *shark) {
@@ -370,7 +379,7 @@ void DrawShark(Shark *shark) {
 
     if (shark->dying) {
         Rectangle destDeath = { shark->rect.x - 120.0f, shark->rect.y - 160.0f, 500.0f, 446.7f };
-        DrawSharkTexture(shark->texDeath, destDeath, false);
+        DrawSharkTexture(shark->texDeath, destDeath, false, shark->hitFlashTimer > 0.0f ? RED : WHITE);
         return;
     }
 
@@ -395,30 +404,31 @@ void DrawShark(Shark *shark) {
 
     float jumpSpriteWidth = 1550.0f, jumpSpriteHeight = 1050.0f;
     Rectangle destJump = { shark->rect.x - 400.0f, shark->rect.y - 200.0f, jumpSpriteWidth, jumpSpriteHeight };
+    Color bossTint = shark->hitFlashTimer > 0.0f ? RED : WHITE;
 
     switch (shark->state) {
         case SHARK_IDLE:
-            DrawSharkFrame(shark->texIdle, shark->animFrame, 9, destIdle, false);
+            DrawSharkFrame(shark->texIdle, shark->animFrame, 9, destIdle, false, bossTint);
             break;
 
         case SHARK_PREP_LEFT:
-            DrawSharkFrame(shark->texDashLeft, shark->animFrame, 6, destDash, true);
+            DrawSharkFrame(shark->texDashLeft, shark->animFrame, 6, destDash, true, bossTint);
             break;
 
         case SHARK_DASH_RIGHT:
-            DrawSharkFrame(shark->texDashRight, shark->animFrame, 6, destDash, false);
+            DrawSharkFrame(shark->texDashRight, shark->animFrame, 6, destDash, false, bossTint);
             break;
 
         case SHARK_DASH_LEFT:
-            DrawSharkFrame(shark->texDashLeft, shark->animFrame, 6, destDash, true);
+            DrawSharkFrame(shark->texDashLeft, shark->animFrame, 6, destDash, true, bossTint);
             break;
 
         case SHARK_SHOOTING:
-            DrawSharkFrame(shark->texShoot, shark->animFrame, 9, destShoot, false);
+            DrawSharkFrame(shark->texShoot, shark->animFrame, 9, destShoot, false, bossTint);
             break;
 
         case SHARK_ARC_ATTACK:
-            DrawSharkFrame(shark->texJump, shark->animFrame, 12, destJump, false);
+            DrawSharkFrame(shark->texJump, shark->animFrame, 12, destJump, false, bossTint);
             break;
 
         default: break;
@@ -441,6 +451,7 @@ void DamageShark(Shark *shark, int damage) {
     if (!shark->active || shark->dying) return;
 
     shark->health -= damage;
+    shark->hitFlashTimer = SHARK_HIT_FLASH_DURATION;
     if (shark->health <= 0) {
         shark->health = 0;
         shark->active = false;

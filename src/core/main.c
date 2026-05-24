@@ -201,36 +201,7 @@ static void EnterBossPhase(
 
 static void DrawDeathScreenOverlay(int currentWidth, int currentHeight, Rectangle optionRects[], const char **options, int optionCount, bool hoveringButton)
 {
-    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.78f));
-
-    const char *title = "Você morreu";
-    int titleSize = currentHeight / 11;
-    int subtitleSize = currentHeight / 28;
-    const char *subtitle = "Escolha como continuar";
-
-    DrawText(
-        title,
-        (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
-        currentHeight / 4,
-        titleSize,
-        RAYWHITE
-    );
-
-    DrawText(
-        subtitle,
-        (currentWidth / 2) - (MeasureText(subtitle, subtitleSize) / 2),
-        currentHeight / 4 + titleSize + 14,
-        subtitleSize,
-        LIGHTGRAY
-    );
-
     Vector2 mouse = GetMousePosition();
-    for (int i = 0; i < optionCount; i++)
-    {
-        bool hover = CheckCollisionPointRec(mouse, optionRects[i]);
-        Color color = hover ? YELLOW : RAYWHITE;
-        DrawText(options[i], optionRects[i].x, optionRects[i].y, currentHeight / 20, color);
-    }
 
     static Texture2D deathScreen = {0};
     static Texture2D deathHome = {0};
@@ -253,41 +224,34 @@ static void DrawDeathScreenOverlay(int currentWidth, int currentHeight, Rectangl
     DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.72f));
     DrawFullscreenTexture(deathOverlay, currentWidth, currentHeight);
     DrawMenuCursor(hoveringButton);
+    (void)options;
 }
 
-static void DrawPauseScreenOverlay(int currentWidth, int currentHeight, Rectangle optionRects[], const char **options, int optionCount, bool hoveringButton)
+static void DrawPauseScreenOverlay(int currentWidth, int currentHeight, Rectangle optionRects[], int optionCount, bool hoveringButton)
 {
-    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.62f));
-
-    const char *title = "Pausado";
-    int titleSize = currentHeight / 11;
-    int subtitleSize = currentHeight / 31;
-    const char *subtitle = "Aperte ESC ou P para continuar";
-
-    DrawText(
-        title,
-        (currentWidth / 2) - (MeasureText(title, titleSize) / 2),
-        currentHeight / 4,
-        titleSize,
-        RAYWHITE
-    );
-
-    DrawText(
-        subtitle,
-        (currentWidth / 2) - (MeasureText(subtitle, subtitleSize) / 2),
-        currentHeight / 4 + titleSize + 12,
-        subtitleSize,
-        LIGHTGRAY
-    );
-
-    Vector2 mouse = GetMousePosition();
-    for (int i = 0; i < optionCount; i++)
+    static Texture2D pauseScreen = {0};
+    static Texture2D pauseBack = {0};
+    static Texture2D pauseHome = {0};
+    if (pauseScreen.id <= 0)
     {
-        bool hover = CheckCollisionPointRec(mouse, optionRects[i]);
-        Color color = hover ? YELLOW : RAYWHITE;
-        DrawText(options[i], optionRects[i].x, optionRects[i].y, currentHeight / 20, color);
+        pauseScreen = LoadTexture("assets/sprites/ui/result/pausado.png");
+        pauseBack = LoadTexture("assets/sprites/ui/result/pausado_voltar.png");
+        pauseHome = LoadTexture("assets/sprites/ui/result/pausado_home.png");
     }
 
+    Vector2 mouse = GetMousePosition();
+    Texture2D pauseOverlay = pauseScreen;
+    if (optionCount >= 2 && CheckCollisionPointRec(mouse, optionRects[0]))
+    {
+        pauseOverlay = pauseBack;
+    }
+    else if (optionCount >= 2 && CheckCollisionPointRec(mouse, optionRects[1]))
+    {
+        pauseOverlay = pauseHome;
+    }
+
+    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.55f));
+    DrawFullscreenTexture(pauseOverlay, currentWidth, currentHeight);
     DrawMenuCursor(hoveringButton);
 }
 
@@ -481,30 +445,8 @@ typedef enum { TRANSITION_RUNNING_TO_BOSS, TRANSITION_BOSS_TO_RUNNING } PhaseTra
 
 static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rectangle advanceRect, Rectangle menuRect, int btnFontSize, const char *title, bool hoveringButton)
 {
-    int blockW = 400;
-    int blockH = 300;
-    int blockX = (currentWidth - blockW) / 2;
-    int blockY = (currentHeight - blockH) / 2;
-
-    DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.55f));
-    DrawRectangleRounded((Rectangle){blockX, blockY, blockW, blockH}, 0.08f, 8, (Color){20, 20, 30, 245});
-    DrawRectangleRoundedLines((Rectangle){blockX, blockY, blockW, blockH}, 0.08f, 8, RAYWHITE);
-
-    int titleSize = blockH / 6;
-    DrawText(
-        title,
-        blockX + (blockW - MeasureText(title, titleSize)) / 2,
-        blockY + blockH / 6,
-        titleSize,
-        RAYWHITE
-    );
-
     Vector2 mouse = GetMousePosition();
 
-    bool hoverMenu = CheckCollisionPointRec(mouse, menuRect);
-    DrawText("Menu", (int)menuRect.x, (int)menuRect.y, btnFontSize, hoverMenu ? YELLOW : RAYWHITE);
-
-    bool hoverAdvance = CheckCollisionPointRec(mouse, advanceRect);
     static Texture2D passedScreen = {0};
     static Texture2D passedHome = {0};
     static Texture2D passedNext = {0};
@@ -525,9 +467,10 @@ static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rect
     }
     DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.55f));
     DrawFullscreenTexture(passedOverlay, currentWidth, currentHeight);
-    (void)hoverAdvance;
 
     DrawMenuCursor(hoveringButton);
+    (void)btnFontSize;
+    (void)title;
 }
 
 int main(void)
@@ -720,17 +663,10 @@ int main(void)
 
                 if (gamePaused)
                 {
-                    const char *pauseOptions[] =
-                    {
-                        "Continuar",
-                        "Menu"
-                    };
-                    int pauseOptionCount = sizeof(pauseOptions) / sizeof(pauseOptions[0]);
-                    int pauseFontSize = currentHeight / 20;
-                    int pauseSpacing = pauseFontSize + 22;
-                    int pauseStartY = currentHeight / 2;
+                    int pauseOptionCount = 2;
                     Rectangle pauseOptionRects[pauseOptionCount];
-                    BuildOptionRects(pauseOptionRects, pauseOptions, pauseOptionCount, pauseFontSize, currentWidth / 2, pauseStartY, pauseSpacing);
+                    pauseOptionRects[0] = ScaleUiRect(332.0f, 154.0f, 68.0f, 56.0f, currentWidth, currentHeight);
+                    pauseOptionRects[1] = ScaleUiRect(249.0f, 152.0f, 59.0f, 52.0f, currentWidth, currentHeight);
 
                     Vector2 mouse = GetMousePosition();
                     bool hoveringButton = false;
@@ -761,7 +697,7 @@ int main(void)
                         {
                             DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
                         }
-                        DrawPauseScreenOverlay(currentWidth, currentHeight, pauseOptionRects, pauseOptions, pauseOptionCount, hoveringButton);
+                        DrawPauseScreenOverlay(currentWidth, currentHeight, pauseOptionRects, pauseOptionCount, hoveringButton);
                     EndDrawing();
                     continue;
                 }
@@ -1361,6 +1297,7 @@ int main(void)
                                 else if (hit)
                                 {
                                     midnightMan.health -= dmg;
+                                    midnightMan.hitFlashTimer = 0.12f;
                                     if (midnightMan.health < 0) midnightMan.health = 0;
                                     projectiles.items[j].active = false;
                                 }

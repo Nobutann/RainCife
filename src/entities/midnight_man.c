@@ -17,6 +17,7 @@
 
 #define MM_UMBRELLA_STORM_DURATION 5.5f
 #define MM_UMBRELLA_SPAWN_INTERVAL 0.45f
+#define MM_HIT_FLASH_DURATION 0.12f
 
 static float Lerpf(float from, float to, float weight)
 {
@@ -45,6 +46,7 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
 {
     mm->active = true;
     mm->health = 200;
+    mm->hitFlashTimer = 0.0f;
     mm->state = MM_IDLE;
     mm->timer = 0.0f;
     mm->handsY = (float)screenHeight;
@@ -100,6 +102,15 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
     if (!mm->active)
     {
         return;
+    }
+
+    if (mm->hitFlashTimer > 0.0f)
+    {
+        mm->hitFlashTimer -= deltaTime;
+        if (mm->hitFlashTimer < 0.0f)
+        {
+            mm->hitFlashTimer = 0.0f;
+        }
     }
 
     if (mm->health <= 0 && mm->state != MM_DEAD)
@@ -582,6 +593,7 @@ void DrawMidnightMan(const MidnightMan *mm)
     int screenHeight = GetScreenHeight();
     int screenWidth = GetScreenWidth();
     float groundY = (float)screenHeight * 0.82f;
+    Color bossTint = mm->hitFlashTimer > 0.0f ? RED : WHITE;
 
     // 1. Draw warning indicators
     if (mm->state == MM_GROUND_TELEGRAPH)
@@ -665,7 +677,7 @@ void DrawMidnightMan(const MidnightMan *mm)
           Rectangle src = {0.0f, 0.0f, texW, texH};
           Rectangle dest = {centerX, centerY, drawW, drawH};
           Vector2 pivot = {drawW / 2.0f, drawH / 2.0f};
-          DrawTexturePro(mm->texFist, src, dest, pivot, 90.0f, WHITE);
+          DrawTexturePro(mm->texFist, src, dest, pivot, 90.0f, bossTint);
         }
       }
     }
@@ -683,12 +695,12 @@ void DrawMidnightMan(const MidnightMan *mm)
         // Left-to-right: draw normally, left edge at sweepX
         Rectangle src = {0.0f, 0.0f, texW, texH};
         Rectangle dest = {mm->sweepX, drawY, drawW, drawH};
-        DrawTexturePro(mm->texHandOpen, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        DrawTexturePro(mm->texHandOpen, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, bossTint);
       } else {
         // Right-to-left: mirror horizontally (flip x in source)
         Rectangle src = {0.0f, 0.0f, -texW, texH};
         Rectangle dest = {mm->sweepX, drawY, drawW, drawH};
-        DrawTexturePro(mm->texHandOpen, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
+        DrawTexturePro(mm->texHandOpen, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, bossTint);
       }
     }
   } else {
@@ -715,7 +727,7 @@ void DrawMidnightMan(const MidnightMan *mm)
           Rectangle dest = {centerX, centerY, mm->handDrawWidth,
                             mm->handDrawHeight};
           Vector2 pivot = {halfOrigW, halfOrigH};
-          DrawTexturePro(mm->texHandOpen, src, dest, pivot, -90.0f, WHITE);
+          DrawTexturePro(mm->texHandOpen, src, dest, pivot, -90.0f, bossTint);
         }
       }
     }
@@ -810,6 +822,7 @@ bool TryDamageMidnightManFromPlayerAttack(MidnightMan *mm, Player *player, float
     if (hit)
     {
         mm->health -= (int)player->weapon.damage;
+        mm->hitFlashTimer = MM_HIT_FLASH_DURATION;
         if (mm->health < 0)
         {
             mm->health = 0;
