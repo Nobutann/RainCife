@@ -92,10 +92,9 @@ GameScreen RunIntro(void)
         UpdateCustomCursor(dt);
 
         // --- Skip input ------------------------------------------------------
-        if (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER))
+        if (!fading && (IsKeyPressed(KEY_SPACE) || IsKeyPressed(KEY_ENTER)))
         {
-            result = SCREEN_START;
-            break;
+            fading = true;
         }
 
         // --- Frame advance ---------------------------------------------------
