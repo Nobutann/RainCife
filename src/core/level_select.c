@@ -430,6 +430,24 @@ GameScreen RunLevelSelect()
             return SCREEN_CHARACTER_SELECT;
         }
 
+        // ENTER key on level select launches the history animation
+        // and returns to the level select screen afterwards.
+        if (IsKeyPressed(KEY_ENTER))
+        {
+            for (int i = 0; i < STORY_LEVEL_COUNT; i++) UnloadTexture(maps[i]);
+            UnloadTexture(selectorArrow);
+            UnloadTexture(playButton);
+            UnloadTexture(playHoverButton);
+            UnloadTexture(itemsButton);
+            UnloadTexture(itemsHoverButton);
+            UnloadTexture(optionsButton);
+            UnloadTexture(optionsHoverButton);
+            UnloadTexture(menuButton);
+            UnloadTexture(menuHoverButton);
+            SetHistoryAnimationReturnScreen(SCREEN_LEVEL_SELECT);
+            return SCREEN_HISTORY_ANIMATION;
+        }
+
         if (!acceptClick && !IsMouseButtonDown(MOUSE_BUTTON_LEFT))
         {
             acceptClick = true;
