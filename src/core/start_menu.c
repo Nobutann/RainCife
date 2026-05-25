@@ -113,10 +113,8 @@ GameScreen RunStart()
             UnloadTexture(exitLabel);
             if (clicked == 0)
             {
-                // "Modo Historia" clicked — play animation then go to Character Select
                 SetCharacterSelectNextScreen(SCREEN_LEVEL_SELECT);
-                SetHistoryAnimationReturnScreen(SCREEN_CHARACTER_SELECT);
-                return SCREEN_HISTORY_ANIMATION;
+                return SCREEN_CHARACTER_SELECT;
             }
             if (clicked == 1)
             {

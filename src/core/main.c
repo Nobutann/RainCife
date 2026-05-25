@@ -505,6 +505,11 @@ int main(void)
         if (currentScreen == SCREEN_INTRO)
         {
             currentScreen = RunIntro();
+            if (currentScreen == SCREEN_START)
+            {
+                SetHistoryAnimationReturnScreen(SCREEN_START);
+                currentScreen = SCREEN_HISTORY_ANIMATION;
+            }
         }
         else if (currentScreen == SCREEN_START)
         {
