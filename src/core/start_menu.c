@@ -8,18 +8,12 @@
 
 static Rectangle GetMenuCanvasRect(int screenWidth, int screenHeight)
 {
-    float scaleX = (float)screenWidth / MENU_CANVAS_WIDTH;
-    float scaleY = (float)screenHeight / MENU_CANVAS_HEIGHT;
-    float scale = scaleX > scaleY ? scaleX : scaleY;
-    float width = MENU_CANVAS_WIDTH * scale;
-    float height = MENU_CANVAS_HEIGHT * scale;
-
     return (Rectangle)
     {
-        ((float)screenWidth - width) * 0.5f,
-        ((float)screenHeight - height) * 0.5f,
-        width,
-        height
+        0.0f,
+        0.0f,
+        (float)screenWidth,
+        (float)screenHeight
     };
 }
 

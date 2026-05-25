@@ -478,7 +478,7 @@ int main(void)
     Config config = CarregarConfig();
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 600, "RainCife");
+    InitWindow(640, 360, "RainCife");
     HideCursor();
     InitCustomCursor();
     InitSoundSystem();

@@ -2,9 +2,11 @@
 
 #include <raylib.h>
 
-#define WINDOWED_WIDTH 1280
-#define WINDOWED_HEIGHT 720
+#define WINDOW_ASPECT_WIDTH 16
+#define WINDOW_ASPECT_HEIGHT 9
 #define WINDOWED_MARGIN 80
+#define MIN_WINDOWED_WIDTH 640
+#define MIN_WINDOWED_HEIGHT 360
 
 static void GetCenteredWindowRect(int monitor, int *width, int *height, int *x, int *y)
 {
@@ -15,23 +17,20 @@ static void GetCenteredWindowRect(int monitor, int *width, int *height, int *x, 
     int maxWidth = monitorWidth - WINDOWED_MARGIN;
     int maxHeight = monitorHeight - WINDOWED_MARGIN;
 
-    *width = WINDOWED_WIDTH;
-    *height = WINDOWED_HEIGHT;
+    if (maxWidth < MIN_WINDOWED_WIDTH) maxWidth = monitorWidth;
+    if (maxHeight < MIN_WINDOWED_HEIGHT) maxHeight = monitorHeight;
 
-    if (*width > maxWidth)
-    {
-        *width = maxWidth;
-        *height = (*width * WINDOWED_HEIGHT) / WINDOWED_WIDTH;
-    }
+    *width = maxWidth;
+    *height = (*width * WINDOW_ASPECT_HEIGHT) / WINDOW_ASPECT_WIDTH;
 
     if (*height > maxHeight)
     {
         *height = maxHeight;
-        *width = (*height * WINDOWED_WIDTH) / WINDOWED_HEIGHT;
+        *width = (*height * WINDOW_ASPECT_WIDTH) / WINDOW_ASPECT_HEIGHT;
     }
 
-    if (*width < 640) *width = 640;
-    if (*height < 360) *height = 360;
+    if (*width < MIN_WINDOWED_WIDTH) *width = MIN_WINDOWED_WIDTH;
+    if (*height < MIN_WINDOWED_HEIGHT) *height = MIN_WINDOWED_HEIGHT;
 
     *x = (int)monitorPos.x + (monitorWidth - *width) / 2;
     *y = (int)monitorPos.y + (monitorHeight - *height) / 2;

@@ -707,7 +707,7 @@ static void DrawDailyChallengeRow(Rectangle row, const DailyChallenge *challenge
 
     int progressY = (int)(row.y + (row.height - smallFontSize) * 0.46f);
     int slashX = (int)(row.x + row.width * 0.833f);
-    int gap = (int)(row.width * 0.014f);
+    int gap = smallFontSize;
     int progressW = MeasureText(progressValue, smallFontSize);
     DrawText(progressValue, slashX - gap - progressW, progressY, smallFontSize, textColor);
     DrawText(targetValue, slashX + gap, progressY, smallFontSize, textColor);
@@ -878,7 +878,7 @@ GameScreen RunItems()
         }
 
         BeginDrawing();
-            ClearBackground(RAYWHITE);
+            ClearBackground((Color){43, 56, 106, 255});
             DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
             int selectedCharacterIndexForUi = GetSelectedCharacterId() - 1;
             int selectedClothingIndexForUi = selectedClothingId - 1;

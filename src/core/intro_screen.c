@@ -1,5 +1,6 @@
 #include "core/intro_screen.h"
 #include "core/cursor.h"
+#include "utils.h"
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -164,18 +165,7 @@ GameScreen RunIntro(void)
 
             if (tex.id != 0)
             {
-                float scaleX = (float)w / (float)tex.width;
-                float scaleY = (float)h / (float)tex.height;
-                float scale  = (scaleX < scaleY) ? scaleX : scaleY;
-
-                float drawW = tex.width  * scale;
-                float drawH = tex.height * scale;
-                float drawX = (w - drawW) * 0.5f;
-                float drawY = (h - drawH) * 0.5f;
-
-                Rectangle src = { 0, 0, (float)tex.width, (float)tex.height };
-                Rectangle dst = { drawX, drawY, drawW, drawH };
-                DrawTexturePro(tex, src, dst, (Vector2){0, 0}, 0.0f, WHITE);
+                DrawFullscreenTexture(tex, w, h);
             }
 
             // Black fade overlay.
