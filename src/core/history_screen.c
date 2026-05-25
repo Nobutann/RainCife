@@ -256,8 +256,8 @@ GameScreen RunHistoryAnimation(void)
         }
 
         // --- Draw ------------------------------------------------------------
-        int w = GetScreenWidth();
-        int h = GetScreenHeight();
+        int w = GetRenderWidth();
+        int h = GetRenderHeight();
 
         Texture2D tex = slot[displaySlot];
 

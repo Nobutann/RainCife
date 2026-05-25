@@ -1,6 +1,5 @@
 #include "core/intro_screen.h"
 #include "core/cursor.h"
-#include "utils.h"
 #include <raylib.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,6 +11,7 @@
 #define INTRO_FPS          30
 #define INTRO_FRAME_TIME   (1.0f / INTRO_FPS)
 #define INTRO_FADE_DURATION 0.7f   // seconds for the black fade-out at the end
+#define INTRO_BOTTOM_CROP_RATIO 0.18f
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -155,8 +155,8 @@ GameScreen RunIntro(void)
         }
 
         // --- Draw ------------------------------------------------------------
-        int w = GetScreenWidth();
-        int h = GetScreenHeight();
+        int w = GetRenderWidth();
+        int h = GetRenderHeight();
 
         Texture2D tex = slot[displaySlot];
 
@@ -165,7 +165,15 @@ GameScreen RunIntro(void)
 
             if (tex.id != 0)
             {
-                DrawFullscreenTexture(tex, w, h);
+                Rectangle source =
+                {
+                    0.0f,
+                    0.0f,
+                    (float)tex.width,
+                    (float)tex.height * (1.0f - INTRO_BOTTOM_CROP_RATIO)
+                };
+                Rectangle dest = {0.0f, 0.0f, (float)w, (float)h};
+                DrawTexturePro(tex, source, dest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
             }
 
             // Black fade overlay.
@@ -180,7 +188,7 @@ GameScreen RunIntro(void)
                 const char *hint   = "SPACE - pular";
                 int         hintSz = h / 40;
                 int         hintW  = MeasureText(hint, hintSz);
-                DrawText(hint, w - hintW - 12, h - hintSz - 10, hintSz, Fade(LIGHTGRAY, 0.55f));
+                DrawText(hint, w - hintW - 12, h - hintSz - (h / 18), hintSz, Fade(LIGHTGRAY, 0.55f));
             }
         EndDrawing();
     }
