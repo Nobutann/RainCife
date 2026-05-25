@@ -1,7 +1,17 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "core/ranking_manager.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 
 #define RANKING_INFINITO_ARQUIVO "ranking_infinito.bin"
 #define RANKING_SUPABASE_RESPONSE_FILE "ranking_supabase_response.json"
@@ -15,6 +25,17 @@
 #else
 #define SUPABASE_NULL_OUTPUT "/dev/null"
 #endif
+
+struct RankingInfinitoFetch
+{
+    RankingInfinito ranking;
+    bool success;
+#ifdef _WIN32
+    HANDLE thread;
+#else
+    pthread_t thread;
+#endif
+};
 
 static void CopiarNomeJogador(char destino[INFINITE_PLAYER_NAME_MAX], const char *origem)
 {
@@ -352,7 +373,7 @@ void SalvarRankingInfinito(RankingInfinito ranking)
     }
 }
 
-static RankingInfinito CarregarRankingInfinitoLocal(void)
+RankingInfinito CarregarRankingInfinitoLocal(void)
 {
     RankingInfinito ranking = {0};
     FILE *arquivo = fopen(RANKING_INFINITO_ARQUIVO, "rb");
@@ -389,6 +410,106 @@ RankingInfinito CarregarRankingInfinito(void)
     }
 
     return ranking;
+}
+
+#ifdef _WIN32
+static DWORD WINAPI BuscarRankingInfinitoOnlineThread(LPVOID data)
+#else
+static void *BuscarRankingInfinitoOnlineThread(void *data)
+#endif
+{
+    RankingInfinitoFetch *fetch = (RankingInfinitoFetch *)data;
+    fetch->success = FetchSupabaseRanking(&fetch->ranking);
+#ifdef _WIN32
+    return 0;
+#else
+    return NULL;
+#endif
+}
+
+RankingInfinitoFetch *IniciarCarregamentoRankingInfinitoOnline(void)
+{
+    RankingInfinitoFetch *fetch = (RankingInfinitoFetch *)calloc(1, sizeof(RankingInfinitoFetch));
+    if (fetch == NULL)
+    {
+        return NULL;
+    }
+
+#ifdef _WIN32
+    fetch->thread = CreateThread(NULL, 0, BuscarRankingInfinitoOnlineThread, fetch, 0, NULL);
+    if (fetch->thread == NULL)
+    {
+        free(fetch);
+        return NULL;
+    }
+#else
+    if (pthread_create(&fetch->thread, NULL, BuscarRankingInfinitoOnlineThread, fetch) != 0)
+    {
+        free(fetch);
+        return NULL;
+    }
+#endif
+
+    return fetch;
+}
+
+bool FinalizarCarregamentoRankingInfinitoOnline(RankingInfinitoFetch *fetch, RankingInfinito *ranking, bool *success)
+{
+    if (fetch == NULL)
+    {
+        return false;
+    }
+
+#ifdef _WIN32
+    DWORD waitResult = WaitForSingleObject(fetch->thread, 0);
+    if (waitResult != WAIT_OBJECT_0)
+    {
+        return false;
+    }
+    CloseHandle(fetch->thread);
+#else
+    if (pthread_tryjoin_np(fetch->thread, NULL) != 0)
+    {
+        return false;
+    }
+#endif
+
+    if (success != NULL)
+    {
+        *success = fetch->success;
+    }
+    if (fetch->success && ranking != NULL)
+    {
+        *ranking = fetch->ranking;
+        SalvarRankingInfinito(*ranking);
+    }
+    free(fetch);
+    return true;
+}
+
+void CancelarCarregamentoRankingInfinitoOnline(RankingInfinitoFetch *fetch)
+{
+    if (fetch == NULL)
+    {
+        return;
+    }
+
+#ifdef _WIN32
+    if (WaitForSingleObject(fetch->thread, 0) == WAIT_OBJECT_0)
+    {
+        CloseHandle(fetch->thread);
+        free(fetch);
+    }
+#else
+    if (pthread_tryjoin_np(fetch->thread, NULL) == 0)
+    {
+        free(fetch);
+    }
+    else
+    {
+        pthread_detach(fetch->thread);
+    }
+#endif
 }
 
 bool PontuacaoEntraNoTop10(const RankingInfinito *ranking, float metros)

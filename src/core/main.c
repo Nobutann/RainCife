@@ -707,7 +707,7 @@ int main(void)
             PhaseTransitionType transitionType = TRANSITION_RUNNING_TO_BOSS;
             bool bossDefeatTransitionPending = false;
             float bossDefeatTransitionTimer = 0.0f;
-            RankingInfinito infiniteRanking = infiniteMode ? CarregarRankingInfinito() : (RankingInfinito){0};
+            RankingInfinito infiniteRanking = infiniteMode ? CarregarRankingInfinitoLocal() : (RankingInfinito){0};
             bool infiniteRankingChecked = false;
             bool infiniteRankingNameActive = false;
             char infinitePlayerName[INFINITE_PLAYER_NAME_MAX] = "";

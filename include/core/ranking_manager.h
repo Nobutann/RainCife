@@ -16,8 +16,14 @@ typedef struct {
     int quantidade;
 } RankingInfinito;
 
+typedef struct RankingInfinitoFetch RankingInfinitoFetch;
+
 void SalvarRankingInfinito(RankingInfinito ranking);
+RankingInfinito CarregarRankingInfinitoLocal(void);
 RankingInfinito CarregarRankingInfinito(void);
+RankingInfinitoFetch *IniciarCarregamentoRankingInfinitoOnline(void);
+bool FinalizarCarregamentoRankingInfinitoOnline(RankingInfinitoFetch *fetch, RankingInfinito *ranking, bool *success);
+void CancelarCarregamentoRankingInfinitoOnline(RankingInfinitoFetch *fetch);
 bool PontuacaoEntraNoTop10(const RankingInfinito *ranking, float metros);
 void AdicionarPontuacaoRankingInfinito(RankingInfinito *ranking, const char *nome, float metros);
 

@@ -587,7 +587,8 @@ GameScreen RunInfiniteMenu()
     };
     bool acceptClick = false;
     bool acceptEscape = !IsKeyDown(KEY_ESCAPE);
-    RankingInfinito ranking = CarregarRankingInfinito();
+    RankingInfinito ranking = CarregarRankingInfinitoLocal();
+    RankingInfinitoFetch *rankingFetch = IniciarCarregamentoRankingInfinitoOnline();
     Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
     Texture2D rankingScreen = LoadTexture("assets/sprites/ui/infinite_menu/ranking_screen.png");
     Texture2D playButton = LoadTexture("assets/sprites/ui/main_menu/play.png");
@@ -635,11 +636,23 @@ GameScreen RunInfiniteMenu()
         };
         Vector2 mouse = GetMousePosition();
         bool hoveringInteractive = false;
+        RankingInfinito rankingOnline = {0};
+        bool rankingFetchSuccess = false;
 
         BuildOptionRects(optionRects, menuOptions, 5, menuFontSize, currentWidth / 2, menuStartY, menuSpacing);
         for (int i = 0; i < 5; i++)
         {
             optionRects[i] = ScaleBaseRect(optionBaseRects[i], currentWidth, currentHeight);
+        }
+
+        if (rankingFetch != NULL &&
+            FinalizarCarregamentoRankingInfinitoOnline(rankingFetch, &rankingOnline, &rankingFetchSuccess))
+        {
+            if (rankingFetchSuccess)
+            {
+                ranking = rankingOnline;
+            }
+            rankingFetch = NULL;
         }
 
         if (!acceptEscape && !IsKeyDown(KEY_ESCAPE))
@@ -649,6 +662,7 @@ GameScreen RunInfiniteMenu()
 
         if (acceptEscape && IsKeyPressed(KEY_ESCAPE))
         {
+            CancelarCarregamentoRankingInfinitoOnline(rankingFetch);
             UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_CHARACTER_SELECT;
         }
@@ -669,27 +683,32 @@ GameScreen RunInfiniteMenu()
         int clicked = acceptClick ? GetClickedOption(optionRects, 5) : -1;
         if (clicked == 0)
         {
+            CancelarCarregamentoRankingInfinitoOnline(rankingFetch);
             UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_INFINITE_GAME;
         }
         if (clicked == 1)
         {
+            CancelarCarregamentoRankingInfinitoOnline(rankingFetch);
             UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_DAILY_CHALLENGES;
         }
         if (clicked == 2)
         {
             SetItemsReturnScreen(SCREEN_INFINITE_MENU);
+            CancelarCarregamentoRankingInfinitoOnline(rankingFetch);
             UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_ITEMS;
         }
         if (clicked == 3)
         {
+            CancelarCarregamentoRankingInfinitoOnline(rankingFetch);
             UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_OPTIONS;
         }
         if (clicked == 4)
         {
+            CancelarCarregamentoRankingInfinitoOnline(rankingFetch);
             UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_START;
         }
@@ -709,6 +728,7 @@ GameScreen RunInfiniteMenu()
         EndDrawing();
     }
 
+    CancelarCarregamentoRankingInfinitoOnline(rankingFetch);
     UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
     return SCREEN_EXIT;
 }
