@@ -276,7 +276,7 @@ static bool FetchSupabaseRanking(RankingInfinito *ranking)
     snprintf(
         command,
         sizeof(command),
-        "curl -s -f --max-time 8 \"%s/rest/v1/ranking_infinito?select=nome,metros&order=metros.desc&limit=10\" -H \"apikey: %s\" -H \"Authorization: Bearer %s\" -o %s",
+        "curl -s -f --max-time 2 \"%s/rest/v1/ranking_infinito?select=nome,metros&order=metros.desc&limit=10\" -H \"apikey: %s\" -H \"Authorization: Bearer %s\" -o %s",
         url,
         anonKey,
         anonKey,
@@ -331,7 +331,7 @@ static bool InsertSupabaseRankingEntry(const char *nome, float metros)
     snprintf(
         command,
         sizeof(command),
-        "curl -s -f --max-time 8 -X POST \"%s/rest/v1/ranking_infinito\" -H \"apikey: %s\" -H \"Authorization: Bearer %s\" -H \"Content-Type: application/json\" -H \"Prefer: return=minimal\" -d @%s -o %s",
+        "curl -s -f --max-time 2 -X POST \"%s/rest/v1/ranking_infinito\" -H \"apikey: %s\" -H \"Authorization: Bearer %s\" -H \"Content-Type: application/json\" -H \"Prefer: return=minimal\" -d @%s -o %s",
         url,
         anonKey,
         anonKey,
@@ -352,7 +352,7 @@ void SalvarRankingInfinito(RankingInfinito ranking)
     }
 }
 
-RankingInfinito CarregarRankingInfinito(void)
+static RankingInfinito CarregarRankingInfinitoLocal(void)
 {
     RankingInfinito ranking = {0};
     FILE *arquivo = fopen(RANKING_INFINITO_ARQUIVO, "rb");
@@ -374,13 +374,18 @@ RankingInfinito CarregarRankingInfinito(void)
         fclose(arquivo);
     }
 
-    RankingInfinito rankingOnline = {0};
-    if (FetchSupabaseRanking(&rankingOnline))
-    {
-        ranking = rankingOnline;
-        SalvarRankingInfinito(ranking);
-    }
+    return ranking;
+}
 
+RankingInfinito CarregarRankingInfinito(void)
+{
+    RankingInfinito ranking = CarregarRankingInfinitoLocal();
+
+    /*
+     * Keep screen transitions instant. Network ranking is refreshed after a
+     * score is submitted, but opening the infinite menu/game should never wait
+     * for curl or a slow Supabase response.
+     */
     return ranking;
 }
 

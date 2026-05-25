@@ -586,13 +586,14 @@ int main(void)
             SetProjectileSystem(&projectiles);
 
             HairyLeg pernaCabeluda = {0};
-            InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
-
             Shark shark = {0};
-            InitShark(&shark, initW, initH);
-
             MidnightMan midnightMan = {0};
-            InitMidnightMan(&midnightMan, initW, initH, initGroundY);
+            if (!infiniteMode)
+            {
+                InitHairyLeg(&pernaCabeluda, (Vector2){ (float)initW * 0.6f, initGroundY }, initGroundY, initBossScale);
+                InitShark(&shark, initW, initH);
+                InitMidnightMan(&midnightMan, initW, initH, initGroundY);
+            }
 
             Level *levels = infiniteMode ? InitInfiniteLevels() : InitGameLevels();
             Level *currentLevel = infiniteMode ? levels : FindLevelById(levels, GetSelectedStoryLevelId());
@@ -636,7 +637,7 @@ int main(void)
             PhaseTransitionType transitionType = TRANSITION_RUNNING_TO_BOSS;
             bool bossDefeatTransitionPending = false;
             float bossDefeatTransitionTimer = 0.0f;
-            RankingInfinito infiniteRanking = CarregarRankingInfinito();
+            RankingInfinito infiniteRanking = infiniteMode ? CarregarRankingInfinito() : (RankingInfinito){0};
             bool infiniteRankingChecked = false;
             bool infiniteRankingNameActive = false;
             char infinitePlayerName[INFINITE_PLAYER_NAME_MAX] = "";
@@ -1564,9 +1565,12 @@ int main(void)
             UnloadTexture(enemyAssets.birdDeath);
             UnloadTexture(enemyAssets.fishDeath);
             UnloadTexture(enemyAssets.destroyedSheet);
-            UnloadHairyLeg(&pernaCabeluda);
-            UnloadShark(&shark);
-            UnloadMidnightMan(&midnightMan);
+            if (!infiniteMode)
+            {
+                UnloadHairyLeg(&pernaCabeluda);
+                UnloadShark(&shark);
+                UnloadMidnightMan(&midnightMan);
+            }
             UnloadProjectileSystem(&projectiles);
             FreeLevels(levels);
         }
