@@ -27,6 +27,8 @@
 #define INFINITE_PHASE_2_DURATION 50.0f
 #define INFINITE_PHASE_3_DURATION 60.0f
 #define INFINITE_PHASE_4_DURATION 70.0f
+#define INFINITE_VISUAL_PHASE_COUNT 3
+#define INFINITE_MAX_DIFFICULTY_LEVEL 3
 
 static float GetInfinitePhaseDuration(float meters)
 {
@@ -95,6 +97,49 @@ static Level *FindLevelById(Level *levels, int levelId)
         current = current->next;
     }
     return levels;
+}
+
+static int GetInfiniteVisualLevelId(float meters)
+{
+    int phaseIndex = (int)(meters / INFINITE_SPEED_STEP_METERS) % INFINITE_VISUAL_PHASE_COUNT;
+    return phaseIndex + 1;
+}
+
+static int GetInfiniteDifficultyLevelId(float meters)
+{
+    int levelId = (int)(meters / INFINITE_SPEED_STEP_METERS) + 1;
+    if (levelId > INFINITE_MAX_DIFFICULTY_LEVEL)
+    {
+        levelId = INFINITE_MAX_DIFFICULTY_LEVEL;
+    }
+    return levelId;
+}
+
+static void SyncInfiniteLevels(Level *levels, float meters, Level **visualLevel, Level **difficultyLevel)
+{
+    *visualLevel = FindLevelById(levels, GetInfiniteVisualLevelId(meters));
+    *difficultyLevel = FindLevelById(levels, GetInfiniteDifficultyLevelId(meters));
+}
+
+static void AdvanceInfiniteMeters(
+    Level *levels,
+    float metersToAdvance,
+    float *meters,
+    float *nextSpeedStepMeters,
+    float *speedMultiplier,
+    Level **visualLevel,
+    Level **difficultyLevel
+)
+{
+    float targetMeters = *meters + metersToAdvance;
+    while (*nextSpeedStepMeters <= targetMeters)
+    {
+        *speedMultiplier *= INFINITE_SPEED_MULTIPLIER_STEP;
+        *nextSpeedStepMeters += INFINITE_SPEED_STEP_METERS;
+    }
+
+    *meters = targetMeters;
+    SyncInfiniteLevels(levels, *meters, visualLevel, difficultyLevel);
 }
 
 static void ResetPlayerForRunningRetry(Player *player, float groundY, float playerScale)
@@ -672,6 +717,7 @@ int main(void)
             float infiniteNextSpeedStepMeters = INFINITE_SPEED_STEP_METERS;
             float infiniteSpeedMultiplier = 1.0f;
             bool infiniteRunRecorded = false;
+            Level *infiniteDifficultyLevel = infiniteMode ? currentLevel : NULL;
 
             while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
@@ -834,6 +880,7 @@ int main(void)
                         if (infiniteMode)
                         {
                             currentLevel = levels;
+                            infiniteDifficultyLevel = levels;
                             phase = PHASE_RUNNING;
                             progressTimer = 0.0f;
                             autoSpawn = true;
@@ -1046,7 +1093,23 @@ int main(void)
 
                     if (infiniteMode)
                     {
-                        float remainingDt = dt;
+                        bool advancedByShortcut = false;
+                        if (IsKeyPressed(KEY_F2))
+                        {
+                            AdvanceInfiniteMeters(
+                                levels,
+                                INFINITE_SPEED_STEP_METERS,
+                                &infiniteMeters,
+                                &infiniteNextSpeedStepMeters,
+                                &infiniteSpeedMultiplier,
+                                &currentLevel,
+                                &infiniteDifficultyLevel
+                            );
+                            infiniteEnemyBaseSpeed = GetInfiniteEnemyBaseSpeed(infiniteSpeedMultiplier);
+                            advancedByShortcut = true;
+                        }
+
+                        float remainingDt = advancedByShortcut ? 0.0f : dt;
                         while (remainingDt > 0.0f)
                         {
                             float metersPerSecond = GetInfiniteMetersPerSecond(infiniteMeters);
@@ -1064,10 +1127,7 @@ int main(void)
                             remainingDt -= timeToNextStep;
                             infiniteSpeedMultiplier *= INFINITE_SPEED_MULTIPLIER_STEP;
                             infiniteNextSpeedStepMeters += INFINITE_SPEED_STEP_METERS;
-                            if (currentLevel->next != NULL)
-                            {
-                                currentLevel = currentLevel->next;
-                            }
+                            SyncInfiniteLevels(levels, infiniteMeters, &currentLevel, &infiniteDifficultyLevel);
                         }
                     }
                     else if (progressTimer >= currentLevel->duration)
@@ -1109,7 +1169,8 @@ int main(void)
                     spawnTimer -= dt;
                     if (spawnTimer <= 0.0f)
                     {
-                        EnemyType chosen = SortearInimigoFase(currentLevel->enemyConfigId);
+                        Level *spawnLevel = infiniteMode ? infiniteDifficultyLevel : currentLevel;
+                        EnemyType chosen = SortearInimigoFase(spawnLevel->enemyConfigId);
 
                         if (chosen == ENEMY_BIRD1)
                         {
@@ -1117,7 +1178,7 @@ int main(void)
                             {
                                 if (enemies[i].active && enemies[i].type == ENEMY_BIRD1)
                                 {
-                                    chosen = SortearInimigoFase(currentLevel->enemyConfigId);
+                                    chosen = SortearInimigoFase(spawnLevel->enemyConfigId);
                                     break;
                                 }
                             }
@@ -1142,7 +1203,7 @@ int main(void)
                                 break;
                             }
                         }
-                        spawnTimer = currentLevel->spawnInterval;
+                        spawnTimer = spawnLevel->spawnInterval;
                     }
 
                     if (safePosteFollowUpTimer > 0.0f)
@@ -1155,7 +1216,8 @@ int main(void)
 
                             do
                             {
-                                followUp = SortearInimigoFase(currentLevel->enemyConfigId);
+                                Level *spawnLevel = infiniteMode ? infiniteDifficultyLevel : currentLevel;
+                                followUp = SortearInimigoFase(spawnLevel->enemyConfigId);
                             }
                             while (followUp == ENEMY_SAFE_POSTE);
                             
@@ -1175,7 +1237,8 @@ int main(void)
                                 }
                             }
 
-                            spawnTimer = currentLevel->spawnInterval;
+                            Level *spawnLevel = infiniteMode ? infiniteDifficultyLevel : currentLevel;
+                            spawnTimer = spawnLevel->spawnInterval;
                         }
                     }
                 }

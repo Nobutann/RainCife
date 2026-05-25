@@ -62,7 +62,6 @@ Level* InitInfiniteLevels() {
     AddLevel(&head, CreateLevel(1, 1, 1.2f, 0.0f, 0.0f, 0));
     AddLevel(&head, CreateLevel(2, 2, 1.0f, 0.0f, 0.0f, 0));
     AddLevel(&head, CreateLevel(3, 3, 0.8f, 0.0f, 0.0f, 0));
-    AddLevel(&head, CreateLevel(4, 3, 0.8f, 0.0f, 0.0f, 0));
 
     return head;
 }
