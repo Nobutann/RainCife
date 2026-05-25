@@ -85,20 +85,6 @@ static void StartLevel(
     player->isBossFighting = false;
 }
 
-static Level *FindLevelById(Level *levels, int levelId)
-{
-    Level *current = levels;
-    while (current != NULL)
-    {
-        if (current->id == levelId)
-        {
-            return current;
-        }
-        current = current->next;
-    }
-    return levels;
-}
-
 static int GetInfiniteVisualLevelId(float meters)
 {
     int phaseIndex = (int)(meters / INFINITE_SPEED_STEP_METERS) % INFINITE_VISUAL_PHASE_COUNT;
@@ -267,6 +253,25 @@ static void EnterBossPhase(
         ResetShark(shark, currentWidth, currentHeight);
         PlacePlayerForBossIntro(player, GetSharkHitbox(shark), playerStandingY, playerScale);
     }
+}
+
+static Level *FindFirstLevelWithBossId(Level *levels, int bossId)
+{
+    Level *current = levels;
+    while (current != NULL)
+    {
+        if (current->bossId == bossId)
+        {
+            return current;
+        }
+
+        current = current->next;
+        if (current == levels)
+        {
+            break;
+        }
+    }
+    return NULL;
 }
 
 static void DrawDeathScreenOverlay(int currentWidth, int currentHeight, Rectangle optionRects[], const char **options, int optionCount, bool hoveringButton)
@@ -1043,9 +1048,10 @@ int main(void)
                             }
                             else if (transitionType == TRANSITION_BOSS_TO_RUNNING)
                             {
+                                Level *nextLevel = CanAdvanceLevel(currentLevel) ? GetNextLevel(levels, currentLevel, false) : NULL;
                                 StartLevel(
                                     &currentLevel,
-                                    currentLevel->next,
+                                    nextLevel,
                                     &phase,
                                     &progressTimer,
                                     &autoSpawn,
@@ -1411,7 +1417,70 @@ int main(void)
 
                 playerHitbox = GetPlayerHitbox(&player, playerScale);
 
-                if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
+                int bossShortcutId = 0;
+                if (IsKeyPressed(KEY_EIGHT))
+                {
+                    bossShortcutId = 1;
+                }
+                else if (IsKeyPressed(KEY_NINE))
+                {
+                    bossShortcutId = 2;
+                }
+                else if (IsKeyPressed(KEY_ZERO))
+                {
+                    bossShortcutId = 3;
+                }
+
+                if (!bossDefeatTransitionPending && !infiniteMode && bossShortcutId != 0)
+                {
+                    Level *bossLevel = FindFirstLevelWithBossId(levels, bossShortcutId);
+                    if (bossLevel != NULL)
+                    {
+                        StartLevel(
+                            &currentLevel,
+                            bossLevel,
+                            &phase,
+                            &progressTimer,
+                            &autoSpawn,
+                            &spawnTimer,
+                            enemies,
+                            &player,
+                            &pernaCabeluda,
+                            &shark,
+                            currentWidth,
+                            currentHeight,
+                            groundY,
+                            bossScale
+                        );
+                        safePosteFollowUpTimer = -1.0f;
+                        EnterBossPhase(
+                            currentLevel,
+                            &phase,
+                            &progressTimer,
+                            &autoSpawn,
+                            &safePosteFollowUpTimer,
+                            enemies,
+                            &player,
+                            &pernaCabeluda,
+                            &shark,
+                            currentWidth,
+                            currentHeight,
+                            groundY,
+                            bossScale,
+                            playerStandingY,
+                            playerScale
+                        );
+                        if (currentLevel->bossId == 3)
+                        {
+                            InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
+                        }
+                        level6IntroActive = (currentLevel->id == 6);
+                        level6IntroTimer = 0.0f;
+                        level6IntroDuration = LEVEL6_INTRO_DURATION;
+                    }
+                }
+
+                if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_O) && phase == PHASE_RUNNING && currentLevel->bossId != 0) {
                     EnterBossPhase(
                         currentLevel,
                         &phase,
@@ -1434,11 +1503,12 @@ int main(void)
                         InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
                     }
                 }
-                else if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_RIGHT) && phase == PHASE_BOSS && currentLevel->next) {
-                    UnlockStoryLevel(currentLevel->next->id);
+                Level *manualNextLevel = CanAdvanceLevel(currentLevel) ? GetNextLevel(levels, currentLevel, false) : NULL;
+                if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_O) && phase == PHASE_BOSS && manualNextLevel) {
+                    UnlockStoryLevel(manualNextLevel->id);
                     StartLevel(
                         &currentLevel,
-                        currentLevel->next,
+                        manualNextLevel,
                         &phase,
                         &progressTimer,
                         &autoSpawn,
@@ -1462,10 +1532,11 @@ int main(void)
                     level6IntroTimer = 0.0f;
                     level6IntroDuration = LEVEL6_INTRO_DURATION;
                 }
-                if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_LEFT) && currentLevel->prev) {
+                Level *manualPreviousLevel = GetPreviousLevel(levels, currentLevel, false);
+                if (!bossDefeatTransitionPending && !infiniteMode && IsKeyPressed(KEY_I) && manualPreviousLevel) {
                     StartLevel(
                         &currentLevel,
-                        currentLevel->prev,
+                        manualPreviousLevel,
                         &phase,
                         &progressTimer,
                         &autoSpawn,
@@ -1493,6 +1564,7 @@ int main(void)
                 if (phase == PHASE_BOSS)
                 {
                     bool bossDefeatedThisFrame = false;
+                    Level *nextStoryLevel = CanAdvanceLevel(currentLevel) ? GetNextLevel(levels, currentLevel, false) : NULL;
 
                     if (currentLevel->bossId == 1)
                     {
@@ -1502,9 +1574,9 @@ int main(void)
                             TryDamageHairyLegFromPlayerAttack(&pernaCabeluda, &player, playerScale);
                         }
 
-                        if (!bossDefeatTransitionPending && pernaCabeluda.state == HL_DEAD && currentLevel->next)
+                        if (!bossDefeatTransitionPending && pernaCabeluda.state == HL_DEAD && nextStoryLevel)
                         {
-                            UnlockStoryLevel(currentLevel->next->id);
+                            UnlockStoryLevel(nextStoryLevel->id);
                             transitionType = TRANSITION_BOSS_TO_RUNNING;
                             bossDefeatTransitionPending = true;
                             bossDefeatTransitionTimer = 0.0f;
@@ -1524,9 +1596,9 @@ int main(void)
                             TryDamageSharkFromPlayerAttack(&shark, &player, playerScale);
                         }
 
-                        if (!bossDefeatTransitionPending && !shark.active && currentLevel->next)
+                        if (!bossDefeatTransitionPending && !shark.active && nextStoryLevel)
                         {
-                            UnlockStoryLevel(currentLevel->next->id);
+                            UnlockStoryLevel(nextStoryLevel->id);
                             transitionType = TRANSITION_BOSS_TO_RUNNING;
                             bossDefeatTransitionPending = true;
                             bossDefeatTransitionTimer = 0.0f;
@@ -1543,9 +1615,9 @@ int main(void)
                             TryDamageMidnightManFromPlayerAttack(&midnightMan, &player, playerScale);
                         }
 
-                        if (!bossDefeatTransitionPending && midnightMan.health <= 0 && currentLevel->next)
+                        if (!bossDefeatTransitionPending && midnightMan.health <= 0 && nextStoryLevel)
                         {
-                            UnlockStoryLevel(currentLevel->next->id);
+                            UnlockStoryLevel(nextStoryLevel->id);
                             transitionType = TRANSITION_BOSS_TO_RUNNING;
                             bossDefeatTransitionPending = true;
                             bossDefeatTransitionTimer = 0.0f;
