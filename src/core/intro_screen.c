@@ -85,7 +85,7 @@ GameScreen RunIntro(void)
     float fadeAlpha   = 0.0f;
     bool  fading      = false;
 
-    GameScreen result = SCREEN_START;
+    GameScreen result = SCREEN_HISTORY_ANIMATION;
 
     while (!WindowShouldClose())
     {
@@ -200,5 +200,6 @@ GameScreen RunIntro(void)
             UnloadTexture(slot[i]);
     }
 
+    SetHistoryAnimationReturnScreen(SCREEN_START);
     return result;
 }

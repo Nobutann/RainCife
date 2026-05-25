@@ -12,13 +12,17 @@ typedef enum {
     MM_GROUND_TELEGRAPH,
     MM_GROUND_RISE,
     MM_GROUND_RETREAT,
+    MM_GROUND_PHASE2_TELEGRAPH,
+    MM_GROUND_PHASE2_RISE,
+    MM_GROUND_PHASE2_PAUSE,
+    MM_GROUND_PHASE2_RETREAT,
     MM_CEILING_TELEGRAPH,
     MM_CEILING_SLAM,
     MM_CEILING_RETREAT,
-    MM_SWEEP_TELEGRAPH,
-    MM_SWEEP_MOVE,
-    MM_SWEEP_RETREAT,
     MM_UMBRELLA_STORM,
+    MM_FOLLOW_TELEGRAPH,
+    MM_FOLLOW_SLAM,
+    MM_FOLLOW_RETREAT,
     MM_DEAD
 } MidnightManState;
 
@@ -31,6 +35,15 @@ typedef struct {
     float animTimer;
     int animFrame;
 } MMUmbrella;
+
+typedef struct {
+    Rectangle rect;
+    Rectangle hitbox;
+    Vector2 speed;
+    bool active;
+    int currentFrame;
+    float frameTimer;
+} MMShockwave;
 
 struct Player;
 typedef struct Player Player;
@@ -46,6 +59,7 @@ typedef struct {
     Texture2D texFist;          // Punch.png
     Texture2D texUmbrella;      // sombrinha-Sheet.png
     Texture2D texArm;           // Arms_idle.png
+    Texture2D texShockwave;     // shockwave.png
 
     float handXPositions[MM_HAND_COUNT];
     float handsY;
@@ -64,7 +78,18 @@ typedef struct {
     float sweepWidth;
     float sweepHeight;
     int sweepDirection; // 1 = Left to Right, -1 = Right to Left
-    Rectangle sweepHitbox;
+
+    // Homing fist 2 details
+    float follow2X;
+    float follow2Y;
+    float follow2VelX;
+    float follow2VelY;
+    float follow2Angle;
+
+    // Sequential shockwaves and phases for Ceiling Slam
+    MMShockwave waveLeft;
+    MMShockwave waveRight;
+    int ceilingPhase;
 
     // Umbrella storm details
     MMUmbrella umbrellas[MM_MAX_UMBRELLAS];
