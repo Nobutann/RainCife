@@ -2,6 +2,7 @@
 *.bin
 .env
 desafios_gemini_*.json
+ranking_supabase_*.json
 .vscode/
 libs/*.dll
 libs/*.exe

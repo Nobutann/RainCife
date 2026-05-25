@@ -11,7 +11,6 @@
 #define INTRO_FPS          30
 #define INTRO_FRAME_TIME   (1.0f / INTRO_FPS)
 #define INTRO_FADE_DURATION 0.7f   // seconds for the black fade-out at the end
-#define INTRO_BOTTOM_CROP_RATIO 0.18f
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -34,6 +33,23 @@ static void BuildFramePath(char *buf, int bufSize, int frameIndex)
 {
     // frameIndex is 0-based; files are 1-based (frame_0001.png …)
     snprintf(buf, bufSize, "%s/frame_%04d.png", INTRO_FRAME_DIR, frameIndex + 1);
+}
+
+static Rectangle GetAspectFitDest(int screenWidth, int screenHeight, int textureWidth, int textureHeight)
+{
+    float scaleX = (float)screenWidth / (float)textureWidth;
+    float scaleY = (float)screenHeight / (float)textureHeight;
+    float scale = scaleX < scaleY ? scaleX : scaleY;
+    float width = (float)textureWidth * scale;
+    float height = (float)textureHeight * scale;
+
+    return (Rectangle)
+    {
+        ((float)screenWidth - width) * 0.5f,
+        ((float)screenHeight - height) * 0.5f,
+        width,
+        height
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -170,9 +186,9 @@ GameScreen RunIntro(void)
                     0.0f,
                     0.0f,
                     (float)tex.width,
-                    (float)tex.height * (1.0f - INTRO_BOTTOM_CROP_RATIO)
+                    (float)tex.height
                 };
-                Rectangle dest = {0.0f, 0.0f, (float)w, (float)h};
+                Rectangle dest = GetAspectFitDest(w, h, tex.width, tex.height);
                 DrawTexturePro(tex, source, dest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
             }
 

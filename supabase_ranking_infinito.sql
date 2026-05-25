@@ -5,6 +5,9 @@ create table if not exists public.ranking_infinito (
     created_at timestamptz not null default now()
 );
 
+create index if not exists ranking_infinito_metros_idx
+on public.ranking_infinito (metros desc, created_at asc);
+
 alter table public.ranking_infinito enable row level security;
 
 drop policy if exists "ranking_infinito_select_publico" on public.ranking_infinito;
