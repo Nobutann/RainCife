@@ -381,11 +381,13 @@ RankingInfinito CarregarRankingInfinito(void)
 {
     RankingInfinito ranking = CarregarRankingInfinitoLocal();
 
-    /*
-     * Keep screen transitions instant. Network ranking is refreshed after a
-     * score is submitted, but opening the infinite menu/game should never wait
-     * for curl or a slow Supabase response.
-     */
+    RankingInfinito rankingOnline = {0};
+    if (FetchSupabaseRanking(&rankingOnline))
+    {
+        ranking = rankingOnline;
+        SalvarRankingInfinito(ranking);
+    }
+
     return ranking;
 }
 

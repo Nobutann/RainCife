@@ -689,10 +689,16 @@ static void DrawDailyChallengeRow(Rectangle row, const DailyChallenge *challenge
     snprintf(progressValue, sizeof(progressValue), "%d", challenge->progress);
     snprintf(targetValue, sizeof(targetValue), "%d", challenge->target);
 
-    int checkW = MeasureText(check, fontSize);
-    int checkX = (int)(row.x + row.width * 0.063f - checkW * 0.5f);
-    int checkY = (int)(row.y + (row.height - fontSize) * 0.50f);
-    DrawText(check, checkX, checkY, fontSize, textColor);
+    if (challenge->completed)
+    {
+        Rectangle completedFill = (Rectangle){row.x + 3.0f, row.y + 3.0f, row.width - 6.0f, row.height - 6.0f};
+        DrawRectangleRec(completedFill, (Color){36, 174, 89, 55});
+
+        Vector2 checkSize = MeasureTextEx(GetFontDefault(), check, fontSize, 1.0f);
+        Vector2 checkCenter = (Vector2){row.x + row.width * 0.059f, row.y + row.height * 0.50f};
+        Vector2 checkPosition = (Vector2){checkCenter.x - checkSize.x * 0.5f, checkCenter.y - checkSize.y * 0.5f};
+        DrawTextEx(GetFontDefault(), check, checkPosition, fontSize, 1.0f, textColor);
+    }
 
     int textX = (int)(row.x + row.width * 0.16f);
     int maxTextW = (int)(row.width * 0.48f);
