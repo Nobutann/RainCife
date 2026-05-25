@@ -29,20 +29,6 @@ void AddLevel(Level **head, Level *newLevel) {
     }
 }
 
-static void AddCircularLevel(Level **head, Level *newLevel) {
-    if (*head == NULL) {
-        *head = newLevel;
-        newLevel->next = newLevel;
-        newLevel->prev = newLevel;
-    } else {
-        Level *tail = (*head)->prev;
-        tail->next = newLevel;
-        newLevel->prev = tail;
-        newLevel->next = *head;
-        (*head)->prev = newLevel;
-    }
-}
-
 void FreeLevels(Level *head) {
     Level *current = head;
     while (current != NULL) {
@@ -73,9 +59,10 @@ Level* InitGameLevels() {
 Level* InitInfiniteLevels() {
     Level *head = NULL;
 
-    AddCircularLevel(&head, CreateLevel(1, 1, 1.2f, 0.0f, 0.0f, 0));
-    AddCircularLevel(&head, CreateLevel(2, 2, 1.0f, 0.0f, 0.0f, 0));
-    AddCircularLevel(&head, CreateLevel(3, 3, 0.8f, 0.0f, 0.0f, 0));
+    AddLevel(&head, CreateLevel(1, 1, 1.2f, 0.0f, 0.0f, 0));
+    AddLevel(&head, CreateLevel(2, 2, 1.0f, 0.0f, 0.0f, 0));
+    AddLevel(&head, CreateLevel(3, 3, 0.8f, 0.0f, 0.0f, 0));
+    AddLevel(&head, CreateLevel(4, 3, 0.8f, 0.0f, 0.0f, 0));
 
     return head;
 }

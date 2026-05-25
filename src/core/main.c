@@ -21,9 +21,34 @@
 #define MAX_ACTIVE_ENEMIES 12
 #define LEVEL6_INTRO_DURATION 2.5f
 #define BOSS_DEFEAT_TRANSITION_DELAY 2.5f
-#define INFINITE_METERS_PER_SECOND (5000.0f / 60.0f)
 #define INFINITE_SPEED_STEP_METERS 5000.0f
-#define INFINITE_SPEED_MULTIPLIER_STEP 1.05f
+#define INFINITE_SPEED_MULTIPLIER_STEP 1.10f
+#define INFINITE_PHASE_1_DURATION 40.0f
+#define INFINITE_PHASE_2_DURATION 50.0f
+#define INFINITE_PHASE_3_DURATION 60.0f
+#define INFINITE_PHASE_4_DURATION 70.0f
+
+static float GetInfinitePhaseDuration(float meters)
+{
+    if (meters < INFINITE_SPEED_STEP_METERS)
+    {
+        return INFINITE_PHASE_1_DURATION;
+    }
+    if (meters < INFINITE_SPEED_STEP_METERS * 2.0f)
+    {
+        return INFINITE_PHASE_2_DURATION;
+    }
+    if (meters < INFINITE_SPEED_STEP_METERS * 3.0f)
+    {
+        return INFINITE_PHASE_3_DURATION;
+    }
+    return INFINITE_PHASE_4_DURATION;
+}
+
+static float GetInfiniteMetersPerSecond(float meters)
+{
+    return INFINITE_SPEED_STEP_METERS / GetInfinitePhaseDuration(meters);
+}
 
 static void StartLevel(
     Level **currentLevel,
@@ -1021,9 +1046,22 @@ int main(void)
 
                     if (infiniteMode)
                     {
-                        infiniteMeters += INFINITE_METERS_PER_SECOND * infiniteSpeedMultiplier * dt;
-                        while (infiniteMeters >= infiniteNextSpeedStepMeters)
+                        float remainingDt = dt;
+                        while (remainingDt > 0.0f)
                         {
+                            float metersPerSecond = GetInfiniteMetersPerSecond(infiniteMeters);
+                            float distanceToNextStep = infiniteNextSpeedStepMeters - infiniteMeters;
+                            float timeToNextStep = distanceToNextStep / metersPerSecond;
+
+                            if (remainingDt < timeToNextStep)
+                            {
+                                infiniteMeters += metersPerSecond * remainingDt;
+                                remainingDt = 0.0f;
+                                break;
+                            }
+
+                            infiniteMeters = infiniteNextSpeedStepMeters;
+                            remainingDt -= timeToNextStep;
                             infiniteSpeedMultiplier *= INFINITE_SPEED_MULTIPLIER_STEP;
                             infiniteNextSpeedStepMeters += INFINITE_SPEED_STEP_METERS;
                             if (currentLevel->next != NULL)
