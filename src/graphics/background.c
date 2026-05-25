@@ -178,17 +178,29 @@ static void DrawBgStrip(Texture2D *frames, int count, float scrollX, int screenW
 void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase)
 {
     Texture2D *runningFrames = NULL;
+    int runningFrameCount = 0;
     if (phase == PHASE_RUNNING)
     {
-        if (levelId == 2 || levelId == 5)
+        if (levelId == 1 || levelId == 4)
+        {
+            runningFrames = &bg->bossHairyLeg;
+            runningFrameCount = 1;
+        }
+        else if (levelId == 2 || levelId == 5)
+        {
             runningFrames = bg->runningPhase2;
+            runningFrameCount = 3;
+        }
         else if (levelId == 3 || levelId == 6)
+        {
             runningFrames = bg->runningPhase3;
+            runningFrameCount = 3;
+        }
     }
 
     if (runningFrames != NULL)
     {
-        DrawBgStrip(runningFrames, 3, bg->runningBgScrollX, screenWidth, screenHeight);
+        DrawBgStrip(runningFrames, runningFrameCount, bg->runningBgScrollX, screenWidth, screenHeight);
     }
     else
     {

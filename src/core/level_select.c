@@ -12,6 +12,61 @@
 #define ITEMS_EQUIPMENT_SLOT_COUNT 3
 #define ITEMS_CLOTHING_SLOT_COUNT 2
 
+static void UnloadStoryLevelSelectTextures(
+    Texture2D maps[STORY_LEVEL_COUNT],
+    Texture2D selectorArrow,
+    Texture2D playButton,
+    Texture2D playHoverButton,
+    Texture2D itemsButton,
+    Texture2D itemsHoverButton,
+    Texture2D optionsButton,
+    Texture2D optionsHoverButton,
+    Texture2D menuButton,
+    Texture2D menuHoverButton)
+{
+    for (int i = 0; i < STORY_LEVEL_COUNT; i++)
+    {
+        UnloadTexture(maps[i]);
+    }
+    UnloadTexture(selectorArrow);
+    UnloadTexture(playButton);
+    UnloadTexture(playHoverButton);
+    UnloadTexture(itemsButton);
+    UnloadTexture(itemsHoverButton);
+    UnloadTexture(optionsButton);
+    UnloadTexture(optionsHoverButton);
+    UnloadTexture(menuButton);
+    UnloadTexture(menuHoverButton);
+}
+
+static void UnloadInfiniteMenuTextures(
+    Texture2D blueBackground,
+    Texture2D rankingScreen,
+    Texture2D playButton,
+    Texture2D playHoverButton,
+    Texture2D challengeButton,
+    Texture2D challengeHoverButton,
+    Texture2D itemsButton,
+    Texture2D itemsHoverButton,
+    Texture2D optionsButton,
+    Texture2D optionsHoverButton,
+    Texture2D menuButton,
+    Texture2D menuHoverButton)
+{
+    UnloadTexture(blueBackground);
+    UnloadTexture(rankingScreen);
+    UnloadTexture(playButton);
+    UnloadTexture(playHoverButton);
+    UnloadTexture(challengeButton);
+    UnloadTexture(challengeHoverButton);
+    UnloadTexture(itemsButton);
+    UnloadTexture(itemsHoverButton);
+    UnloadTexture(optionsButton);
+    UnloadTexture(optionsHoverButton);
+    UnloadTexture(menuButton);
+    UnloadTexture(menuHoverButton);
+}
+
 static void DrawRatPreview(Animation *animation, Rectangle bounds, float widthRatio, float heightRatio, float yRatio)
 {
     Rectangle source = GetAnimationFrameSource(animation, false);
@@ -427,6 +482,7 @@ GameScreen RunLevelSelect()
 
         if (acceptEscape && IsKeyPressed(KEY_ESCAPE))
         {
+            UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_CHARACTER_SELECT;
         }
 
@@ -434,16 +490,7 @@ GameScreen RunLevelSelect()
         // and returns to the level select screen afterwards.
         if (IsKeyPressed(KEY_ENTER))
         {
-            for (int i = 0; i < STORY_LEVEL_COUNT; i++) UnloadTexture(maps[i]);
-            UnloadTexture(selectorArrow);
-            UnloadTexture(playButton);
-            UnloadTexture(playHoverButton);
-            UnloadTexture(itemsButton);
-            UnloadTexture(itemsHoverButton);
-            UnloadTexture(optionsButton);
-            UnloadTexture(optionsHoverButton);
-            UnloadTexture(menuButton);
-            UnloadTexture(menuHoverButton);
+            UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             SetHistoryAnimationReturnScreen(SCREEN_LEVEL_SELECT);
             return SCREEN_HISTORY_ANIMATION;
         }
@@ -486,19 +533,23 @@ GameScreen RunLevelSelect()
         int clicked = acceptClick ? GetClickedOption(optionRects, 4) : -1;
         if (clicked == 0)
         {
+            UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_GAME;
         }
         if (clicked == 1)
         {
             SetItemsReturnScreen(SCREEN_LEVEL_SELECT);
+            UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_ITEMS;
         }
         if (clicked == 2)
         {
+            UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_OPTIONS;
         }
         if (clicked == 3)
         {
+            UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_START;
         }
 
@@ -520,19 +571,7 @@ GameScreen RunLevelSelect()
         lastMousePosition = mouse;
     }
 
-    for (int i = 0; i < STORY_LEVEL_COUNT; i++)
-    {
-        UnloadTexture(maps[i]);
-    }
-    UnloadTexture(selectorArrow);
-    UnloadTexture(playButton);
-    UnloadTexture(playHoverButton);
-    UnloadTexture(itemsButton);
-    UnloadTexture(itemsHoverButton);
-    UnloadTexture(optionsButton);
-    UnloadTexture(optionsHoverButton);
-    UnloadTexture(menuButton);
-    UnloadTexture(menuHoverButton);
+    UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
     return SCREEN_EXIT;
 }
 
@@ -610,6 +649,7 @@ GameScreen RunInfiniteMenu()
 
         if (acceptEscape && IsKeyPressed(KEY_ESCAPE))
         {
+            UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_CHARACTER_SELECT;
         }
 
@@ -629,23 +669,28 @@ GameScreen RunInfiniteMenu()
         int clicked = acceptClick ? GetClickedOption(optionRects, 5) : -1;
         if (clicked == 0)
         {
+            UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_INFINITE_GAME;
         }
         if (clicked == 1)
         {
+            UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_DAILY_CHALLENGES;
         }
         if (clicked == 2)
         {
             SetItemsReturnScreen(SCREEN_INFINITE_MENU);
+            UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_ITEMS;
         }
         if (clicked == 3)
         {
+            UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_OPTIONS;
         }
         if (clicked == 4)
         {
+            UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
             return SCREEN_START;
         }
 
@@ -664,18 +709,7 @@ GameScreen RunInfiniteMenu()
         EndDrawing();
     }
 
-    UnloadTexture(blueBackground);
-    UnloadTexture(rankingScreen);
-    UnloadTexture(playButton);
-    UnloadTexture(playHoverButton);
-    UnloadTexture(challengeButton);
-    UnloadTexture(challengeHoverButton);
-    UnloadTexture(itemsButton);
-    UnloadTexture(itemsHoverButton);
-    UnloadTexture(optionsButton);
-    UnloadTexture(optionsHoverButton);
-    UnloadTexture(menuButton);
-    UnloadTexture(menuHoverButton);
+    UnloadInfiniteMenuTextures(blueBackground, rankingScreen, playButton, playHoverButton, challengeButton, challengeHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
     return SCREEN_EXIT;
 }
 

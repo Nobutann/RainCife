@@ -129,6 +129,7 @@ GameScreen RunHistoryAnimation(void)
     {
         float dt = GetFrameTime();
         UpdateCustomCursor(dt);
+        bool finishedNaturally = false;
 
         // Gate: don't accept skip until both keys are released.
         if (!acceptSkip &&
@@ -163,7 +164,7 @@ GameScreen RunHistoryAnimation(void)
                     if (curFrame >= frameCount)
                     {
                         curFrame = frameCount - 1;
-                        fading   = true;
+                        finishedNaturally = true;
                         break;
                     }
                 }
@@ -177,6 +178,11 @@ GameScreen RunHistoryAnimation(void)
             {
                 frameAdvanced = true;
             }
+        }
+
+        if (finishedNaturally)
+        {
+            break;
         }
 
         // --- Stream next frame or reload if skipped ---------------------------

@@ -378,7 +378,7 @@ void DrawShark(Shark *shark) {
     if (!shark->active && !shark->dying) return;
 
     if (shark->dying) {
-        Rectangle destDeath = { shark->rect.x - 120.0f, shark->rect.y - 160.0f, 500.0f, 446.7f };
+        Rectangle destDeath = { shark->rect.x - 192.0f, shark->rect.y - 256.0f, 800.0f, 714.7f };
         DrawSharkTexture(shark->texDeath, destDeath, false, shark->hitFlashTimer > 0.0f ? RED : WHITE);
         return;
     }
@@ -483,10 +483,16 @@ Rectangle GetSharkHitbox(Shark *shark) {
 
     switch (shark->state) {
         case SHARK_PREP_LEFT:
+            hitboxOffset = (Vector2){ 5.0f, -25.0f };
+            hitboxSize = (Vector2){ 540.0f, 480.0f };
+            break;
         case SHARK_DASH_RIGHT:
-        case SHARK_DASH_LEFT:
             hitboxOffset = (Vector2){ -60.0f, -60.0f };
             hitboxSize = (Vector2){ 650.0f, 540.0f };
+            break;
+        case SHARK_DASH_LEFT:
+            hitboxOffset = (Vector2){ 5.0f, -25.0f };
+            hitboxSize = (Vector2){ 540.0f, 480.0f };
             break;
         case SHARK_ARC_ATTACK:
             hitboxOffset = (Vector2){ 40.0f, -140.0f };
