@@ -378,7 +378,7 @@ void DrawShark(Shark *shark) {
     if (!shark->active && !shark->dying) return;
 
     if (shark->dying) {
-        Rectangle destDeath = { shark->rect.x - 120.0f, shark->rect.y - 160.0f, 500.0f, 446.7f };
+        Rectangle destDeath = { shark->rect.x - 192.0f, shark->rect.y - 256.0f, 800.0f, 714.7f };
         DrawSharkTexture(shark->texDeath, destDeath, false, shark->hitFlashTimer > 0.0f ? RED : WHITE);
         return;
     }

@@ -1454,6 +1454,10 @@ int main(void)
                         UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
                         if (!bossDefeatTransitionPending)
                         {
+                            if (IsKeyPressed(KEY_N))
+                            {
+                                DamageShark(&shark, shark.health);
+                            }
                             TryDamageSharkFromPlayerAttack(&shark, &player, playerScale);
                         }
 
