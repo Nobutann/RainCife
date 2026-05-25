@@ -483,10 +483,16 @@ Rectangle GetSharkHitbox(Shark *shark) {
 
     switch (shark->state) {
         case SHARK_PREP_LEFT:
+            hitboxOffset = (Vector2){ 5.0f, -25.0f };
+            hitboxSize = (Vector2){ 540.0f, 480.0f };
+            break;
         case SHARK_DASH_RIGHT:
-        case SHARK_DASH_LEFT:
             hitboxOffset = (Vector2){ -60.0f, -60.0f };
             hitboxSize = (Vector2){ 650.0f, 540.0f };
+            break;
+        case SHARK_DASH_LEFT:
+            hitboxOffset = (Vector2){ 5.0f, -25.0f };
+            hitboxSize = (Vector2){ 540.0f, 480.0f };
             break;
         case SHARK_ARC_ATTACK:
             hitboxOffset = (Vector2){ 40.0f, -140.0f };
