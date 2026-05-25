@@ -478,7 +478,7 @@ int main(void)
     Config config = CarregarConfig();
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(800, 600, "RainCife");
+    InitWindow(640, 360, "RainCife");
     HideCursor();
     InitCustomCursor();
     InitSoundSystem();
@@ -505,6 +505,11 @@ int main(void)
         if (currentScreen == SCREEN_INTRO)
         {
             currentScreen = RunIntro();
+            if (currentScreen == SCREEN_START)
+            {
+                SetHistoryAnimationReturnScreen(SCREEN_START);
+                currentScreen = SCREEN_HISTORY_ANIMATION;
+            }
         }
         else if (currentScreen == SCREEN_START)
         {
