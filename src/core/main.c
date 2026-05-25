@@ -1263,14 +1263,6 @@ int main(void)
                                         }
                                     }
                                 }
-                                // Check sweep hand
-                                if (!hit && midnightMan.state == MM_SWEEP_MOVE)
-                                {
-                                    if (CheckCollisionRecs(bulletHitbox, midnightMan.sweepHitbox))
-                                    {
-                                        hit = true;
-                                    }
-                                }
 
                                 // Check umbrella collisions for bullets
                                 bool umbrellaHit = false;
@@ -1533,12 +1525,6 @@ int main(void)
                         {
                             DrawHairyLeg(&pernaCabeluda, bossScale);
                         }
-
-                        if (currentLevel->bossId == 3)
-                        {
-                            DrawMidnightMan(&midnightMan);
-                        }
-
                     }
 
                     DrawRain(&bg, currentWidth, currentHeight);
