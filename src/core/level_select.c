@@ -790,6 +790,11 @@ GameScreen RunDailyChallenges()
             return SCREEN_INFINITE_MENU;
         }
 
+        if (IsKeyPressed(KEY_BACKSPACE))
+        {
+            state = ResetarDesafiosDiariosConcluidos();
+        }
+
         if (hoveringInteractive && acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
             return SCREEN_INFINITE_MENU;

@@ -39,6 +39,7 @@ typedef struct
 DailyChallengeState CarregarDesafiosDiarios(void);
 void SalvarDesafiosDiarios(DailyChallengeState state);
 void GarantirDesafiosDiarios(DailyChallengeState *state);
+DailyChallengeState ResetarDesafiosDiariosConcluidos(void);
 void RegistrarDistanciaDesafioDiario(float meters);
 void RegistrarInimigoDesafioDiario(EnemyType type);
 void RegistrarRunDesafioDiario(void);

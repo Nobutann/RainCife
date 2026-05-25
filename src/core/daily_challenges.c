@@ -392,6 +392,29 @@ void GarantirDesafiosDiarios(DailyChallengeState *state)
     SalvarDesafiosDiarios(*state);
 }
 
+DailyChallengeState ResetarDesafiosDiariosConcluidos(void)
+{
+    DailyChallengeState state = CarregarDesafiosDiarios();
+    bool changed = false;
+
+    for (int i = 0; i < DAILY_CHALLENGE_COUNT; i++)
+    {
+        if (state.challenges[i].completed)
+        {
+            state.challenges[i].completed = false;
+            state.challenges[i].progress = 0;
+            changed = true;
+        }
+    }
+
+    if (changed)
+    {
+        SalvarDesafiosDiarios(state);
+    }
+
+    return state;
+}
+
 static bool ChallengeMatchesEnemy(DailyChallengeType type, EnemyType enemyType)
 {
     if (type == DAILY_CHALLENGE_KILL_TOTAL)
