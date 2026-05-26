@@ -40,4 +40,9 @@ void PlayLegSweepSound(void);
 void StopLegSweepSound(void);
 void PlayLegShockwaveSound(void);
 
+// Boss: Midnight Man sounds
+void PlayMidnightManUmbrellaSound(void);
+void PlayMidnightManShockwaveSound(void);
+void PlayMidnightManArmMoveSound(void);
+
 #endif

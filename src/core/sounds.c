@@ -19,6 +19,11 @@ static Sound legJumpSound;
 static Sound legSweepSound;
 static Sound legShockwaveSound;
 
+// Midnight Man Boss Sounds
+static Sound midnightManUmbrellaSound;
+static Sound midnightManShockwaveSound;
+static Sound midnightManArmMoveSound;
+
 static float currentVolume = 1.0f;
 static float currentMusicVolume = 1.0f;
 static Music level1RunMusic;
@@ -63,6 +68,11 @@ void InitSoundSystem(void)
     legSweepSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/rasteira.wav");
     legShockwaveSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/shockwave.wav");
 
+    // Load Midnight Man sounds
+    midnightManUmbrellaSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/gota_caindo.wav");
+    midnightManShockwaveSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/shockwave.wav");
+    midnightManArmMoveSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/nadando.wav");
+
     level1RunMusic = LoadMusicStream("assets/soundtrack/ZUN_Touhou_15_OST_-_Unforgettable_the_Nostalgic_Greenery_1_Stage_theme_(SkySound.cc).mp3");
     level1RunMusic.looping = true;
     level2RunMusic = LoadMusicStream("assets/soundtrack/13. Emotional Skyscraper ~ Cosmic Mind.mp3");
@@ -100,6 +110,11 @@ void SetSoundSystemVolume(float volume)
     SetSoundVolume(legJumpSound, volume);
     SetSoundVolume(legSweepSound, volume);
     SetSoundVolume(legShockwaveSound, volume);
+
+    // Set Midnight Man sounds volume
+    SetSoundVolume(midnightManUmbrellaSound, volume);
+    SetSoundVolume(midnightManShockwaveSound, volume);
+    SetSoundVolume(midnightManArmMoveSound, volume);
 }
 
 void SetMusicSystemVolume(float volume)
@@ -233,6 +248,22 @@ void PlayLegShockwaveSound(void)
     PlaySound(legShockwaveSound);
 }
 
+// Midnight Man Sound Play Wrappers
+void PlayMidnightManUmbrellaSound(void)
+{
+    PlaySound(midnightManUmbrellaSound);
+}
+
+void PlayMidnightManShockwaveSound(void)
+{
+    PlaySound(midnightManShockwaveSound);
+}
+
+void PlayMidnightManArmMoveSound(void)
+{
+    PlaySound(midnightManArmMoveSound);
+}
+
 void UnloadSoundSystem(void)
 {
     StopSoundtrack();
@@ -259,6 +290,11 @@ void UnloadSoundSystem(void)
     UnloadSound(legJumpSound);
     UnloadSound(legSweepSound);
     UnloadSound(legShockwaveSound);
+
+    // Unload Midnight Man sounds
+    UnloadSound(midnightManUmbrellaSound);
+    UnloadSound(midnightManShockwaveSound);
+    UnloadSound(midnightManArmMoveSound);
 
     CloseAudioDevice();
 }
