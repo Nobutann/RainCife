@@ -59,10 +59,11 @@ typedef struct {
   float timer;
 
   Texture2D texHandOpen;
-  Texture2D texFist;      // Punch.png
-  Texture2D texUmbrella;  // sombrinha-Sheet.png
-  Texture2D texArm;       // Arms_idle.png
-  Texture2D texShockwave; // shockwave.png
+  Texture2D texFist; 
+  Texture2D texHandHoldingBuilding;
+  Texture2D texUmbrella;
+  Texture2D texArm;
+  Texture2D texShockwave;
 
   float handXPositions[MM_HAND_COUNT];
   float handsY;
@@ -71,11 +72,9 @@ typedef struct {
   float handDrawWidth;
   float handDrawHeight;
 
-  // Hitboxes for player collision and player attacks
   Rectangle handHitboxes[MM_HAND_COUNT];
   bool handActive[MM_HAND_COUNT];
 
-  // Sequential shockwaves and phases for Ceiling Slam
   MMShockwave waveLeft;
   MMShockwave waveRight;
   int ceilingPhase;
@@ -83,21 +82,18 @@ typedef struct {
   // Umbrella storm details
   MMUmbrella umbrellas[MM_MAX_UMBRELLAS];
   float umbrellaSpawnTimer;
-  int sideUmbrellaSide; // 0 = blocks left half, 1 = blocks right half
-  int attackCycle; // to cycle or track attacks
+  int sideUmbrellaSide; 
+  int attackCycle;
 
-  Animation animShadow; // Hairy Leg style warning shadow alert
+  Animation animShadow;
 } MidnightMan;
 
-void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight,
-                     float groundY);
-void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime,
-                       int screenWidth, int screenHeight, float groundY);
+void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float groundY);
+void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight, float groundY);
 void DrawMidnightMan(const MidnightMan *mm);
 void UnloadMidnightMan(MidnightMan *mm);
 
-bool TryDamageMidnightManFromPlayerAttack(MidnightMan *mm, Player *player,
-                                          float playerScale);
+bool TryDamageMidnightManFromPlayerAttack(MidnightMan *mm, Player *player, float playerScale);
 bool IsMidnightManColliding(const MidnightMan *mm, Rectangle playerHitbox);
 
 #endif

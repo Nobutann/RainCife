@@ -473,25 +473,33 @@ static void DrawGameplayScene(
     ClearBackground(BLACK);
     DrawBackground(bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
-    for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
+    bool level6BossIntroInProgress = currentLevel->id == 6 &&
+        currentLevel->bossId == 3 &&
+        phase == PHASE_BOSS &&
+        level6IntroProgress < 1.0f;
+
+    if (!level6BossIntroInProgress)
     {
-        if (enemies[i].active)
+        for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
         {
-            DrawEnemy(&enemies[i], enemyAssets);
+            if (enemies[i].active)
+            {
+                DrawEnemy(&enemies[i], enemyAssets);
+            }
         }
     }
 
-    if (phase == PHASE_BOSS && currentLevel->bossId == 1)
+    if (!level6BossIntroInProgress && phase == PHASE_BOSS && currentLevel->bossId == 1)
     {
         DrawHairyLegShadowWarning(pernaCabeluda, bossScale);
     }
 
-    if (!(phase == PHASE_BOSS && currentLevel->bossId == 3 && level6IntroProgress < 1.0f))
+    if (!level6BossIntroInProgress)
     {
         DrawPlayer(player, playerScale);
     }
 
-    if (phase == PHASE_BOSS)
+    if (!level6BossIntroInProgress && phase == PHASE_BOSS)
     {
         if (currentLevel->bossId == 1)
         {
@@ -509,15 +517,23 @@ static void DrawGameplayScene(
         }
     }
 
-    DrawWater(bg, currentWidth, currentHeight, groundY);
-    DrawWaterSplashes(bg);
-    DrawObjetos(bg, currentWidth, currentHeight, groundY);
-    DrawRain(bg, currentWidth, currentHeight);
-    if (showStageFront)
+    if (!level6BossIntroInProgress)
     {
-        DrawStageFront(bg, currentWidth, currentHeight);
+        DrawWater(bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
+        DrawWaterSplashes(bg);
+        DrawObjetos(bg, currentWidth, currentHeight, groundY);
+        DrawRain(bg, currentWidth, currentHeight);
+        if (showStageFront)
+        {
+            DrawStageFront(bg, currentWidth, currentHeight);
+        }
     }
-    if (showProgressBar)
+    else
+    {
+        DrawWater(bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
+        DrawRain(bg, currentWidth, currentHeight);
+    }
+    if (showProgressBar && !level6BossIntroInProgress)
     {
         DrawProgressBar(bg, barValue, currentWidth, currentHeight);
     }
@@ -1083,7 +1099,7 @@ int main(void)
                             }
                         }
 
-                        DrawWater(bg, currentWidth, currentHeight, groundY);
+                        DrawWater(bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
                         DrawWaterSplashes(bg);
                         DrawObjetos(bg, currentWidth, currentHeight, groundY);
                         DrawRain(bg, currentWidth, currentHeight);
@@ -1921,12 +1937,17 @@ int main(void)
 
                 BeginDrawing();
                     DrawGameplayScene(bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, false, false);
-                    if (!(currentLevel->bossId == 3 && level6IntroActive))
+                    bool level6BossIntroInProgress = currentLevel->id == 6 &&
+                        currentLevel->bossId == 3 &&
+                        phase == PHASE_BOSS &&
+                        level6IntroProgress < 1.0f;
+
+                    if (!level6BossIntroInProgress)
                     {
                         DrawPlayer(&player, playerScale);
                     }
 
-                    if (phase == PHASE_BOSS)
+                    if (!level6BossIntroInProgress && phase == PHASE_BOSS)
                     {
                         if (currentLevel->bossId == 1)
                         {
@@ -1934,19 +1955,25 @@ int main(void)
                         }
                     }
 
-                    DrawRain(bg, currentWidth, currentHeight);
-                    DrawStageFront(bg, currentWidth, currentHeight);
+                    if (!level6BossIntroInProgress)
+                    {
+                        DrawRain(bg, currentWidth, currentHeight);
+                        DrawStageFront(bg, currentWidth, currentHeight);
+                    }
                     if (infiniteMode)
                     {
                         DrawInfiniteMetersCounter(infiniteMeters, currentWidth, currentHeight);
                     }
 
-                    if (!infiniteMode)
+                    if (!infiniteMode && !level6BossIntroInProgress)
                     {
                         DrawProgressBar(bg, barValue, currentWidth, currentHeight);
                     }
-                    DrawProjectiles(&projectiles);
-                    DrawGameplayCursor(player.weapon.attacking);
+                    if (!level6BossIntroInProgress)
+                    {
+                        DrawProjectiles(&projectiles);
+                        DrawGameplayCursor(player.weapon.attacking);
+                    }
                 EndDrawing();
             }
 

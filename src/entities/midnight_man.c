@@ -13,6 +13,10 @@
 #define MM_PHASE2_PAUSE_DURATION 0.2f
 #define MM_PHASE2_RETREAT_DURATION 0.25f
 #define MM_PHASE2_FIST_SCALE 0.6f
+#define MM_PHASE2_FIST_STRETCH_WIDTH_SCALE 1.14f
+#define MM_FIST_CUFF_SOURCE_X_RATIO 0.36f
+#define MM_FIST_HAND_SOURCE_X_RATIO 0.60f
+#define MM_FIST_EDGE_OVERLAP 40.0f
 
 #define MM_CEILING_TELEGRAPH_DURATION 1.2f
 #define MM_CEILING_SLAM_DURATION 0.3f
@@ -35,20 +39,36 @@
 #define MM_ARM_STORM_ACTIVE_DURATION 4.0f
 #define MM_ARM_STORM_RETREAT_DURATION 1.0f
 #define MM_ARM_STORM_Y_RATIO 0.08f
-#define MM_ARM_STORM_UMBRELLA_INTERVAL 0.35f
+#define MM_ARM_STORM_UMBRELLA_INTERVAL 0.52f
+#define MM_ARM_STORM_UMBRELLA_SPAWN_SPREAD 80
+#define MM_ARM_STORM_UMBRELLA_VELOCITY_SPREAD 430
 #define MM_ARM_STORM_HITBOX_WIDTH_RATIO 0.72f
 #define MM_ARM_STORM_HITBOX_HEIGHT_RATIO 0.62f
 
 #define MM_SIDE_UMBRELLA_ENTER_DURATION 0.7f
 #define MM_SIDE_UMBRELLA_ACTIVE_DURATION 3.2f
 #define MM_SIDE_UMBRELLA_RETREAT_DURATION 0.7f
-#define MM_SIDE_UMBRELLA_INTERVAL 0.32f
+#define MM_SIDE_UMBRELLA_INTERVAL 0.38f
 #define MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO 0.5f
-#define MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO 0.92f
 #define MM_SIDE_UMBRELLA_TELEGRAPH_DURATION 0.8f
 #define MM_SIDE_UMBRELLA_ARM_HEIGHT_RATIO 0.35f
-#define MM_SIDE_UMBRELLA_SPAWN_SPREAD 95
-#define MM_SIDE_UMBRELLA_VELOCITY_SPREAD 240
+#define MM_SIDE_UMBRELLA_HAND_HITBOX_WIDTH_RATIO 0.88f
+#define MM_SIDE_UMBRELLA_SPAWN_SPREAD 220
+#define MM_SIDE_UMBRELLA_VELOCITY_SPREAD 470
+#define MM_SIDE_UMBRELLA_SHADOW_SCALE 2.1f
+
+#define MM_UMBRELLA_FALL_SCALE 0.58f
+#define MM_UMBRELLA_SPLIT_SCALE 0.40f
+
+#define MM_HOLDING_BUILDING_HEIGHT_RATIO 0.18f
+#define MM_HOLDING_BUILDING_Y_RATIO 0.08f
+#define MM_HOLDING_BUILDING_EDGE_OVERLAP_RATIO 0.18f
+#define MM_HOLDING_BUILDING_LEFT 1
+#define MM_HOLDING_BUILDING_RIGHT 2
+
+static bool IsMMArmStormState(MidnightManState state);
+static bool IsMMSideUmbrellaState(MidnightManState state);
+static int GetMMHoldingBuildingHiddenMask(const MidnightMan *mm, int screenWidth);
 
 static float GetMMShockwaveFrameWidth(const MidnightMan *mm)
 {
@@ -173,6 +193,36 @@ static void DrawMMShockwave(const MidnightMan *mm, const MMShockwave *wave, bool
     DrawTexturePro(shockwave, source, wave->rect, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
 }
 
+static void DrawMMHoldingBuildingHands(const MidnightMan *mm, int screenWidth, int screenHeight, Color tint)
+{
+    if (mm->texHandHoldingBuilding.id <= 0)
+    {
+        return;
+    }
+
+    int hiddenMask = GetMMHoldingBuildingHiddenMask(mm, screenWidth);
+    float texW = (float)mm->texHandHoldingBuilding.width;
+    float texH = (float)mm->texHandHoldingBuilding.height;
+    float drawH = (float)screenHeight * MM_HOLDING_BUILDING_HEIGHT_RATIO;
+    float drawW = texH > 0.0f ? texW * (drawH / texH) : texW;
+    float overlap = drawW * MM_HOLDING_BUILDING_EDGE_OVERLAP_RATIO;
+    float y = (float)screenHeight * MM_HOLDING_BUILDING_Y_RATIO;
+
+    if ((hiddenMask & MM_HOLDING_BUILDING_LEFT) == 0)
+    {
+        Rectangle src = {0.0f, 0.0f, texW, texH};
+        Rectangle dest = {-overlap, y, drawW, drawH};
+        DrawTexturePro(mm->texHandHoldingBuilding, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, tint);
+    }
+
+    if ((hiddenMask & MM_HOLDING_BUILDING_RIGHT) == 0)
+    {
+        Rectangle src = {0.0f, 0.0f, -texW, texH};
+        Rectangle dest = {(float)screenWidth - drawW + overlap, y, drawW, drawH};
+        DrawTexturePro(mm->texHandHoldingBuilding, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, tint);
+    }
+}
+
 static float Lerpf(float from, float to, float weight)
 {
     return from + (to - from) * weight;
@@ -190,6 +240,58 @@ static bool IsMMSideUmbrellaState(MidnightManState state)
     return state == MM_SIDE_UMBRELLA_ENTER ||
         state == MM_SIDE_UMBRELLA_ACTIVE ||
         state == MM_SIDE_UMBRELLA_RETREAT;
+}
+
+static int GetMMHoldingBuildingHiddenMask(const MidnightMan *mm, int screenWidth)
+{
+    if (!mm->active || mm->health <= 0 || mm->state == MM_DEAD)
+    {
+        return MM_HOLDING_BUILDING_LEFT | MM_HOLDING_BUILDING_RIGHT;
+    }
+
+    if (mm->state == MM_SIDE_UMBRELLA_TELEGRAPH || IsMMSideUmbrellaState(mm->state) || IsMMArmStormState(mm->state))
+    {
+        return MM_HOLDING_BUILDING_LEFT | MM_HOLDING_BUILDING_RIGHT;
+    }
+
+    int activeCount = 0;
+    int mask = 0;
+    float handCenterOffset = mm->handDrawHeight * 0.5f;
+
+    for (int i = 0; i < MM_HAND_COUNT; i++)
+    {
+        if (!mm->handActive[i])
+        {
+            continue;
+        }
+
+        activeCount++;
+        float handCenterX = mm->handXPositions[i] + handCenterOffset;
+        if (handCenterX < (float)screenWidth * 0.5f)
+        {
+            mask |= MM_HOLDING_BUILDING_LEFT;
+        }
+        else
+        {
+            mask |= MM_HOLDING_BUILDING_RIGHT;
+        }
+    }
+
+    if (activeCount >= 2)
+    {
+        return MM_HOLDING_BUILDING_LEFT | MM_HOLDING_BUILDING_RIGHT;
+    }
+
+    return mask;
+}
+
+static int GetMMDebugAttackSelection(void)
+{
+    if (IsKeyPressed(KEY_ONE) || IsKeyPressed(KEY_KP_1)) return 1;
+    if (IsKeyPressed(KEY_TWO) || IsKeyPressed(KEY_KP_2)) return 2;
+    if (IsKeyPressed(KEY_THREE) || IsKeyPressed(KEY_KP_3)) return 3;
+    if (IsKeyPressed(KEY_FOUR) || IsKeyPressed(KEY_KP_4)) return 4;
+    return 0;
 }
 
 static void RefreshHandsLayout(MidnightMan *mm, int screenWidth, int screenHeight, float groundY)
@@ -254,18 +356,55 @@ static Rectangle GetMMShrunkArmHitbox(Rectangle armRect)
 static Rectangle GetMMSideUmbrellaBlockRect(const MidnightMan *mm, int screenWidth, int screenHeight)
 {
     float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
-    float blockH = (float)screenHeight * MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO;
+    float texW = mm->texHandOpen.width > 0 ? (float)mm->texHandOpen.width : 581.0f;
+    float texH = mm->texHandOpen.height > 0 ? (float)mm->texHandOpen.height : 274.0f;
+    float blockH = blockW * (texH / texW);
     float blockY = ((float)screenHeight - blockH) * 0.5f;
     return (Rectangle){mm->handXPositions[0], blockY, blockW, blockH};
 }
 
-static Rectangle GetMMSideUmbrellaTargetBlockRect(int screenWidth, int screenHeight, int side)
+static Rectangle GetMMSideUmbrellaTargetBlockRect(const MidnightMan *mm, int screenWidth, int screenHeight, int side)
 {
     float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
-    float blockH = (float)screenHeight * MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO;
+    float texW = mm->texHandOpen.width > 0 ? (float)mm->texHandOpen.width : 581.0f;
+    float texH = mm->texHandOpen.height > 0 ? (float)mm->texHandOpen.height : 274.0f;
+    float blockH = blockW * (texH / texW);
     float blockX = side == 0 ? 0.0f : (float)screenWidth - blockW;
     float blockY = ((float)screenHeight - blockH) * 0.5f;
     return (Rectangle){blockX, blockY, blockW, blockH};
+}
+
+static Rectangle GetMMSideUmbrellaHandHitbox(Rectangle block)
+{
+    float hitboxW = block.width * MM_SIDE_UMBRELLA_HAND_HITBOX_WIDTH_RATIO;
+    return (Rectangle)
+    {
+        block.x + (block.width - hitboxW) * 0.5f,
+        block.y,
+        hitboxW,
+        block.height
+    };
+}
+
+static float GetMMCeilingFistExitY(const MidnightMan *mm)
+{
+    float texW = mm->texFist.width > 0 ? (float)mm->texFist.width : 391.0f;
+    float texH = mm->texFist.height > 0 ? (float)mm->texFist.height : 235.0f;
+    float scale = texH > 0.0f ? mm->handDrawHeight / texH : 1.0f;
+    float rotatedVisualHeight = texW * scale;
+
+    return -((mm->handDrawWidth + rotatedVisualHeight) * 0.5f);
+}
+
+static float GetMMGroundPhase2FistExitY(const MidnightMan *mm, int screenHeight)
+{
+    float texW = mm->texFist.width > 0 ? (float)mm->texFist.width : 391.0f;
+    float texH = mm->texFist.height > 0 ? (float)mm->texFist.height : 235.0f;
+    float scale = texH > 0.0f ? mm->handDrawHeight / texH : 1.0f;
+    float rotatedVisualHeight = texW * scale * MM_PHASE2_FIST_SCALE;
+    float hitboxHeight = mm->handDrawWidth * MM_PHASE2_FIST_SCALE;
+
+    return (float)screenHeight + (rotatedVisualHeight - hitboxHeight) * 0.5f;
 }
 
 static void SyncMMSideUmbrellaHitboxes(MidnightMan *mm, int screenWidth, int screenHeight)
@@ -273,7 +412,7 @@ static void SyncMMSideUmbrellaHitboxes(MidnightMan *mm, int screenWidth, int scr
     mm->handActive[0] = true;
     mm->handActive[1] = true;
     mm->handActive[2] = false;
-    mm->handHitboxes[0] = GetMMSideUmbrellaBlockRect(mm, screenWidth, screenHeight);
+    mm->handHitboxes[0] = GetMMSideUmbrellaHandHitbox(GetMMSideUmbrellaBlockRect(mm, screenWidth, screenHeight));
     mm->handHitboxes[1] = GetMMShrunkArmHitbox(GetMMArmVisualRectAt(mm, screenHeight, mm->handXPositions[1], mm->handsY));
     mm->handHitboxes[2] = (Rectangle){0};
 }
@@ -308,6 +447,10 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
     if (mm->texFist.id <= 0)
     {
         mm->texFist = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Punch.png");
+    }
+    if (mm->texHandHoldingBuilding.id <= 0)
+    {
+        mm->texHandHoldingBuilding = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Hand_holding_building.png");
     }
     if (mm->texUmbrella.id <= 0)
     {
@@ -372,6 +515,18 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
     RefreshHandsLayout(mm, screenWidth, screenHeight, groundY);
 
+#if defined(DEBUG)
+    int debugAttack = GetMMDebugAttackSelection();
+    if (debugAttack > 0)
+    {
+        mm->attackCycle = debugAttack;
+        if (mm->state == MM_IDLE)
+        {
+            mm->timer = MM_IDLE_DURATION;
+        }
+    }
+#endif
+
     for (int i = 0; i < MM_MAX_UMBRELLAS; i++)
     {
         if (mm->umbrellas[i].active)
@@ -430,7 +585,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                         mm->umbrellas[u].position = origin;
                         mm->umbrellas[u].velocity.x = cosf(angle) * speed;
                         mm->umbrellas[u].velocity.y = sinf(angle) * speed;
-                        mm->umbrellas[u].scale = 0.25f;
+                        mm->umbrellas[u].scale = MM_UMBRELLA_SPLIT_SCALE;
                         mm->umbrellas[u].animFrame = GetRandomValue(0, 19);
                         mm->umbrellas[u].animTimer = 0.0f;
                         spawned++;
@@ -568,7 +723,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                         mm->umbrellas[i].position.y = spawnY;
                         mm->umbrellas[i].velocity.x = (float)GetRandomValue(-MM_SIDE_UMBRELLA_VELOCITY_SPREAD, MM_SIDE_UMBRELLA_VELOCITY_SPREAD);
                         mm->umbrellas[i].velocity.y = 235.0f + (float)GetRandomValue(0, 70);
-                        mm->umbrellas[i].scale = 0.35f;
+                        mm->umbrellas[i].scale = MM_UMBRELLA_FALL_SCALE;
                         mm->umbrellas[i].animFrame = GetRandomValue(0, 19);
                         mm->umbrellas[i].animTimer = 0.0f;
                         break;
@@ -681,11 +836,11 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                         {
                             mm->umbrellas[i].active   = true;
                             mm->umbrellas[i].isBig    = false;
-                            mm->umbrellas[i].position.x = spawnPoints[s] + (float)GetRandomValue(-15, 15);
+                            mm->umbrellas[i].position.x = spawnPoints[s] + (float)GetRandomValue(-MM_ARM_STORM_UMBRELLA_SPAWN_SPREAD, MM_ARM_STORM_UMBRELLA_SPAWN_SPREAD);
                             mm->umbrellas[i].position.y = handY;
-                            mm->umbrellas[i].velocity.x = (float)GetRandomValue(-150, 150);
+                            mm->umbrellas[i].velocity.x = (float)GetRandomValue(-MM_ARM_STORM_UMBRELLA_VELOCITY_SPREAD, MM_ARM_STORM_UMBRELLA_VELOCITY_SPREAD);
                             mm->umbrellas[i].velocity.y = 220.0f + (float)GetRandomValue(0, 60);
-                            mm->umbrellas[i].scale      = 0.35f;
+                            mm->umbrellas[i].scale      = MM_UMBRELLA_FALL_SCALE;
                             mm->umbrellas[i].animFrame  = GetRandomValue(0, 19);
                             mm->umbrellas[i].animTimer  = 0.0f;
                             break;
@@ -765,6 +920,13 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             {
                 mm->timer = 0.0f;
                 int nextAttack = GetRandomValue(0, 3);
+#if defined(DEBUG)
+                if (mm->attackCycle >= 1 && mm->attackCycle <= 4)
+                {
+                    nextAttack = mm->attackCycle - 1;
+                    mm->attackCycle = 0;
+                }
+#endif
 
                 if (nextAttack == 0)
                 {
@@ -774,12 +936,12 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
                     if (GetRandomValue(0, 1) == 0)
                     {
-                        mm->handXPositions[0] = W / 6.0f - halfVis;
-                        mm->handXPositions[1] = W / 2.0f - halfVis;
-                        mm->handXPositions[2] = W * 5.0f / 6.0f - halfVis;
+                        mm->handXPositions[0] = W / 4.0f - halfVis;
+                        mm->handXPositions[1] = W * 3.0f / 4.0f - halfVis;
+                        mm->handXPositions[2] = -9999.0f;
                         mm->handActive[0] = true;
                         mm->handActive[1] = true;
-                        mm->handActive[2] = true;
+                        mm->handActive[2] = false;
                     }
                     else
                     {
@@ -923,12 +1085,12 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             {
                 mm->handsY = (float)screenHeight;
 
-                bool wasThreeHands = mm->handActive[2];
                 float visualW = mm->handDrawHeight;
                 float halfVis = visualW / 2.0f;
                 float W = (float)screenWidth;
+                bool wasWidePair = mm->handXPositions[0] < W * 0.30f;
 
-                if (wasThreeHands)
+                if (wasWidePair)
                 {
                     mm->handXPositions[0] = W / 3.0f - halfVis;
                     mm->handXPositions[1] = W * 2.0f / 3.0f - halfVis;
@@ -939,12 +1101,12 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 }
                 else
                 {
-                    mm->handXPositions[0] = W / 6.0f - halfVis;
-                    mm->handXPositions[1] = W / 2.0f - halfVis;
-                    mm->handXPositions[2] = W * 5.0f / 6.0f - halfVis;
+                    mm->handXPositions[0] = W / 4.0f - halfVis;
+                    mm->handXPositions[1] = W * 3.0f / 4.0f - halfVis;
+                    mm->handXPositions[2] = -9999.0f;
                     mm->handActive[0] = true;
                     mm->handActive[1] = true;
-                    mm->handActive[2] = true;
+                    mm->handActive[2] = false;
                 }
 
                 mm->state = MM_GROUND_PHASE2_TELEGRAPH;
@@ -987,7 +1149,8 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         {
             progress = 1.0f;
         }
-        mm->handsY = Lerpf(mm->telegraphY, mm->riseStopY, progress);
+        float startY = GetMMGroundPhase2FistExitY(mm, screenHeight);
+        mm->handsY = Lerpf(startY, mm->riseStopY, progress);
 
         float smallerWidth = mm->handDrawWidth * MM_PHASE2_FIST_SCALE;
         float smallerHeight = mm->handDrawHeight * MM_PHASE2_FIST_SCALE;
@@ -1045,7 +1208,8 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         {
             progress = 1.0f;
         }
-        mm->handsY = Lerpf(mm->riseStopY, (float)screenHeight, progress);
+        float endY = GetMMGroundPhase2FistExitY(mm, screenHeight);
+        mm->handsY = Lerpf(mm->riseStopY, endY, progress);
 
         float smallerWidth = mm->handDrawWidth * MM_PHASE2_FIST_SCALE;
         float smallerHeight = mm->handDrawHeight * MM_PHASE2_FIST_SCALE;
@@ -1062,7 +1226,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
         if (mm->timer >= MM_PHASE2_RETREAT_DURATION)
         {
-            mm->handsY = (float)screenHeight;
+            mm->handsY = GetMMGroundPhase2FistExitY(mm, screenHeight);
             mm->state = MM_IDLE;
             mm->timer = 0.0f;
         }
@@ -1109,7 +1273,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             progress = 1.0f;
         }
 
-        float startY = -mm->handDrawHeight;
+        float startY = GetMMCeilingFistExitY(mm);
         float targetY = groundY - mm->handDrawWidth + 30.0f;
         mm->handsY = Lerpf(startY, targetY, progress);
 
@@ -1171,7 +1335,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         }
 
         float targetY = groundY - mm->handDrawWidth + 30.0f;
-        float endY = -mm->handDrawHeight;
+        float endY = GetMMCeilingFistExitY(mm);
 
         if (mm->timer < MM_CEILING_PAUSE_DURATION)
         {
@@ -1246,6 +1410,8 @@ void DrawMidnightMan(const MidnightMan *mm)
     float groundY = (float)screenHeight * 0.82f;
     Color bossTint = mm->hitFlashTimer > 0.0f ? RED : WHITE;
 
+    DrawMMHoldingBuildingHands(mm, screenWidth, screenHeight, bossTint);
+
     if (mm->state == MM_GROUND_TELEGRAPH || mm->state == MM_CEILING_TELEGRAPH || mm->state == MM_GROUND_PHASE2_TELEGRAPH)
     {
         float visualW = mm->handDrawHeight;
@@ -1275,7 +1441,16 @@ void DrawMidnightMan(const MidnightMan *mm)
     {
         if (mm->animShadow.sheet.id > 0)
         {
-            Rectangle shadowDest = GetMMSideUmbrellaTargetBlockRect(screenWidth, screenHeight, mm->sideUmbrellaSide);
+            Rectangle block = GetMMSideUmbrellaTargetBlockRect(mm, screenWidth, screenHeight, mm->sideUmbrellaSide);
+            float shadowH = block.height * MM_SIDE_UMBRELLA_SHADOW_SCALE;
+            float shadowW = shadowH * ((float)mm->animShadow.frameWidth / (float)mm->animShadow.sheet.height);
+            Rectangle shadowDest =
+            {
+                block.x + (block.width - shadowW) * 0.5f,
+                block.y + (block.height - shadowH) * 0.5f,
+                shadowW,
+                shadowH
+            };
             Rectangle shadowSrc = GetAnimationFrameSource(&mm->animShadow, false);
             DrawTexturePro(mm->animShadow.sheet, shadowSrc, shadowDest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
         }
@@ -1290,6 +1465,14 @@ void DrawMidnightMan(const MidnightMan *mm)
             float scale = mm->handDrawHeight / texH;
             float drawW = texW * scale;
             float drawH = mm->handDrawHeight;
+            float cuffSourceX = texW * MM_FIST_CUFF_SOURCE_X_RATIO;
+            float fistSourceX = texW * MM_FIST_HAND_SOURCE_X_RATIO;
+            float blackArmSourceW = cuffSourceX;
+            float cuffSourceW = fistSourceX - cuffSourceX;
+            float fistSourceW = texW - fistSourceX;
+            float blackArmNormalDrawW = blackArmSourceW * scale;
+            float cuffDrawW = cuffSourceW * scale;
+            float fistDrawW = fistSourceW * scale;
 
             for (int i = 0; i < MM_HAND_COUNT; i++)
             {
@@ -1297,10 +1480,26 @@ void DrawMidnightMan(const MidnightMan *mm)
                 {
                     float centerX = mm->handXPositions[i] + mm->handDrawHeight / 2.0f;
                     float centerY = mm->handsY + mm->handDrawWidth / 2.0f;
-                    Rectangle src = {0.0f, 0.0f, texW, texH};
-                    Rectangle dest = {centerX, centerY, drawW, drawH};
-                    Vector2 pivot = {drawW / 2.0f, drawH / 2.0f};
-                    DrawTexturePro(mm->texFist, src, dest, pivot, 90.0f, bossTint);
+                    float fistBottomY = centerY + drawW / 2.0f;
+                    float fistTopY = fistBottomY - fistDrawW;
+                    float cuffTopY = fistTopY - cuffDrawW;
+                    float blackArmDrawW = fmaxf(blackArmNormalDrawW, cuffTopY + MM_FIST_EDGE_OVERLAP);
+                    float blackArmTopY = cuffTopY - blackArmDrawW;
+
+                    Rectangle blackArmSrc = {0.0f, 0.0f, blackArmSourceW, texH};
+                    Rectangle blackArmDest = {centerX, blackArmTopY + blackArmDrawW / 2.0f, blackArmDrawW, drawH};
+                    Vector2 blackArmPivot = {blackArmDrawW / 2.0f, drawH / 2.0f};
+                    DrawTexturePro(mm->texFist, blackArmSrc, blackArmDest, blackArmPivot, 90.0f, bossTint);
+
+                    Rectangle cuffSrc = {cuffSourceX, 0.0f, cuffSourceW, texH};
+                    Rectangle cuffDest = {centerX, cuffTopY + cuffDrawW / 2.0f, cuffDrawW, drawH};
+                    Vector2 cuffPivot = {cuffDrawW / 2.0f, drawH / 2.0f};
+                    DrawTexturePro(mm->texFist, cuffSrc, cuffDest, cuffPivot, 90.0f, bossTint);
+
+                    Rectangle fistSrc = {fistSourceX, 0.0f, fistSourceW, texH};
+                    Rectangle fistDest = {centerX, fistTopY + fistDrawW / 2.0f, fistDrawW, drawH};
+                    Vector2 fistPivot = {fistDrawW / 2.0f, drawH / 2.0f};
+                    DrawTexturePro(mm->texFist, fistSrc, fistDest, fistPivot, 90.0f, bossTint);
                 }
             }
         }
@@ -1313,7 +1512,15 @@ void DrawMidnightMan(const MidnightMan *mm)
             float texH = (float)mm->texFist.height;
             float scale = mm->handDrawHeight / texH;
             float drawW = texW * scale * MM_PHASE2_FIST_SCALE;
-            float drawH = mm->handDrawHeight * MM_PHASE2_FIST_SCALE;
+            float drawH = mm->handDrawHeight * MM_PHASE2_FIST_SCALE * MM_PHASE2_FIST_STRETCH_WIDTH_SCALE;
+            float cuffSourceX = texW * MM_FIST_CUFF_SOURCE_X_RATIO;
+            float fistSourceX = texW * MM_FIST_HAND_SOURCE_X_RATIO;
+            float blackArmSourceW = cuffSourceX;
+            float cuffSourceW = fistSourceX - cuffSourceX;
+            float fistSourceW = texW - fistSourceX;
+            float blackArmNormalDrawW = blackArmSourceW * scale * MM_PHASE2_FIST_SCALE;
+            float cuffDrawW = cuffSourceW * scale * MM_PHASE2_FIST_SCALE;
+            float fistDrawW = fistSourceW * scale * MM_PHASE2_FIST_SCALE;
             float visualW = mm->handDrawHeight;
             float smallerWidth = mm->handDrawWidth * MM_PHASE2_FIST_SCALE;
 
@@ -1323,10 +1530,25 @@ void DrawMidnightMan(const MidnightMan *mm)
                 {
                     float centerX = mm->handXPositions[i] + visualW / 2.0f;
                     float centerY = mm->handsY + smallerWidth / 2.0f;
-                    Rectangle src = {0.0f, 0.0f, texW, texH};
-                    Rectangle dest = {centerX, centerY, drawW, drawH};
-                    Vector2 pivot = {drawW / 2.0f, drawH / 2.0f};
-                    DrawTexturePro(mm->texFist, src, dest, pivot, -90.0f, bossTint);
+                    float fistTipY = centerY - drawW / 2.0f;
+                    float cuffTopY = fistTipY + fistDrawW;
+                    float blackArmTopY = cuffTopY + cuffDrawW;
+                    float blackArmDrawW = fmaxf(blackArmNormalDrawW, (float)screenHeight - blackArmTopY + MM_FIST_EDGE_OVERLAP);
+
+                    Rectangle blackArmSrc = {0.0f, 0.0f, blackArmSourceW, texH};
+                    Rectangle blackArmDest = {centerX, blackArmTopY + blackArmDrawW / 2.0f, blackArmDrawW, drawH};
+                    Vector2 blackArmPivot = {blackArmDrawW / 2.0f, drawH / 2.0f};
+                    DrawTexturePro(mm->texFist, blackArmSrc, blackArmDest, blackArmPivot, -90.0f, bossTint);
+
+                    Rectangle cuffSrc = {cuffSourceX, 0.0f, cuffSourceW, texH};
+                    Rectangle cuffDest = {centerX, cuffTopY + cuffDrawW / 2.0f, cuffDrawW, drawH};
+                    Vector2 cuffPivot = {cuffDrawW / 2.0f, drawH / 2.0f};
+                    DrawTexturePro(mm->texFist, cuffSrc, cuffDest, cuffPivot, -90.0f, bossTint);
+
+                    Rectangle fistSrc = {fistSourceX, 0.0f, fistSourceW, texH};
+                    Rectangle fistDest = {centerX, fistTipY + fistDrawW / 2.0f, fistDrawW, drawH};
+                    Vector2 fistPivot = {fistDrawW / 2.0f, drawH / 2.0f};
+                    DrawTexturePro(mm->texFist, fistSrc, fistDest, fistPivot, -90.0f, bossTint);
                 }
             }
         }
@@ -1354,7 +1576,7 @@ void DrawMidnightMan(const MidnightMan *mm)
 
             for (int i = 0; i < MM_HAND_COUNT; i++)
             {
-                if ((mm->handActive[i] || mm->state == MM_GROUND_RISE || mm->state == MM_GROUND_RETREAT) && mm->state != MM_CEILING_TELEGRAPH && mm->state != MM_ARM_STORM_ENTER && mm->state != MM_ARM_STORM_ACTIVE && mm->state != MM_ARM_STORM_RETREAT)
+                if (mm->handActive[i] && mm->state != MM_CEILING_TELEGRAPH && mm->state != MM_ARM_STORM_ENTER && mm->state != MM_ARM_STORM_ACTIVE && mm->state != MM_ARM_STORM_RETREAT)
                 {
                     float centerX = mm->handXPositions[i] + visualW / 2.0f;
                     float centerY = mm->handsY + mm->handDrawWidth / 2.0f;
@@ -1424,40 +1646,6 @@ void DrawMidnightMan(const MidnightMan *mm)
     {
         DrawMMShockwave(mm, &mm->waveRight, false);
     }
-
-    for (int i = 0; i < MM_HAND_COUNT; i++)
-    {
-        if (mm->handActive[i])
-        {
-            DrawRectangleLinesEx(mm->handHitboxes[i], 2.0f, LIME);
-        }
-    }
-
-    for (int i = 0; i < MM_MAX_UMBRELLAS; i++)
-    {
-        if (mm->umbrellas[i].active)
-        {
-            float uW = 186.0f * mm->umbrellas[i].scale;
-            float uH = 141.0f * mm->umbrellas[i].scale;
-            Rectangle umbrellaHitbox =
-            {
-                mm->umbrellas[i].position.x - uW * 0.35f,
-                mm->umbrellas[i].position.y - uH * 0.35f,
-                uW * 0.7f,
-                uH * 0.7f
-            };
-            DrawRectangleLinesEx(umbrellaHitbox, 2.0f, RED);
-        }
-    }
-
-    if (mm->waveLeft.active)
-    {
-        DrawRectangleLinesEx(mm->waveLeft.hitbox, 2.0f, RED);
-    }
-    if (mm->waveRight.active)
-    {
-        DrawRectangleLinesEx(mm->waveRight.hitbox, 2.0f, RED);
-    }
 }
 
 void UnloadMidnightMan(MidnightMan *mm)
@@ -1471,6 +1659,11 @@ void UnloadMidnightMan(MidnightMan *mm)
     {
         UnloadTexture(mm->texFist);
         mm->texFist.id = 0;
+    }
+    if (mm->texHandHoldingBuilding.id > 0)
+    {
+        UnloadTexture(mm->texHandHoldingBuilding);
+        mm->texHandHoldingBuilding.id = 0;
     }
     if (mm->texUmbrella.id > 0)
     {
