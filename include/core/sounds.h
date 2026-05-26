@@ -4,6 +4,22 @@
 void InitSoundSystem(void);
 void UnloadSoundSystem(void);
 void SetSoundSystemVolume(float volume);
+void SetMusicSystemVolume(float volume);
+
+typedef enum
+{
+    SOUNDTRACK_NONE,
+    SOUNDTRACK_LEVEL1_RUN,
+    SOUNDTRACK_LEVEL2_RUN,
+    SOUNDTRACK_LEVEL3_RUN,
+    SOUNDTRACK_HAIRY_LEG,
+    SOUNDTRACK_SHARK,
+    SOUNDTRACK_MIDNIGHT_MAN
+} SoundtrackId;
+
+void PlaySoundtrack(SoundtrackId soundtrack);
+void StopSoundtrack(void);
+void UpdateSoundtrack(void);
 
 void PlayJumpSound(void);
 void PlayAttackSwordSound(void);
