@@ -58,7 +58,6 @@ typedef struct {
   float timer;
 
   Texture2D texHandOpen;
-  Texture2D texHandHoldingBuilding;
   Texture2D texFist;      // Punch.png
   Texture2D texUmbrella;  // sombrinha-Sheet.png
   Texture2D texArm;       // Arms_idle.png
