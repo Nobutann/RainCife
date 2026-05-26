@@ -473,8 +473,7 @@ static void DrawGameplayScene(
     ClearBackground(BLACK);
     DrawBackground(bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
-    bool level6BossIntroInProgress = currentLevel->id == 6 &&
-        currentLevel->bossId == 3 &&
+    bool level6BossIntroInProgress = currentLevel->bossId == 3 &&
         phase == PHASE_BOSS &&
         level6IntroProgress < 1.0f;
 
@@ -1554,48 +1553,6 @@ int main(void)
 #ifdef DEBUG
                 if (!bossDefeatTransitionPending && !infiniteMode)
                 {
-                    Level *debugTargetLevel = NULL;
-                    if (IsKeyPressed(KEY_RIGHT))
-                    {
-                        debugTargetLevel = GetNextLevel(levels, currentLevel, true);
-                    }
-                    else if (IsKeyPressed(KEY_LEFT))
-                    {
-                        debugTargetLevel = GetPreviousLevel(levels, currentLevel, true);
-                    }
-
-                    if (debugTargetLevel != NULL && debugTargetLevel != currentLevel)
-                    {
-                        UnlockStoryLevel(debugTargetLevel->id);
-                        StartLevel(
-                            &currentLevel,
-                            debugTargetLevel,
-                            &phase,
-                            &progressTimer,
-                            &autoSpawn,
-                            &spawnTimer,
-                            enemies,
-                            &player,
-                            &pernaCabeluda,
-                            &shark,
-                            currentWidth,
-                            currentHeight,
-                            groundY,
-                            bossScale
-                        );
-                        safePosteFollowUpTimer = -1.0f;
-                        deathScreenActive = false;
-                        phaseTransitionActive = false;
-                        ResetPlayerForRunningRetry(&player, playerStandingY, playerScale);
-                        if (currentLevel->bossId == 3)
-                        {
-                            InitMidnightMan(&midnightMan, currentWidth, currentHeight, groundY);
-                        }
-                        level6IntroActive = false;
-                        level6IntroTimer = 0.0f;
-                        level6IntroDuration = LEVEL6_INTRO_DURATION;
-                    }
-
                     if (IsKeyPressed(KEY_UP) && phase == PHASE_RUNNING && currentLevel->bossId != 0)
                     {
                         EnterBossPhase(
@@ -1937,8 +1894,7 @@ int main(void)
 
                 BeginDrawing();
                     DrawGameplayScene(bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, false, false);
-                    bool level6BossIntroInProgress = currentLevel->id == 6 &&
-                        currentLevel->bossId == 3 &&
+                    bool level6BossIntroInProgress = currentLevel->bossId == 3 &&
                         phase == PHASE_BOSS &&
                         level6IntroProgress < 1.0f;
 
