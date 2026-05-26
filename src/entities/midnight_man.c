@@ -59,6 +59,7 @@
 
 #define MM_UMBRELLA_FALL_SCALE 0.58f
 #define MM_UMBRELLA_SPLIT_SCALE 0.40f
+#define MM_UMBRELLA_SOUND_INTERVAL 0.6f
 
 #define MM_HOLDING_BUILDING_HEIGHT_RATIO 0.18f
 #define MM_HOLDING_BUILDING_Y_RATIO 0.08f
@@ -69,6 +70,16 @@
 static bool IsMMArmStormState(MidnightManState state);
 static bool IsMMSideUmbrellaState(MidnightManState state);
 static int GetMMHoldingBuildingHiddenMask(const MidnightMan *mm, int screenWidth);
+
+static void UpdateMMUmbrellaSound(MidnightMan *mm, float deltaTime)
+{
+    mm->umbrellaSoundTimer += deltaTime;
+    while (mm->umbrellaSoundTimer >= MM_UMBRELLA_SOUND_INTERVAL)
+    {
+        PlayMidnightManUmbrellaSound();
+        mm->umbrellaSoundTimer -= MM_UMBRELLA_SOUND_INTERVAL;
+    }
+}
 
 static float GetMMShockwaveFrameWidth(const MidnightMan *mm)
 {
@@ -421,6 +432,7 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
     mm->handDrawWidth = 0.0f;
     mm->handDrawHeight = 0.0f;
     mm->umbrellaSpawnTimer = 0.0f;
+    mm->umbrellaSoundTimer = 0.0f;
     mm->sideUmbrellaSide = 0;
 
     for (int i = 0; i < MM_HAND_COUNT; i++)
@@ -640,6 +652,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 mm->handXPositions[0] = blockLeft ? -blockW : (float)screenWidth;
                 mm->handXPositions[1] = blockLeft ? (float)screenWidth : -armRect.width;
                 mm->umbrellaSpawnTimer = 0.0f;
+                PlayMidnightManArmMoveSound();
                 mm->state = MM_SIDE_UMBRELLA_ENTER;
                 mm->timer = 0.0f;
             }
@@ -672,6 +685,8 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 mm->state = MM_SIDE_UMBRELLA_ACTIVE;
                 mm->timer = 0.0f;
                 mm->umbrellaSpawnTimer = 0.0f;
+                mm->umbrellaSoundTimer = 0.0f;
+                PlayMidnightManUmbrellaSound();
             }
             break;
         }
@@ -680,6 +695,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         {
             mm->timer += deltaTime;
             mm->handsY = 0.0f;
+            UpdateMMUmbrellaSound(mm, deltaTime);
 
             bool blockLeft = mm->sideUmbrellaSide == 0;
             Rectangle armRect = GetMMArmVisualRectAt(mm, screenHeight, mm->handXPositions[1], mm->handsY);
@@ -782,6 +798,8 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 mm->state = MM_ARM_STORM_ACTIVE;
                 mm->timer = 0.0f;
                 mm->umbrellaSpawnTimer = 0.0f;
+                mm->umbrellaSoundTimer = 0.0f;
+                PlayMidnightManUmbrellaSound();
             }
             break;
         }
@@ -789,6 +807,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         case MM_ARM_STORM_ACTIVE:
         {
             mm->timer += deltaTime;
+            UpdateMMUmbrellaSound(mm, deltaTime);
 
             float armW = mm->texArm.width > 0 ? (float)mm->texArm.width : 413.0f;
             float armH = mm->texArm.height > 0 ? (float)mm->texArm.height : 252.0f;
@@ -1004,6 +1023,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             {
                 mm->state = MM_GROUND_RISE;
                 mm->timer = 0.0f;
+                PlayMidnightManArmMoveSound();
             }
             break;
 
@@ -1109,6 +1129,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         {
             mm->state = MM_GROUND_PHASE2_RISE;
             mm->timer = 0.0f;
+            PlayMidnightManArmMoveSound();
         }
         break;
 
@@ -1264,7 +1285,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         if (mm->timer >= MM_CEILING_SLAM_DURATION)
         {
             mm->handsY = targetY;
-            PlayLegShockwaveSound();
+            PlayMidnightManShockwaveSound();
 
             float scale = ((float)screenHeight * 0.65f / 252.0f) * 0.8f;
             float waveW = GetMMShockwaveWidth(mm, scale);

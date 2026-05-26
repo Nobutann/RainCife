@@ -82,6 +82,7 @@ typedef struct {
   // Umbrella storm details
   MMUmbrella umbrellas[MM_MAX_UMBRELLAS];
   float umbrellaSpawnTimer;
+  float umbrellaSoundTimer;
   int sideUmbrellaSide; 
 
   Animation animShadow;
