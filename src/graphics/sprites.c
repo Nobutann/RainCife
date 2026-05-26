@@ -244,7 +244,7 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothi
     playerSprites->jumpUpLegs.layers[0] = LoadAnimation(sprites->jumpUpLegs, 1, FRAME_TIME);
 
     playerSprites->jumpDownLegs.layerCount = 1;
-    playerSprites->jumpDownLegs.layers[0] = LoadAnimation("assets/sprites/Player/attack/Legs_jump_down.png", 1, FRAME_TIME);
+    playerSprites->jumpDownLegs.layers[0] = LoadAnimation(sprites->jumpDownLegs, 1, FRAME_TIME);
 
     playerSprites->armGun = LoadTexture(sprites->armGun);
 
@@ -264,7 +264,6 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothi
     playerSprites->idleGun.layers[1] = LoadAnimation(sprites->idleBodyGun, 1, FRAME_TIME);
     playerSprites->idleGun.layers[2] = LoadAnimation(sprites->idleHeadAttack, 1, FRAME_TIME);
     
-    playerSprites->jumpDownLegs.layers[0] = LoadAnimation(sprites->jumpDownLegs, 1, FRAME_TIME);
 }
 
 float LoadAttackAnimation(PlayerSprites *playerSprites, int characterId, const char *path, int frameCount, float frameTime)

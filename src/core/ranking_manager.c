@@ -37,6 +37,12 @@ struct RankingInfinitoFetch
 #endif
 };
 
+typedef struct
+{
+    char nome[INFINITE_PLAYER_NAME_MAX];
+    float metros;
+} RankingInfinitoSubmit;
+
 static void CopiarNomeJogador(char destino[INFINITE_PLAYER_NAME_MAX], const char *origem)
 {
     if (origem == NULL || origem[0] == '\0')
@@ -363,6 +369,52 @@ static bool InsertSupabaseRankingEntry(const char *nome, float metros)
     return system(command) == 0;
 }
 
+#ifdef _WIN32
+static DWORD WINAPI EnviarPontuacaoRankingInfinitoThread(LPVOID data)
+#else
+static void *EnviarPontuacaoRankingInfinitoThread(void *data)
+#endif
+{
+    RankingInfinitoSubmit *submit = (RankingInfinitoSubmit *)data;
+    InsertSupabaseRankingEntry(submit->nome, submit->metros);
+    free(submit);
+#ifdef _WIN32
+    return 0;
+#else
+    return NULL;
+#endif
+}
+
+static void EnviarPontuacaoRankingInfinitoOnlineAsync(const char *nome, float metros)
+{
+    RankingInfinitoSubmit *submit = (RankingInfinitoSubmit *)calloc(1, sizeof(RankingInfinitoSubmit));
+    if (submit == NULL)
+    {
+        return;
+    }
+
+    CopiarNomeJogador(submit->nome, nome);
+    submit->metros = metros;
+
+#ifdef _WIN32
+    HANDLE thread = CreateThread(NULL, 0, EnviarPontuacaoRankingInfinitoThread, submit, 0, NULL);
+    if (thread == NULL)
+    {
+        free(submit);
+        return;
+    }
+    CloseHandle(thread);
+#else
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, EnviarPontuacaoRankingInfinitoThread, submit) != 0)
+    {
+        free(submit);
+        return;
+    }
+    pthread_detach(thread);
+#endif
+}
+
 void SalvarRankingInfinito(RankingInfinito ranking)
 {
     FILE *arquivo = fopen(RANKING_INFINITO_ARQUIVO, "wb");
@@ -543,14 +595,5 @@ void AdicionarPontuacaoRankingInfinito(RankingInfinito *ranking, const char *nom
 
     OrdenarRanking(ranking);
     SalvarRankingInfinito(*ranking);
-
-    if (InsertSupabaseRankingEntry(nomeNormalizado, metros))
-    {
-        RankingInfinito rankingOnline = {0};
-        if (FetchSupabaseRanking(&rankingOnline))
-        {
-            *ranking = rankingOnline;
-            SalvarRankingInfinito(*ranking);
-        }
-    }
+    EnviarPontuacaoRankingInfinitoOnlineAsync(nomeNormalizado, metros);
 }
