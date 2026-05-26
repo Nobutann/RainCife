@@ -28,6 +28,8 @@
 #define MM_UMBRELLA_BLOCK_HAND_WIDTH_RATIO 0.46f
 #define MM_UMBRELLA_BLOCK_HITBOX_X_RATIO 0.68f
 #define MM_UMBRELLA_BLOCK_HITBOX_Y_RATIO 0.76f
+#define MM_BUILDING_GRIP_HEIGHT_RATIO 0.20f
+#define MM_BUILDING_GRIP_EDGE_MARGIN_RATIO 0.02f
 #define MM_HIT_FLASH_DURATION 0.12f
 
 #define MM_SHOCKWAVE_FALLBACK_WIDTH 88.0f
@@ -229,6 +231,40 @@ static Rectangle GetMMUmbrellaHandBlockHitbox(Rectangle block)
     };
 }
 
+static void DrawMMBuildingGrip(const MidnightMan *mm, float columnX, float columnWidth, int screenWidth, int screenHeight, Color tint)
+{
+    if (mm->texHandHoldingBuilding.id <= 0)
+    {
+        return;
+    }
+
+    float texW = (float)mm->texHandHoldingBuilding.width;
+    float texH = (float)mm->texHandHoldingBuilding.height;
+    if (texW <= 0.0f || texH <= 0.0f)
+    {
+        return;
+    }
+
+    float drawH = (float)screenHeight * MM_BUILDING_GRIP_HEIGHT_RATIO;
+    float drawW = drawH * (texW / texH);
+    float edgeMargin = (float)screenHeight * MM_BUILDING_GRIP_EDGE_MARGIN_RATIO;
+    float drawX = columnX + columnWidth * 0.5f - drawW * 0.5f;
+    float drawY = edgeMargin;
+
+    if (drawX < 0.0f)
+    {
+        drawX = 0.0f;
+    }
+    else if (drawX + drawW > (float)screenWidth)
+    {
+        drawX = (float)screenWidth - drawW;
+    }
+
+    Rectangle src = {0.0f, 0.0f, texW, texH};
+    Rectangle dest = {drawX, drawY, drawW, drawH};
+    DrawTexturePro(mm->texHandHoldingBuilding, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, tint);
+}
+
 void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float groundY)
 {
     mm->active = true;
@@ -254,6 +290,10 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
     if (mm->texHandOpen.id <= 0)
     {
         mm->texHandOpen = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Hand_open.png");
+    }
+    if (mm->texHandHoldingBuilding.id <= 0)
+    {
+        mm->texHandHoldingBuilding = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Hand_holding_building.png");
     }
     if (mm->texFist.id <= 0)
     {
@@ -1241,6 +1281,23 @@ void DrawMidnightMan(const MidnightMan *mm)
         }
     }
 
+    bool drawBuildingGrip =
+        mm->state == MM_GROUND_TELEGRAPH ||
+        mm->state == MM_GROUND_PHASE2_TELEGRAPH ||
+        mm->state == MM_CEILING_TELEGRAPH;
+
+    if (drawBuildingGrip)
+    {
+        float visualW = mm->handDrawHeight;
+        for (int i = 0; i < MM_HAND_COUNT; i++)
+        {
+            if (mm->handActive[i])
+            {
+                DrawMMBuildingGrip(mm, mm->handXPositions[i], visualW, screenWidth, screenHeight, bossTint);
+            }
+        }
+    }
+
     if (mm->state == MM_CEILING_SLAM || mm->state == MM_CEILING_RETREAT)
     {
         if (mm->texFist.id > 0)
@@ -1452,6 +1509,11 @@ void UnloadMidnightMan(MidnightMan *mm)
         UnloadTexture(mm->texHandOpen);
         mm->texHandOpen.id = 0;
     }
+    if (mm->texHandHoldingBuilding.id > 0)
+    {
+        UnloadTexture(mm->texHandHoldingBuilding);
+        mm->texHandHoldingBuilding.id = 0;
+    }
     if (mm->texFist.id > 0)
     {
         UnloadTexture(mm->texFist);
@@ -1466,6 +1528,11 @@ void UnloadMidnightMan(MidnightMan *mm)
     {
         UnloadTexture(mm->texShockwave);
         mm->texShockwave.id = 0;
+    }
+    if (mm->texArm.id > 0)
+    {
+        UnloadTexture(mm->texArm);
+        mm->texArm.id = 0;
     }
     if (mm->animShadow.sheet.id > 0)
     {
