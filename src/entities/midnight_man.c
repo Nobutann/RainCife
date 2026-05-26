@@ -39,21 +39,26 @@
 #define MM_ARM_STORM_ACTIVE_DURATION 4.0f
 #define MM_ARM_STORM_RETREAT_DURATION 1.0f
 #define MM_ARM_STORM_Y_RATIO 0.08f
-#define MM_ARM_STORM_UMBRELLA_INTERVAL 0.35f
+#define MM_ARM_STORM_UMBRELLA_INTERVAL 0.52f
+#define MM_ARM_STORM_UMBRELLA_SPAWN_SPREAD 80
+#define MM_ARM_STORM_UMBRELLA_VELOCITY_SPREAD 430
 #define MM_ARM_STORM_HITBOX_WIDTH_RATIO 0.72f
 #define MM_ARM_STORM_HITBOX_HEIGHT_RATIO 0.62f
 
 #define MM_SIDE_UMBRELLA_ENTER_DURATION 0.7f
 #define MM_SIDE_UMBRELLA_ACTIVE_DURATION 3.2f
 #define MM_SIDE_UMBRELLA_RETREAT_DURATION 0.7f
-#define MM_SIDE_UMBRELLA_INTERVAL 0.32f
+#define MM_SIDE_UMBRELLA_INTERVAL 0.38f
 #define MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO 0.5f
 #define MM_SIDE_UMBRELLA_TELEGRAPH_DURATION 0.8f
 #define MM_SIDE_UMBRELLA_ARM_HEIGHT_RATIO 0.35f
 #define MM_SIDE_UMBRELLA_HAND_HITBOX_WIDTH_RATIO 0.88f
-#define MM_SIDE_UMBRELLA_SPAWN_SPREAD 95
-#define MM_SIDE_UMBRELLA_VELOCITY_SPREAD 240
+#define MM_SIDE_UMBRELLA_SPAWN_SPREAD 220
+#define MM_SIDE_UMBRELLA_VELOCITY_SPREAD 470
 #define MM_SIDE_UMBRELLA_SHADOW_SCALE 2.1f
+
+#define MM_UMBRELLA_FALL_SCALE 0.58f
+#define MM_UMBRELLA_SPLIT_SCALE 0.40f
 
 static float GetMMShockwaveFrameWidth(const MidnightMan *mm)
 {
@@ -493,7 +498,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                         mm->umbrellas[u].position = origin;
                         mm->umbrellas[u].velocity.x = cosf(angle) * speed;
                         mm->umbrellas[u].velocity.y = sinf(angle) * speed;
-                        mm->umbrellas[u].scale = 0.25f;
+                        mm->umbrellas[u].scale = MM_UMBRELLA_SPLIT_SCALE;
                         mm->umbrellas[u].animFrame = GetRandomValue(0, 19);
                         mm->umbrellas[u].animTimer = 0.0f;
                         spawned++;
@@ -631,7 +636,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                         mm->umbrellas[i].position.y = spawnY;
                         mm->umbrellas[i].velocity.x = (float)GetRandomValue(-MM_SIDE_UMBRELLA_VELOCITY_SPREAD, MM_SIDE_UMBRELLA_VELOCITY_SPREAD);
                         mm->umbrellas[i].velocity.y = 235.0f + (float)GetRandomValue(0, 70);
-                        mm->umbrellas[i].scale = 0.35f;
+                        mm->umbrellas[i].scale = MM_UMBRELLA_FALL_SCALE;
                         mm->umbrellas[i].animFrame = GetRandomValue(0, 19);
                         mm->umbrellas[i].animTimer = 0.0f;
                         break;
@@ -744,11 +749,11 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                         {
                             mm->umbrellas[i].active   = true;
                             mm->umbrellas[i].isBig    = false;
-                            mm->umbrellas[i].position.x = spawnPoints[s] + (float)GetRandomValue(-15, 15);
+                            mm->umbrellas[i].position.x = spawnPoints[s] + (float)GetRandomValue(-MM_ARM_STORM_UMBRELLA_SPAWN_SPREAD, MM_ARM_STORM_UMBRELLA_SPAWN_SPREAD);
                             mm->umbrellas[i].position.y = handY;
-                            mm->umbrellas[i].velocity.x = (float)GetRandomValue(-150, 150);
+                            mm->umbrellas[i].velocity.x = (float)GetRandomValue(-MM_ARM_STORM_UMBRELLA_VELOCITY_SPREAD, MM_ARM_STORM_UMBRELLA_VELOCITY_SPREAD);
                             mm->umbrellas[i].velocity.y = 220.0f + (float)GetRandomValue(0, 60);
-                            mm->umbrellas[i].scale      = 0.35f;
+                            mm->umbrellas[i].scale      = MM_UMBRELLA_FALL_SCALE;
                             mm->umbrellas[i].animFrame  = GetRandomValue(0, 19);
                             mm->umbrellas[i].animTimer  = 0.0f;
                             break;
