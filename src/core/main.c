@@ -661,10 +661,18 @@ static SoundtrackId GetGameplaySoundtrack(Level *currentLevel, GamePhase phase, 
     {
         return SOUNDTRACK_LEVEL1_RUN;
     }
+    if (phase == PHASE_RUNNING && currentLevel->id == 2)
+    {
+        return SOUNDTRACK_LEVEL2_RUN;
+    }
 
     if (phase == PHASE_BOSS && currentLevel->bossId == 1)
     {
         return SOUNDTRACK_HAIRY_LEG;
+    }
+    if (phase == PHASE_BOSS && currentLevel->bossId == 2)
+    {
+        return SOUNDTRACK_SHARK;
     }
 
     return SOUNDTRACK_NONE;

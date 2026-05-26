@@ -22,7 +22,9 @@ static Sound legShockwaveSound;
 static float currentVolume = 1.0f;
 static float currentMusicVolume = 1.0f;
 static Music level1RunMusic;
+static Music level2RunMusic;
 static Music hairyLegMusic;
+static Music sharkMusic;
 static SoundtrackId currentSoundtrack = SOUNDTRACK_NONE;
 
 static Music *GetSoundtrackMusic(SoundtrackId soundtrack)
@@ -30,7 +32,9 @@ static Music *GetSoundtrackMusic(SoundtrackId soundtrack)
     switch (soundtrack)
     {
         case SOUNDTRACK_LEVEL1_RUN: return &level1RunMusic;
+        case SOUNDTRACK_LEVEL2_RUN: return &level2RunMusic;
         case SOUNDTRACK_HAIRY_LEG: return &hairyLegMusic;
+        case SOUNDTRACK_SHARK: return &sharkMusic;
         default: return NULL;
     }
 }
@@ -57,8 +61,12 @@ void InitSoundSystem(void)
 
     level1RunMusic = LoadMusicStream("assets/soundtrack/ZUN_Touhou_15_OST_-_Unforgettable_the_Nostalgic_Greenery_1_Stage_theme_(SkySound.cc).mp3");
     level1RunMusic.looping = true;
+    level2RunMusic = LoadMusicStream("assets/soundtrack/13. Emotional Skyscraper ~ Cosmic Mind.mp3");
+    level2RunMusic.looping = true;
     hairyLegMusic = LoadMusicStream("assets/soundtrack/Touhou_-_Hartmann_s_Youkai_Girl_Koishi_Komeiji_s_theme_(mp3.pm).mp3");
     hairyLegMusic.looping = true;
+    sharkMusic = LoadMusicStream("assets/soundtrack/Demetori_-_Solar_Sect_of_Mystic_Wisdom_-Nuclear_Fusion_(mp3.pm).mp3");
+    sharkMusic.looping = true;
 
     // Apply the initial volume setting to all newly loaded sounds
     SetSoundSystemVolume(currentVolume);
@@ -90,7 +98,9 @@ void SetMusicSystemVolume(float volume)
 {
     currentMusicVolume = volume;
     SetMusicVolume(level1RunMusic, volume);
+    SetMusicVolume(level2RunMusic, volume);
     SetMusicVolume(hairyLegMusic, volume);
+    SetMusicVolume(sharkMusic, volume);
 }
 
 void PlaySoundtrack(SoundtrackId soundtrack)
@@ -217,7 +227,9 @@ void UnloadSoundSystem(void)
 {
     StopSoundtrack();
     UnloadMusicStream(level1RunMusic);
+    UnloadMusicStream(level2RunMusic);
     UnloadMusicStream(hairyLegMusic);
+    UnloadMusicStream(sharkMusic);
 
     UnloadSound(jumpSound);
     UnloadSound(attackHammerSound);

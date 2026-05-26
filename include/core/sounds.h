@@ -10,7 +10,9 @@ typedef enum
 {
     SOUNDTRACK_NONE,
     SOUNDTRACK_LEVEL1_RUN,
-    SOUNDTRACK_HAIRY_LEG
+    SOUNDTRACK_LEVEL2_RUN,
+    SOUNDTRACK_HAIRY_LEG,
+    SOUNDTRACK_SHARK
 } SoundtrackId;
 
 void PlaySoundtrack(SoundtrackId soundtrack);
