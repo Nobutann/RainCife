@@ -19,6 +19,10 @@ typedef enum {
   MM_CEILING_TELEGRAPH,
   MM_CEILING_SLAM,
   MM_CEILING_RETREAT,
+  MM_SIDE_UMBRELLA_TELEGRAPH,
+  MM_SIDE_UMBRELLA_ENTER,
+  MM_SIDE_UMBRELLA_ACTIVE,
+  MM_SIDE_UMBRELLA_RETREAT,
   MM_ARM_STORM_ENTER,
   MM_ARM_STORM_ACTIVE,
   MM_ARM_STORM_RETREAT,
@@ -79,6 +83,7 @@ typedef struct {
   // Umbrella storm details
   MMUmbrella umbrellas[MM_MAX_UMBRELLAS];
   float umbrellaSpawnTimer;
+  int sideUmbrellaSide; // 0 = blocks left half, 1 = blocks right half
   int attackCycle; // to cycle or track attacks
 
   Animation animShadow; // Hairy Leg style warning shadow alert

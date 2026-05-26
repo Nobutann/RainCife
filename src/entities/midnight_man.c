@@ -39,6 +39,17 @@
 #define MM_ARM_STORM_HITBOX_WIDTH_RATIO 0.72f
 #define MM_ARM_STORM_HITBOX_HEIGHT_RATIO 0.62f
 
+#define MM_SIDE_UMBRELLA_ENTER_DURATION 0.7f
+#define MM_SIDE_UMBRELLA_ACTIVE_DURATION 3.2f
+#define MM_SIDE_UMBRELLA_RETREAT_DURATION 0.7f
+#define MM_SIDE_UMBRELLA_INTERVAL 0.32f
+#define MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO 0.5f
+#define MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO 0.92f
+#define MM_SIDE_UMBRELLA_TELEGRAPH_DURATION 0.8f
+#define MM_SIDE_UMBRELLA_ARM_HEIGHT_RATIO 0.35f
+#define MM_SIDE_UMBRELLA_SPAWN_SPREAD 95
+#define MM_SIDE_UMBRELLA_VELOCITY_SPREAD 240
+
 static float GetMMShockwaveFrameWidth(const MidnightMan *mm)
 {
     float width = mm->texShockwave.width > 0 ? (float)mm->texShockwave.width : MM_SHOCKWAVE_FALLBACK_WIDTH;
@@ -167,6 +178,20 @@ static float Lerpf(float from, float to, float weight)
     return from + (to - from) * weight;
 }
 
+static bool IsMMArmStormState(MidnightManState state)
+{
+    return state == MM_ARM_STORM_ENTER ||
+        state == MM_ARM_STORM_ACTIVE ||
+        state == MM_ARM_STORM_RETREAT;
+}
+
+static bool IsMMSideUmbrellaState(MidnightManState state)
+{
+    return state == MM_SIDE_UMBRELLA_ENTER ||
+        state == MM_SIDE_UMBRELLA_ACTIVE ||
+        state == MM_SIDE_UMBRELLA_RETREAT;
+}
+
 static void RefreshHandsLayout(MidnightMan *mm, int screenWidth, int screenHeight, float groundY)
 {
     (void)screenWidth;
@@ -203,6 +228,56 @@ static Rectangle GetMMArmStormHitbox(const MidnightMan *mm, int screenHeight, in
     };
 }
 
+static Rectangle GetMMArmVisualRectAt(const MidnightMan *mm, int screenHeight, float x, float y)
+{
+    float armW = mm->texArm.width > 0 ? (float)mm->texArm.width : 413.0f;
+    float armH = mm->texArm.height > 0 ? (float)mm->texArm.height : 252.0f;
+    float scale = ((float)screenHeight * MM_SIDE_UMBRELLA_ARM_HEIGHT_RATIO) / armH;
+
+    return (Rectangle){x, y, armW * scale, armH * scale};
+}
+
+static Rectangle GetMMShrunkArmHitbox(Rectangle armRect)
+{
+    float hitboxW = armRect.width * MM_ARM_STORM_HITBOX_WIDTH_RATIO;
+    float hitboxH = armRect.height * MM_ARM_STORM_HITBOX_HEIGHT_RATIO;
+
+    return (Rectangle)
+    {
+        armRect.x + (armRect.width - hitboxW) * 0.5f,
+        armRect.y + (armRect.height - hitboxH) * 0.5f,
+        hitboxW,
+        hitboxH
+    };
+}
+
+static Rectangle GetMMSideUmbrellaBlockRect(const MidnightMan *mm, int screenWidth, int screenHeight)
+{
+    float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
+    float blockH = (float)screenHeight * MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO;
+    float blockY = ((float)screenHeight - blockH) * 0.5f;
+    return (Rectangle){mm->handXPositions[0], blockY, blockW, blockH};
+}
+
+static Rectangle GetMMSideUmbrellaTargetBlockRect(int screenWidth, int screenHeight, int side)
+{
+    float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
+    float blockH = (float)screenHeight * MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO;
+    float blockX = side == 0 ? 0.0f : (float)screenWidth - blockW;
+    float blockY = ((float)screenHeight - blockH) * 0.5f;
+    return (Rectangle){blockX, blockY, blockW, blockH};
+}
+
+static void SyncMMSideUmbrellaHitboxes(MidnightMan *mm, int screenWidth, int screenHeight)
+{
+    mm->handActive[0] = true;
+    mm->handActive[1] = true;
+    mm->handActive[2] = false;
+    mm->handHitboxes[0] = GetMMSideUmbrellaBlockRect(mm, screenWidth, screenHeight);
+    mm->handHitboxes[1] = GetMMShrunkArmHitbox(GetMMArmVisualRectAt(mm, screenHeight, mm->handXPositions[1], mm->handsY));
+    mm->handHitboxes[2] = (Rectangle){0};
+}
+
 void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float groundY)
 {
     mm->active = true;
@@ -216,6 +291,7 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
     mm->handDrawWidth = 0.0f;
     mm->handDrawHeight = 0.0f;
     mm->umbrellaSpawnTimer = 0.0f;
+    mm->sideUmbrellaSide = 0;
     mm->attackCycle = 0;
 
     for (int i = 0; i < MM_HAND_COUNT; i++)
@@ -396,6 +472,154 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
     switch (mm->state)
     {
+        case MM_SIDE_UMBRELLA_TELEGRAPH:
+        {
+            mm->timer += deltaTime;
+            mm->handsY = (float)screenHeight;
+            for (int i = 0; i < MM_HAND_COUNT; i++)
+            {
+                mm->handActive[i] = false;
+                mm->handHitboxes[i] = (Rectangle){0};
+            }
+
+            if (mm->animShadow.frameCount > 0)
+            {
+                float progress = mm->timer / MM_SIDE_UMBRELLA_TELEGRAPH_DURATION;
+                if (progress > 1.0f)
+                {
+                    progress = 1.0f;
+                }
+                int frame = (int)(progress * mm->animShadow.frameCount);
+                if (frame >= mm->animShadow.frameCount)
+                {
+                    frame = mm->animShadow.frameCount - 1;
+                }
+                mm->animShadow.currentFrame = frame;
+            }
+
+            if (mm->timer >= MM_SIDE_UMBRELLA_TELEGRAPH_DURATION)
+            {
+                bool blockLeft = mm->sideUmbrellaSide == 0;
+                float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
+                Rectangle armRect = GetMMArmVisualRectAt(mm, screenHeight, 0.0f, 0.0f);
+
+                mm->handsY = 0.0f;
+                mm->handXPositions[0] = blockLeft ? -blockW : (float)screenWidth;
+                mm->handXPositions[1] = blockLeft ? (float)screenWidth : -armRect.width;
+                mm->umbrellaSpawnTimer = 0.0f;
+                mm->state = MM_SIDE_UMBRELLA_ENTER;
+                mm->timer = 0.0f;
+            }
+            break;
+        }
+
+        case MM_SIDE_UMBRELLA_ENTER:
+        {
+            mm->timer += deltaTime;
+            float progress = mm->timer / MM_SIDE_UMBRELLA_ENTER_DURATION;
+            if (progress > 1.0f) progress = 1.0f;
+
+            bool blockLeft = mm->sideUmbrellaSide == 0;
+            float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
+            Rectangle armRect = GetMMArmVisualRectAt(mm, screenHeight, 0.0f, 0.0f);
+            float blockStartX = blockLeft ? -blockW : (float)screenWidth;
+            float blockTargetX = blockLeft ? 0.0f : (float)screenWidth - blockW;
+            float armStartX = blockLeft ? (float)screenWidth : -armRect.width;
+            float armTargetX = blockLeft ? (float)screenWidth - armRect.width : 0.0f;
+
+            mm->handsY = 0.0f;
+            mm->handXPositions[0] = Lerpf(blockStartX, blockTargetX, progress);
+            mm->handXPositions[1] = Lerpf(armStartX, armTargetX, progress);
+            SyncMMSideUmbrellaHitboxes(mm, screenWidth, screenHeight);
+
+            if (mm->timer >= MM_SIDE_UMBRELLA_ENTER_DURATION)
+            {
+                mm->handXPositions[0] = blockTargetX;
+                mm->handXPositions[1] = armTargetX;
+                mm->state = MM_SIDE_UMBRELLA_ACTIVE;
+                mm->timer = 0.0f;
+                mm->umbrellaSpawnTimer = 0.0f;
+            }
+            break;
+        }
+
+        case MM_SIDE_UMBRELLA_ACTIVE:
+        {
+            mm->timer += deltaTime;
+            mm->handsY = 0.0f;
+
+            bool blockLeft = mm->sideUmbrellaSide == 0;
+            Rectangle armRect = GetMMArmVisualRectAt(mm, screenHeight, mm->handXPositions[1], mm->handsY);
+            float spawnX = blockLeft ? armRect.x : armRect.x + armRect.width;
+            float spawnY = armRect.y + armRect.height * 0.75f;
+
+            mm->umbrellaSpawnTimer += deltaTime;
+            if (mm->umbrellaSpawnTimer >= MM_SIDE_UMBRELLA_INTERVAL)
+            {
+                mm->umbrellaSpawnTimer = 0.0f;
+
+                for (int i = 0; i < MM_MAX_UMBRELLAS; i++)
+                {
+                    if (!mm->umbrellas[i].active)
+                    {
+                        mm->umbrellas[i].active = true;
+                        mm->umbrellas[i].isBig = false;
+                        mm->umbrellas[i].position.x = spawnX + (float)GetRandomValue(-MM_SIDE_UMBRELLA_SPAWN_SPREAD, MM_SIDE_UMBRELLA_SPAWN_SPREAD);
+                        mm->umbrellas[i].position.y = spawnY;
+                        mm->umbrellas[i].velocity.x = (float)GetRandomValue(-MM_SIDE_UMBRELLA_VELOCITY_SPREAD, MM_SIDE_UMBRELLA_VELOCITY_SPREAD);
+                        mm->umbrellas[i].velocity.y = 235.0f + (float)GetRandomValue(0, 70);
+                        mm->umbrellas[i].scale = 0.35f;
+                        mm->umbrellas[i].animFrame = GetRandomValue(0, 19);
+                        mm->umbrellas[i].animTimer = 0.0f;
+                        break;
+                    }
+                }
+            }
+
+            SyncMMSideUmbrellaHitboxes(mm, screenWidth, screenHeight);
+
+            if (mm->timer >= MM_SIDE_UMBRELLA_ACTIVE_DURATION)
+            {
+                mm->state = MM_SIDE_UMBRELLA_RETREAT;
+                mm->timer = 0.0f;
+            }
+            break;
+        }
+
+        case MM_SIDE_UMBRELLA_RETREAT:
+        {
+            mm->timer += deltaTime;
+            float progress = mm->timer / MM_SIDE_UMBRELLA_RETREAT_DURATION;
+            if (progress > 1.0f) progress = 1.0f;
+
+            bool blockLeft = mm->sideUmbrellaSide == 0;
+            float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
+            Rectangle armRect = GetMMArmVisualRectAt(mm, screenHeight, 0.0f, 0.0f);
+            float blockStartX = blockLeft ? 0.0f : (float)screenWidth - blockW;
+            float blockEndX = blockLeft ? -blockW : (float)screenWidth;
+            float armStartX = blockLeft ? (float)screenWidth - armRect.width : 0.0f;
+            float armEndX = blockLeft ? (float)screenWidth : -armRect.width;
+
+            mm->handsY = 0.0f;
+            mm->handXPositions[0] = Lerpf(blockStartX, blockEndX, progress);
+            mm->handXPositions[1] = Lerpf(armStartX, armEndX, progress);
+            SyncMMSideUmbrellaHitboxes(mm, screenWidth, screenHeight);
+
+            if (mm->timer >= MM_SIDE_UMBRELLA_RETREAT_DURATION)
+            {
+                mm->handActive[0] = false;
+                mm->handActive[1] = false;
+                mm->handActive[2] = false;
+                mm->handHitboxes[0] = (Rectangle){0};
+                mm->handHitboxes[1] = (Rectangle){0};
+                mm->handHitboxes[2] = (Rectangle){0};
+                mm->handsY = (float)screenHeight;
+                mm->state = MM_IDLE;
+                mm->timer = 0.0f;
+            }
+            break;
+        }
+
         case MM_ARM_STORM_ENTER:
         {
             mm->timer += deltaTime;
@@ -540,7 +764,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             if (mm->timer >= MM_IDLE_DURATION)
             {
                 mm->timer = 0.0f;
-                int nextAttack = GetRandomValue(0, 2);
+                int nextAttack = GetRandomValue(0, 3);
 
                 if (nextAttack == 0)
                 {
@@ -591,6 +815,24 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                     mm->animShadow.timer = 0.0f;
                 }
                 else if (nextAttack == 2)
+                {
+                    bool blockLeft = GetRandomValue(0, 1) == 0;
+
+                    mm->sideUmbrellaSide = blockLeft ? 0 : 1;
+                    mm->handsY = (float)screenHeight;
+                    mm->handActive[0] = false;
+                    mm->handActive[1] = false;
+                    mm->handActive[2] = false;
+                    mm->handHitboxes[0] = (Rectangle){0};
+                    mm->handHitboxes[1] = (Rectangle){0};
+                    mm->handHitboxes[2] = (Rectangle){0};
+                    mm->umbrellaSpawnTimer = 0.0f;
+                    mm->animShadow.currentFrame = 0;
+                    mm->animShadow.timer = 0.0f;
+                    mm->state = MM_SIDE_UMBRELLA_TELEGRAPH;
+                    mm->timer = 0.0f;
+                }
+                else if (nextAttack == 3)
                 {
                     mm->handsY = 0.0f;
                     mm->handXPositions[0] = -(float)(mm->texArm.width);
@@ -1000,6 +1242,7 @@ void DrawMidnightMan(const MidnightMan *mm)
     }
 
     int screenHeight = GetScreenHeight();
+    int screenWidth = GetScreenWidth();
     float groundY = (float)screenHeight * 0.82f;
     Color bossTint = mm->hitFlashTimer > 0.0f ? RED : WHITE;
 
@@ -1026,6 +1269,15 @@ void DrawMidnightMan(const MidnightMan *mm)
                     DrawAnimationFrame((Animation *)&mm->animShadow, warningPosition, scale, false, WHITE);
                 }
             }
+        }
+    }
+    else if (mm->state == MM_SIDE_UMBRELLA_TELEGRAPH)
+    {
+        if (mm->animShadow.sheet.id > 0)
+        {
+            Rectangle shadowDest = GetMMSideUmbrellaTargetBlockRect(screenWidth, screenHeight, mm->sideUmbrellaSide);
+            Rectangle shadowSrc = GetAnimationFrameSource(&mm->animShadow, false);
+            DrawTexturePro(mm->animShadow.sheet, shadowSrc, shadowDest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
         }
     }
 
@@ -1079,6 +1331,17 @@ void DrawMidnightMan(const MidnightMan *mm)
             }
         }
     }
+    else if (IsMMSideUmbrellaState(mm->state))
+    {
+        if (mm->texHandOpen.id > 0)
+        {
+            float texW = (float)mm->texHandOpen.width;
+            float texH = (float)mm->texHandOpen.height;
+            Rectangle block = GetMMSideUmbrellaBlockRect(mm, screenWidth, screenHeight);
+            Rectangle src = {0.0f, 0.0f, mm->sideUmbrellaSide == 1 ? -texW : texW, texH};
+            DrawTexturePro(mm->texHandOpen, src, block, (Vector2){0.0f, 0.0f}, 0.0f, bossTint);
+        }
+    }
     else
     {
         if (mm->texHandOpen.id > 0)
@@ -1104,7 +1367,7 @@ void DrawMidnightMan(const MidnightMan *mm)
         }
     }
 
-    if (mm->state == MM_ARM_STORM_ENTER  || mm->state == MM_ARM_STORM_ACTIVE || mm->state == MM_ARM_STORM_RETREAT)
+    if (IsMMArmStormState(mm->state))
     {
         if (mm->texArm.id > 0)
         {
@@ -1123,6 +1386,17 @@ void DrawMidnightMan(const MidnightMan *mm)
             DrawTexturePro(mm->texArm, srcRight, destRight, (Vector2){0.0f, 0.0f}, 0.0f, bossTint);
         }
 
+    }
+    if (IsMMSideUmbrellaState(mm->state))
+    {
+        if (mm->texArm.id > 0)
+        {
+            float texW = (float)mm->texArm.width;
+            float texH = (float)mm->texArm.height;
+            Rectangle armRect = GetMMArmVisualRectAt(mm, screenHeight, mm->handXPositions[1], mm->handsY);
+            Rectangle src = {0.0f, 0.0f, mm->sideUmbrellaSide == 0 ? -texW : texW, texH};
+            DrawTexturePro(mm->texArm, src, armRect, (Vector2){0.0f, 0.0f}, 0.0f, bossTint);
+        }
     }
     if (mm->texUmbrella.id > 0)
     {
@@ -1308,7 +1582,7 @@ bool IsMidnightManColliding(const MidnightMan *mm, Rectangle playerHitbox)
     if (mm->state == MM_GROUND_RISE || mm->state == MM_GROUND_RETREAT ||
         mm->state == MM_GROUND_PHASE2_RISE || mm->state == MM_GROUND_PHASE2_PAUSE ||
         mm->state == MM_GROUND_PHASE2_RETREAT || mm->state == MM_CEILING_SLAM ||
-        mm->state == MM_CEILING_RETREAT)
+        mm->state == MM_CEILING_RETREAT || IsMMSideUmbrellaState(mm->state))
 
     {
         for (int i = 0; i < MM_HAND_COUNT; i++)
