@@ -635,6 +635,11 @@ static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float pro
     return barValue;
 }
 
+static GameScreen GetGameplayReturnScreen(bool infiniteMode)
+{
+    return infiniteMode ? SCREEN_INFINITE_MENU : SCREEN_LEVEL_SELECT;
+}
+
 typedef enum { TRANSITION_RUNNING_TO_BOSS, TRANSITION_BOSS_TO_RUNNING } PhaseTransitionType;
 
 static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rectangle advanceRect, Rectangle menuRect, int btnFontSize, const char *title, bool hoveringButton)
@@ -876,7 +881,7 @@ int main(void)
                     }
                     else if (clickedPauseOption == 1)
                     {
-                        currentScreen = SCREEN_START;
+                        currentScreen = GetGameplayReturnScreen(infiniteMode);
                     }
 
                     float barValue = GetGameplayBarValue(currentLevel, phase, progressTimer, &pernaCabeluda, &shark, &midnightMan);
@@ -1040,7 +1045,7 @@ int main(void)
                     }
                     else if (clickedDeathOption == 1)
                     {
-                        currentScreen = infiniteMode ? SCREEN_INFINITE_MENU : SCREEN_LEVEL_SELECT;
+                        currentScreen = GetGameplayReturnScreen(infiniteMode);
                     }
 
                     BeginDrawing();
@@ -1185,7 +1190,7 @@ int main(void)
                         }
                         else if (CheckCollisionPointRec(mouse, menuRect))
                         {
-                            currentScreen = SCREEN_LEVEL_SELECT;
+                            currentScreen = GetGameplayReturnScreen(infiniteMode);
                         }
                     }
 
