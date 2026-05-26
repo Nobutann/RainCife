@@ -665,6 +665,10 @@ static SoundtrackId GetGameplaySoundtrack(Level *currentLevel, GamePhase phase, 
     {
         return SOUNDTRACK_LEVEL2_RUN;
     }
+    if (phase == PHASE_RUNNING && currentLevel->id == 3)
+    {
+        return SOUNDTRACK_LEVEL3_RUN;
+    }
 
     if (phase == PHASE_BOSS && currentLevel->bossId == 1)
     {
@@ -673,6 +677,10 @@ static SoundtrackId GetGameplaySoundtrack(Level *currentLevel, GamePhase phase, 
     if (phase == PHASE_BOSS && currentLevel->bossId == 2)
     {
         return SOUNDTRACK_SHARK;
+    }
+    if (phase == PHASE_BOSS && currentLevel->bossId == 3)
+    {
+        return SOUNDTRACK_MIDNIGHT_MAN;
     }
 
     return SOUNDTRACK_NONE;
