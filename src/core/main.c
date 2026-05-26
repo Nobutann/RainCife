@@ -643,7 +643,7 @@ static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float pro
         }
         else if (currentLevel->bossId == 3)
         {
-            barValue = (float)midnightMan->health / 200.0f;
+            barValue = (float)midnightMan->health / 120.0f;
         }
     }
 
@@ -1768,6 +1768,10 @@ int main(void)
                         UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
                         if (!bossDefeatTransitionPending)
                         {
+                            if (IsKeyPressed(KEY_N))
+                            {
+                                DamageHairyLeg(&pernaCabeluda, pernaCabeluda.health);
+                            }
                             TryDamageHairyLegFromPlayerAttack(&pernaCabeluda, &player, playerScale);
                         }
 
@@ -1809,6 +1813,10 @@ int main(void)
                         UpdateMidnightMan(&midnightMan, playerHitbox, mmDt, currentWidth, currentHeight, groundY);
                         if (!bossDefeatTransitionPending)
                         {
+                            if (IsKeyPressed(KEY_N))
+                            {
+                                midnightMan.health = 0;
+                            }
                             TryDamageMidnightManFromPlayerAttack(&midnightMan, &player, playerScale);
                         }
 
