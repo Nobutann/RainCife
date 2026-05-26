@@ -19,9 +19,10 @@ typedef enum {
   MM_CEILING_TELEGRAPH,
   MM_CEILING_SLAM,
   MM_CEILING_RETREAT,
-  MM_FOLLOW_TELEGRAPH,
-  MM_FOLLOW_SLAM,
-  MM_FOLLOW_RETREAT,
+  MM_SIDE_UMBRELLA_TELEGRAPH,
+  MM_SIDE_UMBRELLA_ENTER,
+  MM_SIDE_UMBRELLA_ACTIVE,
+  MM_SIDE_UMBRELLA_RETREAT,
   MM_ARM_STORM_ENTER,
   MM_ARM_STORM_ACTIVE,
   MM_ARM_STORM_RETREAT,
@@ -58,7 +59,6 @@ typedef struct {
   float timer;
 
   Texture2D texHandOpen;
-  Texture2D texHandHoldingBuilding;
   Texture2D texFist;      // Punch.png
   Texture2D texUmbrella;  // sombrinha-Sheet.png
   Texture2D texArm;       // Arms_idle.png
@@ -75,20 +75,6 @@ typedef struct {
   Rectangle handHitboxes[MM_HAND_COUNT];
   bool handActive[MM_HAND_COUNT];
 
-  // Sweep attack details
-  float sweepX;
-  float sweepY;
-  float sweepWidth;
-  float sweepHeight;
-  int sweepDirection; // 1 = Left to Right, -1 = Right to Left
-
-  // Homing fist 2 details
-  float follow2X;
-  float follow2Y;
-  float follow2VelX;
-  float follow2VelY;
-  float follow2Angle;
-
   // Sequential shockwaves and phases for Ceiling Slam
   MMShockwave waveLeft;
   MMShockwave waveRight;
@@ -97,6 +83,7 @@ typedef struct {
   // Umbrella storm details
   MMUmbrella umbrellas[MM_MAX_UMBRELLAS];
   float umbrellaSpawnTimer;
+  int sideUmbrellaSide; // 0 = blocks left half, 1 = blocks right half
   int attackCycle; // to cycle or track attacks
 
   Animation animShadow; // Hairy Leg style warning shadow alert
