@@ -1,6 +1,7 @@
 #include <raylib.h>
 #include "core/screens.h"
 #include "core/cursor.h"
+#include "core/sounds.h"
 #include "utils.h"
 
 #define CHARACTER_SLOT_COUNT 3
@@ -44,6 +45,7 @@ GameScreen RunCharacterSelect()
 
     while (!WindowShouldClose())
     {
+        UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
         Vector2 mouse = GetMousePosition();

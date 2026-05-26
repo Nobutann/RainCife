@@ -1,11 +1,13 @@
 #include <raylib.h>
 #include "core/screens.h"
 #include "core/cursor.h"
+#include "core/sounds.h"
 
 GameScreen RunCredits()
 {
     while (!WindowShouldClose())
     {
+        UpdateSoundtrack();
         int currentHeight = GetScreenHeight();
         int currentWidth = GetScreenWidth();
 

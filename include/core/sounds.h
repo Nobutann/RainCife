@@ -9,6 +9,7 @@ void SetMusicSystemVolume(float volume);
 typedef enum
 {
     SOUNDTRACK_NONE,
+    SOUNDTRACK_MENU,
     SOUNDTRACK_LEVEL1_RUN,
     SOUNDTRACK_LEVEL2_RUN,
     SOUNDTRACK_LEVEL3_RUN,
