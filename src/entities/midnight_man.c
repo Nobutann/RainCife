@@ -411,7 +411,7 @@ static void SyncMMSideUmbrellaHitboxes(MidnightMan *mm, int screenWidth, int scr
 void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float groundY)
 {
     mm->active = true;
-    mm->health = 200;
+    mm->health = 120;
     mm->hitFlashTimer = 0.0f;
     mm->state = MM_IDLE;
     mm->timer = 0.0f;
