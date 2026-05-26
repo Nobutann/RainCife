@@ -849,12 +849,12 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
                     if (GetRandomValue(0, 1) == 0)
                     {
-                        mm->handXPositions[0] = W / 6.0f - halfVis;
-                        mm->handXPositions[1] = W / 2.0f - halfVis;
-                        mm->handXPositions[2] = W * 5.0f / 6.0f - halfVis;
+                        mm->handXPositions[0] = W / 4.0f - halfVis;
+                        mm->handXPositions[1] = W * 3.0f / 4.0f - halfVis;
+                        mm->handXPositions[2] = -9999.0f;
                         mm->handActive[0] = true;
                         mm->handActive[1] = true;
-                        mm->handActive[2] = true;
+                        mm->handActive[2] = false;
                     }
                     else
                     {
@@ -998,12 +998,12 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             {
                 mm->handsY = (float)screenHeight;
 
-                bool wasThreeHands = mm->handActive[2];
                 float visualW = mm->handDrawHeight;
                 float halfVis = visualW / 2.0f;
                 float W = (float)screenWidth;
+                bool wasWidePair = mm->handXPositions[0] < W * 0.30f;
 
-                if (wasThreeHands)
+                if (wasWidePair)
                 {
                     mm->handXPositions[0] = W / 3.0f - halfVis;
                     mm->handXPositions[1] = W * 2.0f / 3.0f - halfVis;
@@ -1014,12 +1014,12 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 }
                 else
                 {
-                    mm->handXPositions[0] = W / 6.0f - halfVis;
-                    mm->handXPositions[1] = W / 2.0f - halfVis;
-                    mm->handXPositions[2] = W * 5.0f / 6.0f - halfVis;
+                    mm->handXPositions[0] = W / 4.0f - halfVis;
+                    mm->handXPositions[1] = W * 3.0f / 4.0f - halfVis;
+                    mm->handXPositions[2] = -9999.0f;
                     mm->handActive[0] = true;
                     mm->handActive[1] = true;
-                    mm->handActive[2] = true;
+                    mm->handActive[2] = false;
                 }
 
                 mm->state = MM_GROUND_PHASE2_TELEGRAPH;
@@ -1487,7 +1487,7 @@ void DrawMidnightMan(const MidnightMan *mm)
 
             for (int i = 0; i < MM_HAND_COUNT; i++)
             {
-                if ((mm->handActive[i] || mm->state == MM_GROUND_RISE || mm->state == MM_GROUND_RETREAT) && mm->state != MM_CEILING_TELEGRAPH && mm->state != MM_ARM_STORM_ENTER && mm->state != MM_ARM_STORM_ACTIVE && mm->state != MM_ARM_STORM_RETREAT)
+                if (mm->handActive[i] && mm->state != MM_CEILING_TELEGRAPH && mm->state != MM_ARM_STORM_ENTER && mm->state != MM_ARM_STORM_ACTIVE && mm->state != MM_ARM_STORM_RETREAT)
                 {
                     float centerX = mm->handXPositions[i] + visualW / 2.0f;
                     float centerY = mm->handsY + mm->handDrawWidth / 2.0f;
