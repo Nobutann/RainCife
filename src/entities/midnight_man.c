@@ -285,6 +285,16 @@ static Rectangle GetMMSideUmbrellaHandHitbox(Rectangle block)
     };
 }
 
+static float GetMMCeilingFistExitY(const MidnightMan *mm)
+{
+    float texW = mm->texFist.width > 0 ? (float)mm->texFist.width : 391.0f;
+    float texH = mm->texFist.height > 0 ? (float)mm->texFist.height : 235.0f;
+    float scale = texH > 0.0f ? mm->handDrawHeight / texH : 1.0f;
+    float rotatedVisualHeight = texW * scale;
+
+    return -((mm->handDrawWidth + rotatedVisualHeight) * 0.5f);
+}
+
 static void SyncMMSideUmbrellaHitboxes(MidnightMan *mm, int screenWidth, int screenHeight)
 {
     mm->handActive[0] = true;
@@ -1188,7 +1198,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         }
 
         float targetY = groundY - mm->handDrawWidth + 30.0f;
-        float endY = -mm->handDrawHeight;
+        float endY = GetMMCeilingFistExitY(mm);
 
         if (mm->timer < MM_CEILING_PAUSE_DURATION)
         {
