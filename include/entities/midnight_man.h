@@ -60,6 +60,7 @@ typedef struct {
 
   Texture2D texHandOpen;
   Texture2D texFist; 
+  Texture2D texHandHoldingBuilding;
   Texture2D texUmbrella;
   Texture2D texArm;
   Texture2D texShockwave;

@@ -98,6 +98,29 @@ static float GetWaterSurfaceY(Background *bg, int screenWidth, float groundY)
     return waterY;
 }
 
+static float GetLevel6BossIntroWorldYOffset(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, GamePhase phase)
+{
+    if (levelId != 6 || bossId != 3 || phase != PHASE_BOSS || level6IntroProgress >= 1.0f || bg->bossMidnightMan.id <= 0)
+    {
+        return 0.0f;
+    }
+
+    if (level6IntroProgress < 0.0f)
+    {
+        level6IntroProgress = 0.0f;
+    }
+
+    float texW = (float)bg->bossMidnightMan.width;
+    float texH = (float)bg->bossMidnightMan.height;
+    float scale = (float)screenWidth / texW;
+    float texHeightVisibleOnScreen = (float)screenHeight / scale;
+    float bottomTrimTex = texH * LEVEL6_BOTTOM_TRIM_RATIO;
+    float maxSrcY = fmaxf(0.0f, texH - texHeightVisibleOnScreen - bottomTrimTex);
+    float srcY = maxSrcY * level6IntroProgress;
+
+    return (maxSrcY - srcY) * scale;
+}
+
 void UpdateWaterSplashes(Background *bg, float dt, int screenWidth, int screenHeight, float groundY)
 {
     if (bg->waterSplashSheet.id == 0) return;
@@ -177,6 +200,8 @@ static void DrawBgStrip(Texture2D *frames, int count, float scrollX, int screenW
 
 void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase)
 {
+    float level6IntroWorldYOffset = GetLevel6BossIntroWorldYOffset(bg, levelId, bossId, level6IntroProgress, screenWidth, screenHeight, phase);
+
     Texture2D *runningFrames = NULL;
     int runningFrameCount = 0;
     if (phase == PHASE_RUNNING)
@@ -267,7 +292,7 @@ void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroPr
         float tileW = bg->floor.width * scale;
         float tileH = bg->floor.height * scale;
         float visibleTopOff = tileH * FLOOR_VISIBLE_TOP_RATIO;
-        float posY = groundY - visibleTopOff;
+        float posY = groundY - visibleTopOff + level6IntroWorldYOffset;
 
         float offset = fmodf(bg->scrollX, tileW);
 
@@ -310,14 +335,16 @@ void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroPr
 
 }
 
-void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY)
+void DrawWater(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase)
 {
+    float level6IntroWorldYOffset = GetLevel6BossIntroWorldYOffset(bg, levelId, bossId, level6IntroProgress, screenWidth, screenHeight, phase);
+    float waterSurfaceY = GetWaterSurfaceY(bg, screenWidth, groundY) + level6IntroWorldYOffset;
+
     if (bg->waterStatic.id > 0)
     {
         float tileW = (float)bg->waterStatic.width;
         float scale = (float)screenWidth / tileW;
         float scaledW = tileW * scale;
-        float waterY = GetWaterSurfaceY(bg, screenWidth, groundY);
 
         float offset = fmodf(bg->waterScrollX, scaledW);
         float startX = -offset;
@@ -326,12 +353,15 @@ void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY)
             startX -= scaledW;
         }
 
-        float waterHeight = ((float)screenHeight - waterY) * 1.5f;
-        Rectangle waterSrc = { 0, 0, (float)bg->waterStatic.width, (float)bg->waterStatic.height };
-        for (float x = startX; x < screenWidth + scaledW; x += scaledW)
+        float waterHeight = ((float)screenHeight - waterSurfaceY) * 1.5f;
+        if (waterHeight > 0.0f)
         {
-            Rectangle waterDest = { x, waterY, scaledW, waterHeight };
-            DrawTexturePro(bg->waterStatic, waterSrc, waterDest, (Vector2){0, 0}, 0.0f, WHITE);
+            Rectangle waterSrc = { 0, 0, (float)bg->waterStatic.width, (float)bg->waterStatic.height };
+            for (float x = startX; x < screenWidth + scaledW; x += scaledW)
+            {
+                Rectangle waterDest = { x, waterSurfaceY, scaledW, waterHeight };
+                DrawTexturePro(bg->waterStatic, waterSrc, waterDest, (Vector2){0, 0}, 0.0f, WHITE);
+            }
         }
     }
 
@@ -341,7 +371,9 @@ void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY)
 
     if (wTex.id > 0)
     {
-        float waterY = groundY + (screenHeight * -0.14f);
+        float waterY = level6IntroWorldYOffset > 0.0f
+            ? waterSurfaceY
+            : groundY + (screenHeight * -0.14f);
         float waterH = screenHeight - waterY;
         if (waterH > 0)
         {

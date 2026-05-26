@@ -65,7 +65,7 @@ void UpdateBackground(Background *bg, float dt, GamePhase phase);
 void UpdateObjetos(Background *bg, float dt, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void UpdateWaterSplashes(Background *bg, float dt, int screenWidth, int screenHeight, float groundY);
 void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
-void DrawWater(Background *bg, int screenWidth, int screenHeight, float groundY);
+void DrawWater(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void DrawWaterSplashes(Background *bg);
 void DrawObjetos(Background *bg, int screenWidth, int screenHeight, float groundY);
 void DrawStageFront(Background *bg, int screenWidth, int screenHeight);
