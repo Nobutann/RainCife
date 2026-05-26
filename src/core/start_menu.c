@@ -2,6 +2,7 @@
 #include "core/screens.h"
 #include "utils.h"
 #include "core/cursor.h"
+#include "core/sounds.h"
 
 #define MENU_CANVAS_WIDTH 640.0f
 #define MENU_CANVAS_HEIGHT 360.0f
@@ -59,6 +60,7 @@ GameScreen RunStart()
 
     while (!WindowShouldClose())
     {
+        UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
         Rectangle canvasRect = GetMenuCanvasRect(currentWidth, currentHeight);
@@ -191,6 +193,7 @@ GameScreen RunInfiniteSoon()
 {
     while (!WindowShouldClose())
     {
+        UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
 
