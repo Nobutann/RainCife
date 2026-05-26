@@ -650,6 +650,26 @@ static float GetGameplayBarValue(Level *currentLevel, GamePhase phase, float pro
     return barValue;
 }
 
+static SoundtrackId GetGameplaySoundtrack(Level *currentLevel, GamePhase phase, bool infiniteMode)
+{
+    if (infiniteMode || currentLevel == NULL)
+    {
+        return SOUNDTRACK_NONE;
+    }
+
+    if (phase == PHASE_RUNNING && currentLevel->id == 1)
+    {
+        return SOUNDTRACK_LEVEL1_RUN;
+    }
+
+    if (phase == PHASE_BOSS && currentLevel->bossId == 1)
+    {
+        return SOUNDTRACK_HAIRY_LEG;
+    }
+
+    return SOUNDTRACK_NONE;
+}
+
 static GameScreen GetGameplayReturnScreen(bool infiniteMode)
 {
     return infiniteMode ? SCREEN_INFINITE_MENU : SCREEN_LEVEL_SELECT;
@@ -697,6 +717,7 @@ int main(void)
     InitCustomCursor();
     InitSoundSystem();
     SetSoundSystemVolume(config.volume);
+    SetMusicSystemVolume(config.musica);
 
     ApplyWindowMode(config.telaCheia != 0);
 
@@ -712,6 +733,11 @@ int main(void)
 
     while (currentScreen != SCREEN_EXIT && !WindowShouldClose())
     {
+        if (currentScreen != SCREEN_GAME && currentScreen != SCREEN_INFINITE_GAME)
+        {
+            StopSoundtrack();
+        }
+
         if (IsKeyPressed(KEY_F11))
         {
             bool fullscreen = config.telaCheia != 0;
@@ -869,6 +895,16 @@ int main(void)
                 if (level6IntroActive)
                 {
                     level6IntroProgress = level6IntroTimer / level6IntroDuration;
+                }
+
+                if (deathScreenActive)
+                {
+                    StopSoundtrack();
+                }
+                else
+                {
+                    PlaySoundtrack(GetGameplaySoundtrack(currentLevel, phase, infiniteMode));
+                    UpdateSoundtrack();
                 }
 
                 if (gamePaused)

@@ -150,11 +150,16 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
         if (aceitarClique)
         {
             float prevVolume = config->volume;
+            float prevMusic = config->musica;
             config->volume = UpdateSlider(barSom, config->volume, &draggingSom);
             config->musica = UpdateSlider(barMusica, config->musica, &draggingMusica);
             if (config->volume != prevVolume)
             {
                 SetSoundSystemVolume(config->volume);
+            }
+            if (config->musica != prevMusic)
+            {
+                SetMusicSystemVolume(config->musica);
             }
         }
 
