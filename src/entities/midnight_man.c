@@ -1646,40 +1646,6 @@ void DrawMidnightMan(const MidnightMan *mm)
     {
         DrawMMShockwave(mm, &mm->waveRight, false);
     }
-
-    for (int i = 0; i < MM_HAND_COUNT; i++)
-    {
-        if (mm->handActive[i])
-        {
-            DrawRectangleLinesEx(mm->handHitboxes[i], 2.0f, LIME);
-        }
-    }
-
-    for (int i = 0; i < MM_MAX_UMBRELLAS; i++)
-    {
-        if (mm->umbrellas[i].active)
-        {
-            float uW = 186.0f * mm->umbrellas[i].scale;
-            float uH = 141.0f * mm->umbrellas[i].scale;
-            Rectangle umbrellaHitbox =
-            {
-                mm->umbrellas[i].position.x - uW * 0.35f,
-                mm->umbrellas[i].position.y - uH * 0.35f,
-                uW * 0.7f,
-                uH * 0.7f
-            };
-            DrawRectangleLinesEx(umbrellaHitbox, 2.0f, RED);
-        }
-    }
-
-    if (mm->waveLeft.active)
-    {
-        DrawRectangleLinesEx(mm->waveLeft.hitbox, 2.0f, RED);
-    }
-    if (mm->waveRight.active)
-    {
-        DrawRectangleLinesEx(mm->waveRight.hitbox, 2.0f, RED);
-    }
 }
 
 void UnloadMidnightMan(MidnightMan *mm)
