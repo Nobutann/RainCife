@@ -373,6 +373,8 @@ static void DrawInfiniteRankingPanel(Rectangle panel, const RankingInfinito *ran
     }
 }
 
+#define INFINITE_RANKING_DISPLAY_MAX 5
+
 static void DrawInfiniteRankingRows(const RankingInfinito *ranking, int screenWidth, int screenHeight)
 {
     int fontSize = screenHeight / 34;
@@ -389,7 +391,7 @@ static void DrawInfiniteRankingRows(const RankingInfinito *ranking, int screenWi
         return;
     }
 
-    for (int i = 0; i < ranking->quantidade && i < 4; i++)
+    for (int i = 0; i < ranking->quantidade && i < INFINITE_RANKING_DISPLAY_MAX; i++)
     {
         char posText[8];
         char scoreText[24];
@@ -776,6 +778,7 @@ static void DrawDailyChallengeRow(Rectangle row, const DailyChallenge *challenge
 GameScreen RunDailyChallenges()
 {
     bool acceptClick = false;
+    GameScreen nextScreen = SCREEN_EXIT;
     DailyChallengeState state = CarregarDesafiosDiarios();
     Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
     Texture2D challengesScreen = LoadTexture("assets/sprites/ui/infinite_menu/daily_challenges_screen.png");
@@ -788,7 +791,7 @@ GameScreen RunDailyChallenges()
         {105.0f, 210.0f, 431.0f, 56.0f}
     };
 
-    while (!WindowShouldClose())
+    while (!WindowShouldClose() && nextScreen == SCREEN_EXIT)
     {
         GarantirDesafiosDiarios(&state);
 
@@ -807,7 +810,7 @@ GameScreen RunDailyChallenges()
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
-            return SCREEN_INFINITE_MENU;
+            nextScreen = SCREEN_INFINITE_MENU;
         }
 
         if (IsKeyPressed(KEY_BACKSPACE))
@@ -817,7 +820,7 @@ GameScreen RunDailyChallenges()
 
         if (hoveringInteractive && acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
-            return SCREEN_INFINITE_MENU;
+            nextScreen = SCREEN_INFINITE_MENU;
         }
 
         BeginDrawing();
@@ -842,7 +845,7 @@ GameScreen RunDailyChallenges()
     UnloadTexture(challengesScreen);
     UnloadTexture(backButtonTexture);
     UnloadTexture(backHoverTexture);
-    return SCREEN_EXIT;
+    return nextScreen;
 }
 
 GameScreen RunItems()

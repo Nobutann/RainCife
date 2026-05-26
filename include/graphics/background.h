@@ -61,6 +61,7 @@ typedef struct {
 } Background;
 
 void InitBackground(Background *bg);
+void ResetBackgroundState(Background *bg);
 void UpdateBackground(Background *bg, float dt, GamePhase phase);
 void UpdateObjetos(Background *bg, float dt, int screenWidth, int screenHeight, float groundY, GamePhase phase);
 void UpdateWaterSplashes(Background *bg, float dt, int screenWidth, int screenHeight, float groundY);

@@ -213,10 +213,6 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
                 int keyTextY = (int)(keySlots[i].y + (keySlots[i].height - keyFontSize) / 2.0f);
                 DrawText(teclaAtual, keyTextX, keyTextY, keyFontSize, DARKGRAY);
 
-                if (controleSelecionado == i)
-                {
-                    DrawRectangleLinesEx(controlBoxes[i], 3.0f, BLUE);
-                }
             }
 
             DrawMenuCursor(hoveringInteractive);
