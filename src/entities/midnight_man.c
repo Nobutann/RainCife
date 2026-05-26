@@ -14,11 +14,6 @@
 #define MM_PHASE2_RETREAT_DURATION 0.25f
 #define MM_PHASE2_FIST_SCALE 0.6f
 
-#define MM_FOLLOW_SLAM_DURATION 3.5f
-#define MM_FOLLOW_SPEED 900.0f
-#define MM_FOLLOW_FIST_SCALE 0.5f
-#define MM_FOLLOW_TURN_SPEED 1.45f
-
 #define MM_CEILING_TELEGRAPH_DURATION 1.2f
 #define MM_CEILING_SLAM_DURATION 0.3f
 #define MM_CEILING_PAUSE_DURATION 0.5f
@@ -172,20 +167,6 @@ static float Lerpf(float from, float to, float weight)
     return from + (to - from) * weight;
 }
 
-static float LerpAngle(float from, float to, float weight)
-{
-    float difference = to - from;
-    while (difference < -180.0f)
-    {
-        difference += 360.0f;
-    }
-    while (difference > 180.0f)
-    {
-        difference -= 360.0f;
-    }
-    return from + difference * weight;
-}
-
 static void RefreshHandsLayout(MidnightMan *mm, int screenWidth, int screenHeight, float groundY)
 {
     (void)screenWidth;
@@ -274,16 +255,6 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
         mm->umbrellas[i].active = false;
     }
 
-    mm->sweepX = 0.0f;
-    mm->sweepY = 0.0f;
-    mm->sweepWidth = 0.0f;
-    mm->sweepHeight = 0.0f;
-    mm->sweepDirection = 1;
-    mm->follow2X = 0.0f;
-    mm->follow2Y = 0.0f;
-    mm->follow2VelX = 0.0f;
-    mm->follow2VelY = 0.0f;
-    mm->follow2Angle = 0.0f;
     mm->ceilingPhase = 0;
     mm->waveLeft = (MMShockwave){0};
     mm->waveRight = (MMShockwave){0};
@@ -569,7 +540,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             if (mm->timer >= MM_IDLE_DURATION)
             {
                 mm->timer = 0.0f;
-                int nextAttack = GetRandomValue(0, 3);
+                int nextAttack = GetRandomValue(0, 2);
 
                 if (nextAttack == 0)
                 {
@@ -620,25 +591,6 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                     mm->animShadow.timer = 0.0f;
                 }
                 else if (nextAttack == 2)
-                {
-                    float playerY = playerRect.y + playerRect.height / 2.0f;
-                    mm->sweepDirection = (GetRandomValue(0, 1) == 0) ? 1 : -1;
-
-                    float startX1 = (mm->sweepDirection == 1) ? -150.0f : ((float)screenWidth + 150.0f);
-                    mm->handXPositions[0] = startX1;
-                    mm->handsY = playerY;
-                    mm->handActive[0] = true;
-
-                    float initVelX1 = (mm->sweepDirection == 1) ? MM_FOLLOW_SPEED : -MM_FOLLOW_SPEED;
-                    mm->sweepY = initVelX1;
-                    mm->sweepWidth = 0.0f;
-                    mm->sweepX = (mm->sweepDirection == 1) ? 0.0f : 180.0f;
-                    mm->handActive[1] = false;
-                    mm->handActive[2] = false;
-                    mm->state = MM_FOLLOW_SLAM;
-                    mm->timer = 0.0f;
-                }
-                else if (nextAttack == 3)
                 {
                     mm->handsY = 0.0f;
                     mm->handXPositions[0] = -(float)(mm->texArm.width);
@@ -868,171 +820,6 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
         if (mm->timer >= MM_PHASE2_RETREAT_DURATION)
         {
-            mm->handsY = (float)screenHeight;
-            mm->state = MM_IDLE;
-            mm->timer = 0.0f;
-        }
-        break;
-    }
-
-    case MM_FOLLOW_SLAM:
-    {
-        mm->timer += deltaTime;
-
-        float playerX = playerRect.x + playerRect.width / 2.0f;
-        float playerY = playerRect.y + playerRect.height / 2.0f;
-
-        if (mm->timer >= 1.6f && !mm->handActive[1])
-        {
-            float startX2 = (mm->sweepDirection == 1) ? ((float)screenWidth + 150.0f) : -150.0f;
-            mm->handXPositions[1] = startX2;
-            mm->follow2Y = playerY;
-            mm->handActive[1] = true;
-
-            float initVelX2 = (mm->sweepDirection == 1) ? -MM_FOLLOW_SPEED : MM_FOLLOW_SPEED;
-            mm->follow2VelX = initVelX2;
-            mm->follow2VelY = 0.0f;
-            mm->follow2Angle = (mm->sweepDirection == 1) ? 180.0f : 0.0f;
-        }
-
-        if (mm->handActive[0])
-        {
-            if (mm->timer < 1.6f)
-            {
-                Vector2 targetDir1 = {playerX - mm->handXPositions[0], playerY - mm->handsY};
-                float dist1 = sqrtf(targetDir1.x * targetDir1.x + targetDir1.y * targetDir1.y);
-                if (dist1 > 0.0f)
-                {
-                    targetDir1.x /= dist1;
-                    targetDir1.y /= dist1;
-                }
-                else
-                {
-                    targetDir1.x = (mm->sweepDirection == 1) ? 1.0f : -1.0f;
-                    targetDir1.y = 0.0f;
-                }
-
-                float targetAngle1 = atan2f(targetDir1.y, targetDir1.x) * (180.0f / 3.14159265f);
-                mm->sweepX = LerpAngle(mm->sweepX, targetAngle1, MM_FOLLOW_TURN_SPEED * deltaTime);
-
-                float rad1 = mm->sweepX * (3.14159265f / 180.0f);
-                mm->sweepY = cosf(rad1) * MM_FOLLOW_SPEED;
-                mm->sweepWidth = sinf(rad1) * MM_FOLLOW_SPEED;
-            }
-
-            mm->sweepX = atan2f(mm->sweepWidth, mm->sweepY) * (180.0f / 3.14159265f);
-            mm->handXPositions[0] += mm->sweepY * deltaTime;
-            mm->handsY += mm->sweepWidth * deltaTime;
-
-            float hitboxSize = mm->handDrawHeight * MM_FOLLOW_FIST_SCALE * 0.70f;
-            mm->handHitboxes[0] = (Rectangle)
-            {
-                mm->handXPositions[0] - hitboxSize / 2.0f,
-                mm->handsY - hitboxSize / 2.0f,
-                hitboxSize,
-                hitboxSize
-            };
-        }
-
-        if (mm->handActive[1])
-        {
-            if (mm->timer < 3.2f)
-            {
-                Vector2 targetDir2 = {playerX - mm->handXPositions[1], playerY - mm->follow2Y};
-                float dist2 = sqrtf(targetDir2.x * targetDir2.x + targetDir2.y * targetDir2.y);
-                if (dist2 > 0.0f)
-                {
-                    targetDir2.x /= dist2;
-                    targetDir2.y /= dist2;
-                }
-                else
-                {
-                    targetDir2.x = (mm->sweepDirection == 1) ? -1.0f : 1.0f;
-                    targetDir2.y = 0.0f;
-                }
-
-                float targetAngle2 = atan2f(targetDir2.y, targetDir2.x) * (180.0f / 3.14159265f);
-                mm->follow2Angle = LerpAngle(mm->follow2Angle, targetAngle2, MM_FOLLOW_TURN_SPEED * deltaTime);
-
-                float rad2 = mm->follow2Angle * (3.14159265f / 180.0f);
-                mm->follow2VelX = cosf(rad2) * MM_FOLLOW_SPEED;
-                mm->follow2VelY = sinf(rad2) * MM_FOLLOW_SPEED;
-            }
-
-            mm->follow2Angle = atan2f(mm->follow2VelY, mm->follow2VelX) * (180.0f / 3.14159265f);
-            mm->handXPositions[1] += mm->follow2VelX * deltaTime;
-            mm->follow2Y += mm->follow2VelY * deltaTime;
-
-            float hitboxSize = mm->handDrawHeight * MM_FOLLOW_FIST_SCALE * 0.70f;
-            mm->handHitboxes[1] = (Rectangle)
-            {
-                mm->handXPositions[1] - hitboxSize / 2.0f,
-                mm->follow2Y - hitboxSize / 2.0f,
-                hitboxSize,
-                hitboxSize
-            };
-        }
-
-        if (mm->timer >= MM_FOLLOW_SLAM_DURATION)
-        {
-            mm->state = MM_FOLLOW_RETREAT;
-            mm->timer = 0.0f;
-        }
-        break;
-    }
-
-    case MM_FOLLOW_RETREAT:
-    {
-        mm->timer += deltaTime;
-
-        if (mm->handActive[0])
-        {
-            mm->handXPositions[0] += mm->sweepY * 1.5f * deltaTime;
-            mm->handsY += mm->sweepWidth * 1.5f * deltaTime;
-
-            float hitboxSize = mm->handDrawHeight * MM_FOLLOW_FIST_SCALE * 0.70f;
-            mm->handHitboxes[0] = (Rectangle)
-            {
-                mm->handXPositions[0] - hitboxSize / 2.0f,
-                mm->handsY - hitboxSize / 2.0f,
-                hitboxSize,
-                hitboxSize
-            };
-        }
-
-        if (mm->handActive[1])
-        {
-            mm->handXPositions[1] += mm->follow2VelX * 1.5f * deltaTime;
-            mm->follow2Y += mm->follow2VelY * 1.5f * deltaTime;
-
-            float hitboxSize = mm->handDrawHeight * MM_FOLLOW_FIST_SCALE * 0.70f;
-            mm->handHitboxes[1] = (Rectangle)
-            {
-                mm->handXPositions[1] - hitboxSize / 2.0f,
-                mm->follow2Y - hitboxSize / 2.0f,
-                hitboxSize,
-                hitboxSize
-            };
-        }
-
-        float margin = 200.0f;
-        bool fist1Exited = !mm->handActive[0] ||
-            (mm->handXPositions[0] < -margin ||
-             mm->handXPositions[0] > (float)screenWidth + margin ||
-             mm->handsY < -margin ||
-             mm->handsY > (float)screenHeight + margin);
-        bool fist2Exited = !mm->handActive[1] ||
-            (mm->handXPositions[1] < -margin ||
-             mm->handXPositions[1] > (float)screenWidth + margin ||
-             mm->follow2Y < -margin ||
-             mm->follow2Y > (float)screenHeight + margin);
-
-        if (fist1Exited && fist2Exited)
-        {
-            mm->handActive[0] = false;
-            mm->handActive[1] = false;
-            mm->handHitboxes[0] = (Rectangle){0};
-            mm->handHitboxes[1] = (Rectangle){0};
             mm->handsY = (float)screenHeight;
             mm->state = MM_IDLE;
             mm->timer = 0.0f;
@@ -1292,33 +1079,6 @@ void DrawMidnightMan(const MidnightMan *mm)
             }
         }
     }
-    else if (mm->state == MM_FOLLOW_SLAM || mm->state == MM_FOLLOW_RETREAT)
-    {
-        if (mm->texFist.id > 0)
-        {
-            float texW = (float)mm->texFist.width;
-            float texH = (float)mm->texFist.height;
-            float scale = mm->handDrawHeight / texH;
-            float drawW = texW * scale * MM_FOLLOW_FIST_SCALE;
-            float drawH = mm->handDrawHeight * MM_FOLLOW_FIST_SCALE;
-
-            if (mm->handActive[0])
-            {
-                Rectangle src = {0.0f, 0.0f, texW, texH};
-                Rectangle dest = {mm->handXPositions[0], mm->handsY, drawW, drawH};
-                Vector2 pivot = {drawW / 2.0f, drawH / 2.0f};
-                DrawTexturePro(mm->texFist, src, dest, pivot, mm->sweepX, bossTint);
-            }
-
-            if (mm->handActive[1])
-            {
-                Rectangle src = {0.0f, 0.0f, texW, texH};
-                Rectangle dest = {mm->handXPositions[1], mm->follow2Y, drawW, drawH};
-                Vector2 pivot = {drawW / 2.0f, drawH / 2.0f};
-                DrawTexturePro(mm->texFist, src, dest, pivot, mm->follow2Angle, bossTint);
-            }
-        }
-    }
     else
     {
         if (mm->texHandOpen.id > 0)
@@ -1548,8 +1308,7 @@ bool IsMidnightManColliding(const MidnightMan *mm, Rectangle playerHitbox)
     if (mm->state == MM_GROUND_RISE || mm->state == MM_GROUND_RETREAT ||
         mm->state == MM_GROUND_PHASE2_RISE || mm->state == MM_GROUND_PHASE2_PAUSE ||
         mm->state == MM_GROUND_PHASE2_RETREAT || mm->state == MM_CEILING_SLAM ||
-        mm->state == MM_CEILING_RETREAT || mm->state == MM_FOLLOW_SLAM ||
-        mm->state == MM_FOLLOW_RETREAT)
+        mm->state == MM_CEILING_RETREAT)
 
     {
         for (int i = 0; i < MM_HAND_COUNT; i++)

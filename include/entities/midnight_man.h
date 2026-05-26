@@ -19,9 +19,6 @@ typedef enum {
   MM_CEILING_TELEGRAPH,
   MM_CEILING_SLAM,
   MM_CEILING_RETREAT,
-  MM_FOLLOW_TELEGRAPH,
-  MM_FOLLOW_SLAM,
-  MM_FOLLOW_RETREAT,
   MM_ARM_STORM_ENTER,
   MM_ARM_STORM_ACTIVE,
   MM_ARM_STORM_RETREAT,
@@ -73,20 +70,6 @@ typedef struct {
   // Hitboxes for player collision and player attacks
   Rectangle handHitboxes[MM_HAND_COUNT];
   bool handActive[MM_HAND_COUNT];
-
-  // Sweep attack details
-  float sweepX;
-  float sweepY;
-  float sweepWidth;
-  float sweepHeight;
-  int sweepDirection; // 1 = Left to Right, -1 = Right to Left
-
-  // Homing fist 2 details
-  float follow2X;
-  float follow2Y;
-  float follow2VelX;
-  float follow2VelY;
-  float follow2Angle;
 
   // Sequential shockwaves and phases for Ceiling Slam
   MMShockwave waveLeft;
