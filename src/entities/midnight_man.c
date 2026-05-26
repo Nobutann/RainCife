@@ -285,15 +285,6 @@ static int GetMMHoldingBuildingHiddenMask(const MidnightMan *mm, int screenWidth
     return mask;
 }
 
-static int GetMMDebugAttackSelection(void)
-{
-    if (IsKeyPressed(KEY_ONE) || IsKeyPressed(KEY_KP_1)) return 1;
-    if (IsKeyPressed(KEY_TWO) || IsKeyPressed(KEY_KP_2)) return 2;
-    if (IsKeyPressed(KEY_THREE) || IsKeyPressed(KEY_KP_3)) return 3;
-    if (IsKeyPressed(KEY_FOUR) || IsKeyPressed(KEY_KP_4)) return 4;
-    return 0;
-}
-
 static void RefreshHandsLayout(MidnightMan *mm, int screenWidth, int screenHeight, float groundY)
 {
     (void)screenWidth;
@@ -431,7 +422,6 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
     mm->handDrawHeight = 0.0f;
     mm->umbrellaSpawnTimer = 0.0f;
     mm->sideUmbrellaSide = 0;
-    mm->attackCycle = 0;
 
     for (int i = 0; i < MM_HAND_COUNT; i++)
     {
@@ -514,18 +504,6 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
     }
 
     RefreshHandsLayout(mm, screenWidth, screenHeight, groundY);
-
-#if defined(DEBUG)
-    int debugAttack = GetMMDebugAttackSelection();
-    if (debugAttack > 0)
-    {
-        mm->attackCycle = debugAttack;
-        if (mm->state == MM_IDLE)
-        {
-            mm->timer = MM_IDLE_DURATION;
-        }
-    }
-#endif
 
     for (int i = 0; i < MM_MAX_UMBRELLAS; i++)
     {
@@ -920,13 +898,6 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             {
                 mm->timer = 0.0f;
                 int nextAttack = GetRandomValue(0, 3);
-#if defined(DEBUG)
-                if (mm->attackCycle >= 1 && mm->attackCycle <= 4)
-                {
-                    nextAttack = mm->attackCycle - 1;
-                    mm->attackCycle = 0;
-                }
-#endif
 
                 if (nextAttack == 0)
                 {

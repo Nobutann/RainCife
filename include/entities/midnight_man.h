@@ -83,7 +83,6 @@ typedef struct {
   MMUmbrella umbrellas[MM_MAX_UMBRELLAS];
   float umbrellaSpawnTimer;
   int sideUmbrellaSide; 
-  int attackCycle;
 
   Animation animShadow;
 } MidnightMan;
