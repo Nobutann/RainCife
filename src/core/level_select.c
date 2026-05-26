@@ -373,6 +373,8 @@ static void DrawInfiniteRankingPanel(Rectangle panel, const RankingInfinito *ran
     }
 }
 
+#define INFINITE_RANKING_DISPLAY_MAX 5
+
 static void DrawInfiniteRankingRows(const RankingInfinito *ranking, int screenWidth, int screenHeight)
 {
     int fontSize = screenHeight / 34;
@@ -389,7 +391,7 @@ static void DrawInfiniteRankingRows(const RankingInfinito *ranking, int screenWi
         return;
     }
 
-    for (int i = 0; i < ranking->quantidade && i < 4; i++)
+    for (int i = 0; i < ranking->quantidade && i < INFINITE_RANKING_DISPLAY_MAX; i++)
     {
         char posText[8];
         char scoreText[24];

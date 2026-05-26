@@ -931,7 +931,7 @@ int main(void)
                     }
                     else if (clickedDeathOption == 1)
                     {
-                        currentScreen = SCREEN_START;
+                        currentScreen = infiniteMode ? SCREEN_INFINITE_MENU : SCREEN_LEVEL_SELECT;
                     }
 
                     BeginDrawing();
