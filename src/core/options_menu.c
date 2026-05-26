@@ -100,6 +100,7 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
 
     while (!WindowShouldClose())
     {
+        UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
         int smallFontSize = currentHeight / 31;

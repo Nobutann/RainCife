@@ -691,6 +691,19 @@ static GameScreen GetGameplayReturnScreen(bool infiniteMode)
     return infiniteMode ? SCREEN_INFINITE_MENU : SCREEN_LEVEL_SELECT;
 }
 
+static bool IsMenuSoundtrackScreen(GameScreen screen)
+{
+    return screen == SCREEN_START ||
+        screen == SCREEN_CHARACTER_SELECT ||
+        screen == SCREEN_LEVEL_SELECT ||
+        screen == SCREEN_ITEMS ||
+        screen == SCREEN_INFINITE_MENU ||
+        screen == SCREEN_DAILY_CHALLENGES ||
+        screen == SCREEN_INFINITE_SOON ||
+        screen == SCREEN_CREDITS ||
+        screen == SCREEN_OPTIONS;
+}
+
 typedef enum { TRANSITION_RUNNING_TO_BOSS, TRANSITION_BOSS_TO_RUNNING } PhaseTransitionType;
 
 static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rectangle advanceRect, Rectangle menuRect, int btnFontSize, const char *title, bool hoveringButton)
@@ -749,7 +762,12 @@ int main(void)
 
     while (currentScreen != SCREEN_EXIT && !WindowShouldClose())
     {
-        if (currentScreen != SCREEN_GAME && currentScreen != SCREEN_INFINITE_GAME)
+        if (IsMenuSoundtrackScreen(currentScreen))
+        {
+            PlaySoundtrack(SOUNDTRACK_MENU);
+            UpdateSoundtrack();
+        }
+        else if (currentScreen != SCREEN_GAME && currentScreen != SCREEN_INFINITE_GAME)
         {
             StopSoundtrack();
         }
@@ -1484,13 +1502,11 @@ int main(void)
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
 
-                // Bullet collision handling
                 for (int j = 0; j < MAX_PROJECTILES; j++)
                 {
                     if (!projectiles.items[j].active) continue;
                     Rectangle bulletHitbox = GetProjectileHitbox(&projectiles.items[j]);
 
-                    // 1. Check normal enemies collision (birds and fish, only)
                     for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                     {
                         if (!enemies[i].active || enemies[i].dying) continue;
@@ -1508,7 +1524,6 @@ int main(void)
                             enemies[i].animationTimer = 0.0f;
                             enemies[i].currentFrame = 0;
 
-                            // Deactivate the bullet
                             projectiles.items[j].active = false;
                             break;
                         }
@@ -1516,7 +1531,6 @@ int main(void)
 
                     if (!projectiles.items[j].active) continue;
 
-                    // 2. Check bosses collision
                     if (phase == PHASE_BOSS)
                     {
                         int dmg = (int)player.weapon.damage;
@@ -1549,7 +1563,6 @@ int main(void)
                             if (midnightMan.active && midnightMan.health > 0)
                             {
                                 bool hit = false;
-                                // Check all active hands
                                 for (int h = 0; h < MM_HAND_COUNT; h++)
                                 {
                                     if (midnightMan.handActive[h])
@@ -1562,7 +1575,6 @@ int main(void)
                                     }
                                 }
 
-                                // Check umbrella collisions for bullets
                                 bool umbrellaHit = false;
                                 for (int u = 0; u < MM_MAX_UMBRELLAS; u++)
                                 {
@@ -1578,7 +1590,7 @@ int main(void)
                                         };
                                         if (CheckCollisionRecs(bulletHitbox, umbrellaHitbox))
                                         {
-                                            midnightMan.umbrellas[u].active = false; // Destroy umbrella
+                                            midnightMan.umbrellas[u].active = false;
                                             umbrellaHit = true;
                                         }
                                     }
@@ -1586,7 +1598,7 @@ int main(void)
 
                                 if (umbrellaHit)
                                 {
-                                    projectiles.items[j].active = false; // Destroy bullet
+                                    projectiles.items[j].active = false;
                                 }
                                 else if (hit)
                                 {

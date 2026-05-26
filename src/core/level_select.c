@@ -4,6 +4,7 @@
 #include "core/ranking_manager.h"
 #include "core/daily_challenges.h"
 #include "core/cursor.h"
+#include "core/sounds.h"
 #include "utils.h"
 #include "graphics/sprites.h"
 
@@ -454,6 +455,7 @@ GameScreen RunLevelSelect()
 
     while (!WindowShouldClose())
     {
+        UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
         int stageFontSize = currentHeight / 28;
@@ -488,8 +490,6 @@ GameScreen RunLevelSelect()
             return SCREEN_CHARACTER_SELECT;
         }
 
-        // ENTER key on level select launches the history animation
-        // and returns to the level select screen afterwards.
         if (IsKeyPressed(KEY_ENTER))
         {
             UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
@@ -622,6 +622,7 @@ GameScreen RunInfiniteMenu()
 
     while (!WindowShouldClose())
     {
+        UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
         int titleSize = currentHeight / 10;
@@ -793,6 +794,7 @@ GameScreen RunDailyChallenges()
 
     while (!WindowShouldClose() && nextScreen == SCREEN_EXIT)
     {
+        UpdateSoundtrack();
         GarantirDesafiosDiarios(&state);
 
         int currentWidth = GetScreenWidth();
@@ -895,6 +897,7 @@ GameScreen RunItems()
 
     while (!WindowShouldClose() && nextScreen == SCREEN_EXIT)
     {
+        UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
         Vector2 mouse = GetMousePosition();

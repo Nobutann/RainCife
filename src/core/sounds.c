@@ -7,13 +7,11 @@ static Sound attackSwordSound;
 static Sound attackHammerSound;
 static Sound shootSound;
 
-// Shark Boss Sounds
 static Sound sharkShootSound;
 static Sound sharkSwimmingSound;
 static Sound sharkJumpSound;
 static Sound sharkBubbleSound;
 
-// Hairy Leg Boss Sounds
 static Sound legStompSound;
 static Sound legJumpSound;
 static Sound legSweepSound;
@@ -26,6 +24,7 @@ static Sound midnightManArmMoveSound;
 
 static float currentVolume = 1.0f;
 static float currentMusicVolume = 1.0f;
+static Music menuMusic;
 static Music level1RunMusic;
 static Music level2RunMusic;
 static Music level3RunMusic;
@@ -38,6 +37,7 @@ static Music *GetSoundtrackMusic(SoundtrackId soundtrack)
 {
     switch (soundtrack)
     {
+        case SOUNDTRACK_MENU: return &menuMusic;
         case SOUNDTRACK_LEVEL1_RUN: return &level1RunMusic;
         case SOUNDTRACK_LEVEL2_RUN: return &level2RunMusic;
         case SOUNDTRACK_LEVEL3_RUN: return &level3RunMusic;
@@ -56,23 +56,22 @@ void InitSoundSystem(void)
     attackSwordSound = LoadSound("assets/sprites/Player/Soms/Som_ataque_sword.wav");
     shootSound = LoadSound("assets/sprites/Player/Soms/Som_tiro.wav");
 
-    // Load Shark sounds
     sharkShootSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/atirando_bolas.wav");
     sharkSwimmingSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/nadando.wav");
     sharkJumpSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/salto.wav");
     sharkBubbleSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/gota_caindo.wav");
 
-    // Load Hairy Leg sounds
     legStompSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/pesada.wav");
     legJumpSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/pesada.wav");
     legSweepSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/rasteira.wav");
     legShockwaveSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/shockwave.wav");
 
-    // Load Midnight Man sounds
     midnightManUmbrellaSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/gota_caindo.wav");
     midnightManShockwaveSound = LoadSound("assets/sprites/Boss/Sons_bosses/perna/shockwave.wav");
     midnightManArmMoveSound = LoadSound("assets/sprites/Boss/Sons_bosses/tubarao/nadando.wav");
 
+    menuMusic = LoadMusicStream("assets/soundtrack/MoF Stage 3 - The Gensokyo the Gods Loved.mp3");
+    menuMusic.looping = true;
     level1RunMusic = LoadMusicStream("assets/soundtrack/ZUN_Touhou_15_OST_-_Unforgettable_the_Nostalgic_Greenery_1_Stage_theme_(SkySound.cc).mp3");
     level1RunMusic.looping = true;
     level2RunMusic = LoadMusicStream("assets/soundtrack/13. Emotional Skyscraper ~ Cosmic Mind.mp3");
@@ -86,7 +85,6 @@ void InitSoundSystem(void)
     midnightManMusic = LoadMusicStream("assets/soundtrack/LoLK Junko's Theme_ Pure Furies Whereabouts of the Heart.mp3");
     midnightManMusic.looping = true;
 
-    // Apply the initial volume setting to all newly loaded sounds
     SetSoundSystemVolume(currentVolume);
     SetMusicSystemVolume(currentMusicVolume);
 }
@@ -99,13 +97,11 @@ void SetSoundSystemVolume(float volume)
     SetSoundVolume(attackSwordSound, volume);
     SetSoundVolume(shootSound, volume);
 
-    // Set Shark sounds volume
     SetSoundVolume(sharkShootSound, volume);
     SetSoundVolume(sharkSwimmingSound, volume);
     SetSoundVolume(sharkJumpSound, volume);
     SetSoundVolume(sharkBubbleSound, volume);
 
-    // Set Hairy Leg sounds volume
     SetSoundVolume(legStompSound, volume);
     SetSoundVolume(legJumpSound, volume);
     SetSoundVolume(legSweepSound, volume);
@@ -120,6 +116,7 @@ void SetSoundSystemVolume(float volume)
 void SetMusicSystemVolume(float volume)
 {
     currentMusicVolume = volume;
+    SetMusicVolume(menuMusic, volume);
     SetMusicVolume(level1RunMusic, volume);
     SetMusicVolume(level2RunMusic, volume);
     SetMusicVolume(level3RunMusic, volume);
@@ -219,7 +216,6 @@ void PlaySharkBubbleSound(void)
     PlaySound(sharkBubbleSound);
 }
 
-// Hairy Leg Sound Play Wrappers
 void PlayLegStompSound(void)
 {
     PlaySound(legStompSound);
@@ -267,6 +263,7 @@ void PlayMidnightManArmMoveSound(void)
 void UnloadSoundSystem(void)
 {
     StopSoundtrack();
+    UnloadMusicStream(menuMusic);
     UnloadMusicStream(level1RunMusic);
     UnloadMusicStream(level2RunMusic);
     UnloadMusicStream(level3RunMusic);
@@ -279,13 +276,11 @@ void UnloadSoundSystem(void)
     UnloadSound(attackSwordSound);
     UnloadSound(shootSound);
 
-    // Unload Shark sounds
     UnloadSound(sharkShootSound);
     UnloadSound(sharkSwimmingSound);
     UnloadSound(sharkJumpSound);
     UnloadSound(sharkBubbleSound);
 
-    // Unload Hairy Leg sounds
     UnloadSound(legStompSound);
     UnloadSound(legJumpSound);
     UnloadSound(legSweepSound);
