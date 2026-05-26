@@ -105,7 +105,8 @@ static float GetWaterSurfaceY(Background *bg, int screenWidth, float groundY)
 
 static float GetLevel6BossIntroWorldYOffset(Background *bg, int levelId, int bossId, float level6IntroProgress, int screenWidth, int screenHeight, GamePhase phase)
 {
-    if (levelId != 6 || bossId != 3 || phase != PHASE_BOSS || level6IntroProgress >= 1.0f || bg->bossMidnightMan.id <= 0)
+    bool useMidnightManBossBackground = (bossId == 3 || levelId == 6);
+    if (!useMidnightManBossBackground || phase != PHASE_BOSS || level6IntroProgress >= 1.0f || bg->bossMidnightMan.id <= 0)
     {
         return 0.0f;
     }

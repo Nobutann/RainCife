@@ -473,8 +473,7 @@ static void DrawGameplayScene(
     ClearBackground(BLACK);
     DrawBackground(bg, currentLevel->id, currentLevel->bossId, level6IntroProgress, currentWidth, currentHeight, groundY, phase);
 
-    bool level6BossIntroInProgress = currentLevel->id == 6 &&
-        currentLevel->bossId == 3 &&
+    bool level6BossIntroInProgress = currentLevel->bossId == 3 &&
         phase == PHASE_BOSS &&
         level6IntroProgress < 1.0f;
 
@@ -1895,8 +1894,7 @@ int main(void)
 
                 BeginDrawing();
                     DrawGameplayScene(bg, currentLevel, phase, level6IntroProgress, currentWidth, currentHeight, groundY, enemies, enemyAssets, &player, playerScale, &pernaCabeluda, bossScale, &shark, &midnightMan, barValue, false, false);
-                    bool level6BossIntroInProgress = currentLevel->id == 6 &&
-                        currentLevel->bossId == 3 &&
+                    bool level6BossIntroInProgress = currentLevel->bossId == 3 &&
                         phase == PHASE_BOSS &&
                         level6IntroProgress < 1.0f;
 
