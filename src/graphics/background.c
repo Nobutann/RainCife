@@ -23,19 +23,31 @@
 #define WATER_SPLASH_FRAME_COUNT 4
 #define WATER_SPLASH_FRAME_TIME 0.055f
 
-void InitBackground(Background *bg)
+void ResetBackgroundState(Background *bg)
 {
     bg->time = 0.0f;
     bg->scrollX = 0.0f;
     bg->waterScrollX = 0.0f;
+    bg->waterCurrentFrame = 0;
+    bg->waterFrameTimer = 0.0f;
+    bg->waterFrameTime = 0.01f;
+    for (int i = 0; i < MAX_WATER_SPLASHES; i++) bg->waterSplashes[i].active = false;
+    bg->waterSplashSpawnTimer = 0.0f;
+    bg->waterSplashSpawnInterval = 0.12f;
+    bg->runningBgScrollX = 0.0f;
+    for (int i = 0; i < MAX_OBJETOS; i++) bg->objetosList[i].active = false;
+    bg->objetoSpawnTimer = 0.0f;
+    bg->objetoSpawnInterval = 2.0f;
+}
+
+void InitBackground(Background *bg)
+{
+    ResetBackgroundState(bg);
     bg->floor = LoadTexture("assets/sprites/background/Floor.png");
     bg->bossHairyLeg = LoadTexture("assets/sprites/fundo/Background_1Boss.png");
     bg->bossMidnightMan = LoadTexture("assets/sprites/Boss/Spr_MidnightMan/Homem_da_meia_noite_background.png");
     bg->bossShark = LoadTexture("assets/sprites/fundo/Fase_2_fundos/Fase2_background_1.png");
     bg->waterFrameCount = 38;
-    bg->waterCurrentFrame = 0;
-    bg->waterFrameTimer = 0.0f;
-    bg->waterFrameTime = 0.01f;
     for (int i = 0; i < bg->waterFrameCount; i++)
     {
         char path[64];
@@ -44,9 +56,6 @@ void InitBackground(Background *bg)
     }
     bg->waterStatic = LoadTexture("assets/sprites/background/Water.png");
     bg->waterSplashSheet = LoadTexture("assets/sprites/background/Water_splash-Sheet.png");
-    for (int i = 0; i < MAX_WATER_SPLASHES; i++) bg->waterSplashes[i].active = false;
-    bg->waterSplashSpawnTimer = 0.0f;
-    bg->waterSplashSpawnInterval = 0.12f;
     bg->barFrame = LoadTexture("assets/sprites/background/Barra_Boss.png");
     bg->barBackground = LoadTexture("assets/sprites/background/Fundo_Barra_Boss.png");
     bg->barFill = LoadTexture("assets/sprites/background/Porcentagem_Barra_Boss.png");
@@ -57,13 +66,9 @@ void InitBackground(Background *bg)
     bg->runningPhase3[0] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_1.png");
     bg->runningPhase3[1] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_2.png");
     bg->runningPhase3[2] = LoadTexture("assets/sprites/fundo/Fase_3_fundos/Ultima_fase_background_3.png");
-    bg->runningBgScrollX = 0.0f;
     bg->bueiro = LoadTexture("assets/sprites/background/Bueiro.png");
     bg->objetos = LoadTexture("assets/sprites/background/objetos.png");
     bg->colorFront = LoadTexture("assets/sprites/background/Color_front.png");
-    for (int i = 0; i < MAX_OBJETOS; i++) bg->objetosList[i].active = false;
-    bg->objetoSpawnTimer = 0.0f;
-    bg->objetoSpawnInterval = 2.0f;
 }
 
 void UpdateBackground(Background *bg, float dt, GamePhase phase)
@@ -205,8 +210,9 @@ void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroPr
     else
     {
 
+    bool useMidnightManBossBackground = (bossId == 3 || levelId == 6);
     Texture2D levelBackground;
-    if (levelId == 6)
+    if (useMidnightManBossBackground)
     {
         levelBackground = bg->bossMidnightMan;
     }
@@ -225,7 +231,7 @@ void DrawBackground(Background *bg, int levelId, int bossId, float level6IntroPr
         Rectangle destRec = { 0.0f, 0.0f, (float)screenWidth, (float)screenHeight };
         Vector2 origin = { 0.0f, 0.0f };
 
-        if (levelId == 6)
+        if (useMidnightManBossBackground)
         {
             float texW = (float)levelBackground.width;
             float texH = (float)levelBackground.height;

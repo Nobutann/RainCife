@@ -778,6 +778,7 @@ static void DrawDailyChallengeRow(Rectangle row, const DailyChallenge *challenge
 GameScreen RunDailyChallenges()
 {
     bool acceptClick = false;
+    GameScreen nextScreen = SCREEN_EXIT;
     DailyChallengeState state = CarregarDesafiosDiarios();
     Texture2D blueBackground = LoadTexture("assets/sprites/background/fundo_azul.png");
     Texture2D challengesScreen = LoadTexture("assets/sprites/ui/infinite_menu/daily_challenges_screen.png");
@@ -790,7 +791,7 @@ GameScreen RunDailyChallenges()
         {105.0f, 210.0f, 431.0f, 56.0f}
     };
 
-    while (!WindowShouldClose())
+    while (!WindowShouldClose() && nextScreen == SCREEN_EXIT)
     {
         GarantirDesafiosDiarios(&state);
 
@@ -809,7 +810,7 @@ GameScreen RunDailyChallenges()
 
         if (IsKeyPressed(KEY_ESCAPE))
         {
-            return SCREEN_INFINITE_MENU;
+            nextScreen = SCREEN_INFINITE_MENU;
         }
 
         if (IsKeyPressed(KEY_BACKSPACE))
@@ -819,7 +820,7 @@ GameScreen RunDailyChallenges()
 
         if (hoveringInteractive && acceptClick && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
-            return SCREEN_INFINITE_MENU;
+            nextScreen = SCREEN_INFINITE_MENU;
         }
 
         BeginDrawing();
@@ -844,7 +845,7 @@ GameScreen RunDailyChallenges()
     UnloadTexture(challengesScreen);
     UnloadTexture(backButtonTexture);
     UnloadTexture(backHoverTexture);
-    return SCREEN_EXIT;
+    return nextScreen;
 }
 
 GameScreen RunItems()
