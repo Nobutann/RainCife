@@ -490,8 +490,6 @@ GameScreen RunLevelSelect()
             return SCREEN_CHARACTER_SELECT;
         }
 
-        // ENTER key on level select launches the history animation
-        // and returns to the level select screen afterwards.
         if (IsKeyPressed(KEY_ENTER))
         {
             UnloadStoryLevelSelectTextures(maps, selectorArrow, playButton, playHoverButton, itemsButton, itemsHoverButton, optionsButton, optionsHoverButton, menuButton, menuHoverButton);
