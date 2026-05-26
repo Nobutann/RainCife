@@ -22,6 +22,8 @@ typedef struct
 
 void InitProjectileSystem(ProjectileSystem *ps);
 void UnloadProjectileSystem(ProjectileSystem *ps);
+void PreloadProjectileAssets(void);
+void UnloadProjectileAssets(void);
 void SpawnProjectile(ProjectileSystem *ps, Vector2 origin, Vector2 target);
 void UpdateProjectile(ProjectileSystem *ps, float dt, int screenWidth, int screenHeight);
 Rectangle GetProjectileHitbox(Projectile *p);

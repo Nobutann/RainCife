@@ -3,6 +3,25 @@
 #include <math.h>
 #include "gameplay/projectile.h"
 
+static Texture2D projectileSpriteCache = {0};
+
+void PreloadProjectileAssets(void)
+{
+    if (projectileSpriteCache.id <= 0)
+    {
+        projectileSpriteCache = LoadTexture("assets/sprites/Player/attack/Pistol/Nerf_bullet.png");
+    }
+}
+
+void UnloadProjectileAssets(void)
+{
+    if (projectileSpriteCache.id > 0)
+    {
+        UnloadTexture(projectileSpriteCache);
+        projectileSpriteCache.id = 0;
+    }
+}
+
 void InitProjectileSystem(ProjectileSystem *ps)
 {
     for (int i = 0; i < MAX_PROJECTILES; i++)
@@ -10,12 +29,13 @@ void InitProjectileSystem(ProjectileSystem *ps)
         ps->items[i].active = false;
     }
 
-    ps->sprites = LoadTexture("assets/sprites/Player/attack/Pistol/Nerf_bullet.png");
+    PreloadProjectileAssets();
+    ps->sprites = projectileSpriteCache;
 }
 
 void UnloadProjectileSystem(ProjectileSystem *ps)
 {
-    UnloadTexture(ps->sprites);
+    ps->sprites = (Texture2D){0};
 }
 
 void SpawnProjectile(ProjectileSystem *ps, Vector2 origin, Vector2 target)
