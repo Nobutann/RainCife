@@ -24,10 +24,6 @@
 #define MM_CEILING_PAUSE_DURATION 0.5f
 #define MM_CEILING_RETREAT_DURATION 0.7f
 
-#define MM_UMBRELLA_BLOCK_HAND_SCALE 1.55f
-#define MM_UMBRELLA_BLOCK_HAND_WIDTH_RATIO 0.46f
-#define MM_UMBRELLA_BLOCK_HITBOX_X_RATIO 0.68f
-#define MM_UMBRELLA_BLOCK_HITBOX_Y_RATIO 0.76f
 #define MM_HIT_FLASH_DURATION 0.12f
 
 #define MM_SHOCKWAVE_FALLBACK_WIDTH 88.0f
@@ -45,6 +41,8 @@
 #define MM_ARM_STORM_RETREAT_DURATION 1.0f
 #define MM_ARM_STORM_Y_RATIO 0.08f
 #define MM_ARM_STORM_UMBRELLA_INTERVAL 0.35f
+#define MM_ARM_STORM_HITBOX_WIDTH_RATIO 0.72f
+#define MM_ARM_STORM_HITBOX_HEIGHT_RATIO 0.62f
 
 static float GetMMShockwaveFrameWidth(const MidnightMan *mm)
 {
@@ -205,27 +203,22 @@ static void RefreshHandsLayout(MidnightMan *mm, int screenWidth, int screenHeigh
     mm->riseStopY = fmaxf(0.0f, (float)screenHeight - mm->handDrawWidth);
 }
 
-static Rectangle GetMMUmbrellaHandBlock(const MidnightMan *mm, int screenWidth, int screenHeight, bool rightSide)
+static Rectangle GetMMArmStormHitbox(const MidnightMan *mm, int screenHeight, int handIndex)
 {
-    float blockHeight = mm->handDrawHeight * MM_UMBRELLA_BLOCK_HAND_SCALE;
-    float blockWidth = blockHeight * MM_UMBRELLA_BLOCK_HAND_WIDTH_RATIO;
-    float blockX = rightSide ? (float)screenWidth - blockWidth : 0.0f;
-    float blockY = ((float)screenHeight - blockHeight) * 0.5f;
-
-    return (Rectangle){blockX, blockY, blockWidth, blockHeight};
-}
-
-static Rectangle GetMMUmbrellaHandBlockHitbox(Rectangle block)
-{
-    float hitboxWidth = block.width * MM_UMBRELLA_BLOCK_HITBOX_X_RATIO;
-    float hitboxHeight = block.height * MM_UMBRELLA_BLOCK_HITBOX_Y_RATIO;
+    float armW = mm->texArm.width > 0 ? (float)mm->texArm.width : 413.0f;
+    float armH = mm->texArm.height > 0 ? (float)mm->texArm.height : 252.0f;
+    float scale = ((float)screenHeight * 0.35f) / armH;
+    float drawW = armW * scale;
+    float drawH = armH * scale;
+    float hitboxW = drawW * MM_ARM_STORM_HITBOX_WIDTH_RATIO;
+    float hitboxH = drawH * MM_ARM_STORM_HITBOX_HEIGHT_RATIO;
 
     return (Rectangle)
     {
-        block.x + (block.width - hitboxWidth) * 0.5f,
-        block.y + (block.height - hitboxHeight) * 0.5f,
-        hitboxWidth,
-        hitboxHeight
+        mm->handXPositions[handIndex] + (drawW - hitboxW) * 0.5f,
+        mm->handsY + (drawH - hitboxH) * 0.5f,
+        hitboxW,
+        hitboxH
     };
 }
 
@@ -448,8 +441,10 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
             mm->handXPositions[0] = Lerpf(-drawW, destLeft, progress);
             mm->handXPositions[1] = Lerpf((float)screenWidth, destRight, progress);
-            mm->handHitboxes[0] = GetMMUmbrellaHandBlockHitbox(GetMMUmbrellaHandBlock(mm, screenWidth, screenHeight, false));
-            mm->handHitboxes[1] = GetMMUmbrellaHandBlockHitbox(GetMMUmbrellaHandBlock(mm, screenWidth, screenHeight, true));
+            mm->handActive[0] = true;
+            mm->handActive[1] = true;
+            mm->handHitboxes[0] = GetMMArmStormHitbox(mm, screenHeight, 0);
+            mm->handHitboxes[1] = GetMMArmStormHitbox(mm, screenHeight, 1);
             mm->handHitboxes[2] = (Rectangle){0};
 
             if (mm->timer >= MM_ARM_STORM_ENTER_DURATION)
@@ -504,8 +499,10 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 }
             }
 
-            mm->handHitboxes[0] = GetMMUmbrellaHandBlockHitbox(GetMMUmbrellaHandBlock(mm, screenWidth, screenHeight, false));
-            mm->handHitboxes[1] = GetMMUmbrellaHandBlockHitbox(GetMMUmbrellaHandBlock(mm, screenWidth, screenHeight, true));
+            mm->handActive[0] = true;
+            mm->handActive[1] = true;
+            mm->handHitboxes[0] = GetMMArmStormHitbox(mm, screenHeight, 0);
+            mm->handHitboxes[1] = GetMMArmStormHitbox(mm, screenHeight, 1);
             mm->handHitboxes[2] = (Rectangle){0};
 
             if (mm->timer >= MM_ARM_STORM_ACTIVE_DURATION)
@@ -531,8 +528,10 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
             mm->handXPositions[0] = Lerpf(destLeft,  -drawW, progress);
             mm->handXPositions[1] = Lerpf(destRight, (float)screenWidth, progress);
-            mm->handHitboxes[0] = GetMMUmbrellaHandBlockHitbox(GetMMUmbrellaHandBlock(mm, screenWidth, screenHeight, false));
-            mm->handHitboxes[1] = GetMMUmbrellaHandBlockHitbox(GetMMUmbrellaHandBlock(mm, screenWidth, screenHeight, true));
+            mm->handActive[0] = true;
+            mm->handActive[1] = true;
+            mm->handHitboxes[0] = GetMMArmStormHitbox(mm, screenHeight, 0);
+            mm->handHitboxes[1] = GetMMArmStormHitbox(mm, screenHeight, 1);
             mm->handHitboxes[2] = (Rectangle){0};
 
             if (mm->timer >= MM_ARM_STORM_RETREAT_DURATION)
@@ -647,6 +646,9 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                     mm->handActive[0] = true;
                     mm->handActive[1] = true;
                     mm->handActive[2] = false;
+                    mm->handHitboxes[0] = GetMMArmStormHitbox(mm, screenHeight, 0);
+                    mm->handHitboxes[1] = GetMMArmStormHitbox(mm, screenHeight, 1);
+                    mm->handHitboxes[2] = (Rectangle){0};
                     mm->umbrellaSpawnTimer = 0.0f;
                     mm->state = MM_ARM_STORM_ENTER;
                     mm->timer = 0.0f;
@@ -1211,7 +1213,6 @@ void DrawMidnightMan(const MidnightMan *mm)
     }
 
     int screenHeight = GetScreenHeight();
-    int screenWidth = GetScreenWidth();
     float groundY = (float)screenHeight * 0.82f;
     Color bossTint = mm->hitFlashTimer > 0.0f ? RED : WHITE;
 
@@ -1362,26 +1363,6 @@ void DrawMidnightMan(const MidnightMan *mm)
             DrawTexturePro(mm->texArm, srcRight, destRight, (Vector2){0.0f, 0.0f}, 0.0f, bossTint);
         }
 
-        if (mm->texHandOpen.id > 0)
-        {
-            float texW = (float)mm->texHandOpen.width;
-            float texH = (float)mm->texHandOpen.height;
-
-            for (int i = 0; i < 2; i++)
-            {
-                if (mm->handActive[i])
-                {
-                    Rectangle block = GetMMUmbrellaHandBlock(mm, screenWidth, screenHeight, i == 1);
-                    float drawH = block.height;
-                    float drawW = texH > 0.0f ? drawH * (texW / texH) : block.width;
-                    float drawX = (i == 0) ? block.x + block.width - drawW : block.x;
-                    float currentTexW = (i == 1) ? -texW : texW;
-                    Rectangle src = {0.0f, 0.0f, currentTexW, texH};
-                    Rectangle dest = {drawX, block.y, drawW, drawH};
-                    DrawTexturePro(mm->texHandOpen, src, dest, (Vector2){0.0f, 0.0f}, 0.0f, bossTint);
-                }
-            }
-        }
     }
     if (mm->texUmbrella.id > 0)
     {
@@ -1568,7 +1549,7 @@ bool IsMidnightManColliding(const MidnightMan *mm, Rectangle playerHitbox)
         mm->state == MM_GROUND_PHASE2_RISE || mm->state == MM_GROUND_PHASE2_PAUSE ||
         mm->state == MM_GROUND_PHASE2_RETREAT || mm->state == MM_CEILING_SLAM ||
         mm->state == MM_CEILING_RETREAT || mm->state == MM_FOLLOW_SLAM ||
-        mm->state == MM_FOLLOW_RETREAT || mm->state == MM_ARM_STORM_ACTIVE)
+        mm->state == MM_FOLLOW_RETREAT)
 
     {
         for (int i = 0; i < MM_HAND_COUNT; i++)
