@@ -44,11 +44,12 @@
 #define MM_SIDE_UMBRELLA_RETREAT_DURATION 0.7f
 #define MM_SIDE_UMBRELLA_INTERVAL 0.32f
 #define MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO 0.5f
-#define MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO 0.92f
 #define MM_SIDE_UMBRELLA_TELEGRAPH_DURATION 0.8f
 #define MM_SIDE_UMBRELLA_ARM_HEIGHT_RATIO 0.35f
+#define MM_SIDE_UMBRELLA_HAND_HITBOX_WIDTH_RATIO 0.88f
 #define MM_SIDE_UMBRELLA_SPAWN_SPREAD 95
 #define MM_SIDE_UMBRELLA_VELOCITY_SPREAD 240
+#define MM_SIDE_UMBRELLA_SHADOW_SCALE 2.1f
 
 static float GetMMShockwaveFrameWidth(const MidnightMan *mm)
 {
@@ -254,18 +255,34 @@ static Rectangle GetMMShrunkArmHitbox(Rectangle armRect)
 static Rectangle GetMMSideUmbrellaBlockRect(const MidnightMan *mm, int screenWidth, int screenHeight)
 {
     float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
-    float blockH = (float)screenHeight * MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO;
+    float texW = mm->texHandOpen.width > 0 ? (float)mm->texHandOpen.width : 581.0f;
+    float texH = mm->texHandOpen.height > 0 ? (float)mm->texHandOpen.height : 274.0f;
+    float blockH = blockW * (texH / texW);
     float blockY = ((float)screenHeight - blockH) * 0.5f;
     return (Rectangle){mm->handXPositions[0], blockY, blockW, blockH};
 }
 
-static Rectangle GetMMSideUmbrellaTargetBlockRect(int screenWidth, int screenHeight, int side)
+static Rectangle GetMMSideUmbrellaTargetBlockRect(const MidnightMan *mm, int screenWidth, int screenHeight, int side)
 {
     float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
-    float blockH = (float)screenHeight * MM_SIDE_UMBRELLA_HAND_HEIGHT_RATIO;
+    float texW = mm->texHandOpen.width > 0 ? (float)mm->texHandOpen.width : 581.0f;
+    float texH = mm->texHandOpen.height > 0 ? (float)mm->texHandOpen.height : 274.0f;
+    float blockH = blockW * (texH / texW);
     float blockX = side == 0 ? 0.0f : (float)screenWidth - blockW;
     float blockY = ((float)screenHeight - blockH) * 0.5f;
     return (Rectangle){blockX, blockY, blockW, blockH};
+}
+
+static Rectangle GetMMSideUmbrellaHandHitbox(Rectangle block)
+{
+    float hitboxW = block.width * MM_SIDE_UMBRELLA_HAND_HITBOX_WIDTH_RATIO;
+    return (Rectangle)
+    {
+        block.x + (block.width - hitboxW) * 0.5f,
+        block.y,
+        hitboxW,
+        block.height
+    };
 }
 
 static void SyncMMSideUmbrellaHitboxes(MidnightMan *mm, int screenWidth, int screenHeight)
@@ -273,7 +290,7 @@ static void SyncMMSideUmbrellaHitboxes(MidnightMan *mm, int screenWidth, int scr
     mm->handActive[0] = true;
     mm->handActive[1] = true;
     mm->handActive[2] = false;
-    mm->handHitboxes[0] = GetMMSideUmbrellaBlockRect(mm, screenWidth, screenHeight);
+    mm->handHitboxes[0] = GetMMSideUmbrellaHandHitbox(GetMMSideUmbrellaBlockRect(mm, screenWidth, screenHeight));
     mm->handHitboxes[1] = GetMMShrunkArmHitbox(GetMMArmVisualRectAt(mm, screenHeight, mm->handXPositions[1], mm->handsY));
     mm->handHitboxes[2] = (Rectangle){0};
 }
@@ -1275,7 +1292,16 @@ void DrawMidnightMan(const MidnightMan *mm)
     {
         if (mm->animShadow.sheet.id > 0)
         {
-            Rectangle shadowDest = GetMMSideUmbrellaTargetBlockRect(screenWidth, screenHeight, mm->sideUmbrellaSide);
+            Rectangle block = GetMMSideUmbrellaTargetBlockRect(mm, screenWidth, screenHeight, mm->sideUmbrellaSide);
+            float shadowH = block.height * MM_SIDE_UMBRELLA_SHADOW_SCALE;
+            float shadowW = shadowH * ((float)mm->animShadow.frameWidth / (float)mm->animShadow.sheet.height);
+            Rectangle shadowDest =
+            {
+                block.x + (block.width - shadowW) * 0.5f,
+                block.y + (block.height - shadowH) * 0.5f,
+                shadowW,
+                shadowH
+            };
             Rectangle shadowSrc = GetAnimationFrameSource(&mm->animShadow, false);
             DrawTexturePro(mm->animShadow.sheet, shadowSrc, shadowDest, (Vector2){0.0f, 0.0f}, 0.0f, WHITE);
         }
