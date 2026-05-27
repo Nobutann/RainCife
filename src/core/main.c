@@ -21,6 +21,7 @@
 #define MAX_ACTIVE_ENEMIES 12
 #define LEVEL6_INTRO_DURATION 2.5f
 #define BOSS_DEFEAT_TRANSITION_DELAY 2.5f
+#define FINAL_SCREEN_DURATION 5.0f
 #define INFINITE_SPEED_STEP_METERS 5000.0f
 #define INFINITE_SPEED_MULTIPLIER_STEP 1.10f
 #define INFINITE_PHASE_1_DURATION 40.0f
@@ -869,6 +870,11 @@ int main(void)
 
             Enemy enemies[MAX_ACTIVE_ENEMIES] = {0};
             EnemyAssets *enemyAssets = GetGameplayEnemyAssets();
+            Texture2D finalScreenTexture = {0};
+            if (!infiniteMode)
+            {
+                finalScreenTexture = LoadTexture("assets/sprites/fim/fim.png");
+            }
 
             GamePhase phase = PHASE_RUNNING;
             float progressTimer = 0.0f;
@@ -890,6 +896,8 @@ int main(void)
             PhaseTransitionType transitionType = TRANSITION_RUNNING_TO_BOSS;
             bool bossDefeatTransitionPending = false;
             float bossDefeatTransitionTimer = 0.0f;
+            bool finalScreenActive = false;
+            float finalScreenTimer = 0.0f;
             RankingInfinito infiniteRanking = infiniteMode ? CarregarRankingInfinitoLocal() : (RankingInfinito){0};
             bool infiniteRankingChecked = false;
             bool infiniteRankingNameActive = false;
@@ -905,7 +913,7 @@ int main(void)
 
             while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
-                if (!deathScreenActive && !phaseTransitionActive && !bossDefeatTransitionPending && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)))
+                if (!deathScreenActive && !phaseTransitionActive && !bossDefeatTransitionPending && !finalScreenActive && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)))
                 {
                     gamePaused = !gamePaused;
                 }
@@ -931,7 +939,7 @@ int main(void)
                     level6IntroProgress = level6IntroTimer / level6IntroDuration;
                 }
 
-                if (deathScreenActive)
+                if (deathScreenActive || finalScreenActive)
                 {
                     StopSoundtrack();
                 }
@@ -991,6 +999,22 @@ int main(void)
                         level6IntroActive = false;
                     }
                     level6IntroProgress = level6IntroTimer / level6IntroDuration;
+                }
+
+                if (finalScreenActive)
+                {
+                    finalScreenTimer += dt;
+                    if (finalScreenTimer >= FINAL_SCREEN_DURATION)
+                    {
+                        currentScreen = SCREEN_START;
+                        continue;
+                    }
+
+                    BeginDrawing();
+                        ClearBackground(BLACK);
+                        DrawFullscreenTexture(finalScreenTexture, currentWidth, currentHeight);
+                    EndDrawing();
+                    continue;
                 }
 
                 if (deathScreenActive)
@@ -1877,19 +1901,21 @@ int main(void)
                         UpdateMidnightMan(&midnightMan, playerHitbox, mmDt, currentWidth, currentHeight, groundY);
                         if (!bossDefeatTransitionPending)
                         {
-                            if (IsKeyPressed(KEY_N))
+                            if (IsKeyPressed(KEY_MINUS))
                             {
                                 midnightMan.health = 0;
                             }
                             TryDamageMidnightManFromPlayerAttack(&midnightMan, &player, playerScale);
                         }
 
-                        if (!bossDefeatTransitionPending && midnightMan.health <= 0 && nextStoryLevel)
+                        if (!bossDefeatTransitionPending && midnightMan.health <= 0)
                         {
-                            UnlockStoryLevel(nextStoryLevel->id);
-                            transitionType = TRANSITION_BOSS_TO_RUNNING;
-                            bossDefeatTransitionPending = true;
-                            bossDefeatTransitionTimer = 0.0f;
+                            if (nextStoryLevel)
+                            {
+                                UnlockStoryLevel(nextStoryLevel->id);
+                            }
+                            finalScreenActive = true;
+                            finalScreenTimer = 0.0f;
                             bossDefeatedThisFrame = true;
                         }
                     }
@@ -2017,6 +2043,10 @@ int main(void)
                     UnloadShark(&shark);
                 }
                 UnloadMidnightMan(&midnightMan);
+            }
+            if (finalScreenTexture.id > 0)
+            {
+                UnloadTexture(finalScreenTexture);
             }
             UnloadProjectileSystem(&projectiles);
             FreeLevels(levels);
