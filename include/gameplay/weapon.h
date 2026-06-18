@@ -20,6 +20,7 @@ typedef struct
     float damage;
     float cooldown;
     float cooldownTimer;
+    bool showCooldown;
     int breakPower;
     bool attacking;
     bool hitConnected;
