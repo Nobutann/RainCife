@@ -3,6 +3,7 @@
 
 #include "raylib.h"
 #include "graphics/sprites.h"
+#include "gameplay/difficulty.h"
 
 typedef struct Player Player;
 
@@ -47,7 +48,7 @@ typedef struct {
 
 void InitHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale);
 void ResetHairyLeg(HairyLeg *leg, Vector2 startPosition, float groundY, float scale);
-void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale);
+void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale, GameplayDifficulty difficulty);
 bool IsHairyLegKickColliding(const HairyLeg *leg, Rectangle playerHitbox);
 void DamageHairyLeg(HairyLeg *leg, int damage);
 bool ShouldHairyLegJumpBackFromCorner(const HairyLeg *leg, Rectangle playerRect, float screenWidth);

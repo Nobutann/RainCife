@@ -9,8 +9,47 @@
 #define SHARK_DASH_ANIM_TIME 0.12f
 #define SHARK_HIT_FLASH_DURATION 0.12f
 
+static float GetSharkIdleDelay(GameplayDifficulty difficulty) {
+    switch (difficulty) {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 3.0f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 2.5f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 1.75f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 2.0f;
+    }
+}
 
-static void FireProjectile(Shark *shark, Rectangle playerRect) {
+static float GetSharkDashSpeedMultiplier(GameplayDifficulty difficulty) {
+    switch (difficulty) {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 0.75f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 0.90f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 1.08f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetSharkProjectileSpeedMultiplier(GameplayDifficulty difficulty) {
+    switch (difficulty) {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 0.75f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 0.90f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 1.08f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static int GetSharkTargetShootCount(GameplayDifficulty difficulty) {
+    switch (difficulty) {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 2;
+        case GAMEPLAY_DIFFICULTY_EASY: return GetRandomValue(2, 3);
+        case GAMEPLAY_DIFFICULTY_HARD: return 4;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return GetRandomValue(3, 4);
+    }
+}
+
+static void FireProjectile(Shark *shark, Rectangle playerRect, GameplayDifficulty difficulty) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
             float visualSize = 120.0f;
@@ -24,7 +63,7 @@ static void FireProjectile(Shark *shark, Rectangle playerRect) {
             Vector2 shootPos = { shark->balls[i].rect.x + visualSize / 2, shark->balls[i].rect.y + visualSize / 2 };
             Vector2 dir = Vector2Subtract(playerBody, shootPos);
             shark->balls[i].direction = Vector2Normalize(dir);
-            shark->balls[i].speed = 24.0f * 60.0f;
+            shark->balls[i].speed = 24.0f * 60.0f * GetSharkProjectileSpeedMultiplier(difficulty);
 
             shark->balls[i].isWaterBubble = false;
             shark->balls[i].active = true;
@@ -34,7 +73,7 @@ static void FireProjectile(Shark *shark, Rectangle playerRect) {
     }
 }
 
-static void FireBubble(Shark *shark) {
+static void FireBubble(Shark *shark, GameplayDifficulty difficulty) {
     for (int i = 0; i < MAX_WATER_BALLS; i++) {
         if (!shark->balls[i].active) {
             float bubbleSize = 120.0f;
@@ -47,7 +86,7 @@ static void FireBubble(Shark *shark) {
                 hitboxSize
             };
             shark->balls[i].direction = (Vector2){ 0, 1.0f }; 
-            shark->balls[i].speed = 12.5f * 60.0f; 
+            shark->balls[i].speed = 12.5f * 60.0f * GetSharkProjectileSpeedMultiplier(difficulty);
             shark->balls[i].isWaterBubble = true;
             shark->balls[i].active = true;
             PlaySharkBubbleSound();
@@ -95,7 +134,7 @@ void InitShark(Shark *shark, int screenWidth, int screenHeight) {
     shark->texDeath = LoadTexture("assets/sprites/Boss/Shark_death.png");
 }
 
-void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight) {
+void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight, GameplayDifficulty difficulty) {
     if (shark->hitFlashTimer > 0.0f) {
         shark->hitFlashTimer -= deltaTime;
         if (shark->hitFlashTimer < 0.0f) {
@@ -158,7 +197,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 shark->animFrame = nextFrame;
                 if (shark->animFrame == SHARK_SHOOT_FIRE_FRAME) {
                     if (shark->shootCount < shark->targetShootCount) {
-                        FireProjectile(shark, playerRect);
+                        FireProjectile(shark, playerRect, difficulty);
                         shark->shootCount++;
                     }
                 }
@@ -213,7 +252,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
     switch (shark->state) {
         case SHARK_IDLE:
             shark->timer += deltaTime;
-            if (shark->timer > 2.0f) {
+            if (shark->timer > GetSharkIdleDelay(difficulty)) {
                 int chance = GetRandomValue(1, 100);
                 if (chance <= 33) {
                     shark->state = SHARK_PREP_LEFT;
@@ -224,13 +263,13 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 } else if (chance <= 66) {
                     shark->state = SHARK_SHOOTING;
                     shark->shootCount = 0;
-                    shark->targetShootCount = GetRandomValue(3, 4);
+                    shark->targetShootCount = GetSharkTargetShootCount(difficulty);
                     shark->animFrame = 0;
                     shark->animTimer = 0.0f;
                 } else {
                     shark->state = SHARK_ARC_ATTACK;
-                    shark->velocity.x = -850.0f;
-                    shark->velocity.y = -1472.0f;
+                    shark->velocity.x = -850.0f * GetSharkDashSpeedMultiplier(difficulty);
+                    shark->velocity.y = -1472.0f * GetSharkDashSpeedMultiplier(difficulty);
                     shark->arcDrops = 0;
                     shark->animFrame = 0;
                     shark->animTimer = 0.0f;
@@ -241,7 +280,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             break;
 
         case SHARK_PREP_LEFT: {
-            shark->rect.x -= 1500.0f * deltaTime;
+            shark->rect.x -= 1500.0f * GetSharkDashSpeedMultiplier(difficulty) * deltaTime;
             float endX = -1200.0f;
             float dist = shark->dashStartX - endX;
             if (dist > 0.0f) {
@@ -271,7 +310,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             break;
 
         case SHARK_DASH_RIGHT: {
-            shark->rect.x += 2000.0f * deltaTime;
+            shark->rect.x += 2000.0f * GetSharkDashSpeedMultiplier(difficulty) * deltaTime;
             float endX = (float)screenWidth + 100.0f;
             float dist = endX - shark->dashStartX;
             if (dist > 0.0f) {
@@ -291,7 +330,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
 
         case SHARK_DASH_LEFT:
             shark->startPos.x = (float)screenWidth - size - 50.0f;
-            float returnSpeed = 1600.0f; 
+            float returnSpeed = 1600.0f * GetSharkDashSpeedMultiplier(difficulty);
             if (shark->rect.x > shark->startPos.x) {
                 shark->rect.x -= returnSpeed * deltaTime;
                 if (shark->rect.x < shark->startPos.x) shark->rect.x = shark->startPos.x;
@@ -309,7 +348,6 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             break;
 
         case SHARK_SHOOTING:
-            /* Firing is driven by the animation frame (see SHARK_SHOOT_FIRE_FRAME above). */
             break;
 
         case SHARK_ARC_ATTACK:
@@ -319,16 +357,16 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
             shark->timer += deltaTime;
 
             if (shark->arcDrops == 0 && shark->timer >= 0.2f) {
-                FireBubble(shark);
+                FireBubble(shark, difficulty);
                 shark->arcDrops++;
             } else if (shark->arcDrops == 1 && shark->timer >= 0.5f) {
-                FireBubble(shark);
+                FireBubble(shark, difficulty);
                 shark->arcDrops++;
             } else if (shark->arcDrops == 2 && shark->timer >= 0.8f) {
-                FireBubble(shark);
+                FireBubble(shark, difficulty);
                 shark->arcDrops++;
-            } else if (shark->arcDrops == 3 && shark->timer >= 1.2f) {
-                FireBubble(shark);
+            } else if (difficulty != GAMEPLAY_DIFFICULTY_HELENA && shark->arcDrops == 3 && shark->timer >= 1.2f) {
+                FireBubble(shark, difficulty);
                 shark->arcDrops++;
             }
 

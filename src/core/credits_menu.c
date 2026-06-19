@@ -7,6 +7,7 @@ GameScreen RunCredits()
 {
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         int currentHeight = GetScreenHeight();
         int currentWidth = GetScreenWidth();

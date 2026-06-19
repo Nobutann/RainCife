@@ -793,6 +793,7 @@ static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rect
 int main(void)
 {
     Config config = CarregarConfig();
+    DefinirConfigAtiva(&config);
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(640, 360, "RainCife");
@@ -963,12 +964,32 @@ int main(void)
             bool infiniteRunRecorded = false;
             bool discardNextGameplayDelta = true;
             Level *infiniteDifficultyLevel = infiniteMode ? currentLevel : NULL;
+            GameplayDifficulty gameplayDifficulty = GAMEPLAY_DIFFICULTY_EASY;
 
             while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
-                if (!deathScreenActive && !phaseTransitionActive && !bossDefeatTransitionPending && !finalScreenActive && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)))
+                AtualizarPreferenciaEspaco();
+
+                if (!deathScreenActive && !phaseTransitionActive && !bossDefeatTransitionPending && !finalScreenActive && IsKeyPressed(KEY_ESCAPE))
                 {
                     gamePaused = !gamePaused;
+                }
+
+                if (IsKeyPressed(KEY_F1))
+                {
+                    gameplayDifficulty = GAMEPLAY_DIFFICULTY_EASY;
+                }
+                else if (IsKeyPressed(KEY_F2))
+                {
+                    gameplayDifficulty = GAMEPLAY_DIFFICULTY_MEDIUM;
+                }
+                else if (IsKeyPressed(KEY_F3))
+                {
+                    gameplayDifficulty = GAMEPLAY_DIFFICULTY_HARD;
+                }
+                else if (IsKeyPressed(KEY_F10))
+                {
+                    gameplayDifficulty = GAMEPLAY_DIFFICULTY_HELENA;
                 }
 
                 float dt = GetFrameTime();
@@ -1072,6 +1093,11 @@ int main(void)
 
                 if (deathScreenActive)
                 {
+                    for (int i = 0; i < MAX_PROJECTILES; i++)
+                    {
+                        projectiles.items[i].active = false;
+                    }
+
                     if (infiniteMode && !infiniteRunRecorded)
                     {
                         RegistrarDistanciaDesafioDiario(infiniteMeters);
@@ -1366,6 +1392,27 @@ int main(void)
                 }
 
                 int infiniteEnemyBaseSpeed = infiniteMode ? GetInfiniteEnemyBaseSpeed(infiniteSpeedMultiplier) : 0;
+                float difficultySpeedModifier = 0.0f;
+                float difficultySpawnTimerModifier = 0.0f;
+                float difficultyScrollMultiplier = 1.0f;
+                if (gameplayDifficulty == GAMEPLAY_DIFFICULTY_EASY)
+                {
+                    difficultySpeedModifier = -3.0f;
+                    difficultySpawnTimerModifier = 0.3f;
+                    difficultyScrollMultiplier = 0.8f;
+                }
+                else if (gameplayDifficulty == GAMEPLAY_DIFFICULTY_HARD)
+                {
+                    difficultySpeedModifier = 3.0f;
+                    difficultySpawnTimerModifier = -0.2f;
+                    difficultyScrollMultiplier = 1.2f;
+                }
+                else if (gameplayDifficulty == GAMEPLAY_DIFFICULTY_HELENA)
+                {
+                    difficultySpeedModifier = -5.0f;
+                    difficultySpawnTimerModifier = 0.6f;
+                    difficultyScrollMultiplier = 0.65f;
+                }
 
                 if (phase == PHASE_RUNNING)
                 {
@@ -1374,7 +1421,7 @@ int main(void)
                     if (infiniteMode)
                     {
                         bool advancedByShortcut = false;
-                        if (IsKeyPressed(KEY_F2))
+                        if (IsKeyPressed(KEY_F5))
                         {
                             AdvanceInfiniteMeters(
                                 levels,
@@ -1475,11 +1522,11 @@ int main(void)
                                 {
                                     if (infiniteMode)
                                     {
-                                        InitEnemyTuned(&enemies[i], chosen, currentWidth, currentHeight, infiniteEnemyBaseSpeed, 0.55, -30.0f);
+                                        InitEnemyTuned(&enemies[i], chosen, currentWidth, currentHeight, infiniteEnemyBaseSpeed + (int)difficultySpeedModifier, 0.55, -30.0f);
                                     }
                                     else
                                     {
-                                        InitEnemy(&enemies[i], chosen, currentWidth, currentHeight, infiniteEnemyBaseSpeed);
+                                        InitEnemy(&enemies[i], chosen, currentWidth, currentHeight, infiniteEnemyBaseSpeed + (int)difficultySpeedModifier);
                                     }
                                     if (chosen == ENEMY_SAFE_POSTE)
                                     {
@@ -1488,7 +1535,9 @@ int main(void)
                                     break;
                                 }
                             }
-                            spawnTimer = spawnLevel->spawnInterval;
+                            float modifiedInterval = spawnLevel->spawnInterval + difficultySpawnTimerModifier;
+                            if (modifiedInterval < 0.1f) modifiedInterval = 0.1f;
+                            spawnTimer = modifiedInterval;
                         }
                     }
 
@@ -1513,18 +1562,20 @@ int main(void)
                                 {
                                     if (infiniteMode)
                                     {
-                                        InitEnemyTuned(&enemies[i], followUp, currentWidth, currentHeight, infiniteEnemyBaseSpeed, 0.55, -30.0f);
+                                        InitEnemyTuned(&enemies[i], followUp, currentWidth, currentHeight, infiniteEnemyBaseSpeed + (int)difficultySpeedModifier, 0.55, -30.0f);
                                     }
                                     else
                                     {
-                                        InitEnemy(&enemies[i], followUp, currentWidth, currentHeight, infiniteEnemyBaseSpeed);
+                                        InitEnemy(&enemies[i], followUp, currentWidth, currentHeight, infiniteEnemyBaseSpeed + (int)difficultySpeedModifier);
                                     }
                                     break;
                                 }
                             }
 
                             Level *spawnLevel = infiniteMode ? infiniteDifficultyLevel : currentLevel;
-                            spawnTimer = spawnLevel->spawnInterval;
+                            float modifiedInterval = spawnLevel->spawnInterval + difficultySpawnTimerModifier;
+                            if (modifiedInterval < 0.1f) modifiedInterval = 0.1f;
+                            spawnTimer = modifiedInterval;
                         }
                     }
                 }
@@ -1533,7 +1584,7 @@ int main(void)
 
                 for (int i = 0; i < MAX_ACTIVE_ENEMIES; i++)
                 {
-                    UpdateEnemy(&enemies[i], currentWidth, currentHeight, infiniteEnemyBaseSpeed, playerHitbox);
+                    UpdateEnemy(&enemies[i], currentWidth, currentHeight, infiniteEnemyBaseSpeed + (int)difficultySpeedModifier, playerHitbox);
                     if (enemies[i].active && enemies[i].type != ENEMY_SAFE_POSTE)
                     {
                         if (CheckCollisionRecs(playerHitbox, GetEnemyHitbox(&enemies[i])))
@@ -1573,9 +1624,9 @@ int main(void)
                     }
                 }
 
-                UpdateBackground(bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, phase);
-                UpdateObjetos(bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, currentWidth, currentHeight, groundY, phase);
-                UpdateWaterSplashes(bg, infiniteMode ? dt * infiniteSpeedMultiplier : dt, currentWidth, currentHeight, groundY);
+                UpdateBackground(bg, infiniteMode ? dt * infiniteSpeedMultiplier * difficultyScrollMultiplier : dt * difficultyScrollMultiplier, phase);
+                UpdateObjetos(bg, infiniteMode ? dt * infiniteSpeedMultiplier * difficultyScrollMultiplier : dt * difficultyScrollMultiplier, currentWidth, currentHeight, groundY, phase);
+                UpdateWaterSplashes(bg, infiniteMode ? dt * infiniteSpeedMultiplier * difficultyScrollMultiplier : dt * difficultyScrollMultiplier, currentWidth, currentHeight, groundY);
                 UpdatePlayer(&player, dt, playerStandingY, playerScale, &config);
                 UpdateProjectile(&projectiles, dt, currentWidth, currentHeight);
 
@@ -1906,7 +1957,7 @@ int main(void)
 
                     if (currentLevel->bossId == 1)
                     {
-                        UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale);
+                        UpdateHairyLeg(&pernaCabeluda, playerHitbox, dt, standingY, bossScale, gameplayDifficulty);
                         if (!bossDefeatTransitionPending)
                         {
                             if (IsKeyPressed(KEY_N))
@@ -1928,7 +1979,7 @@ int main(void)
 
                     if (!bossDefeatedThisFrame && currentLevel->bossId == 2)
                     {
-                        UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight);
+                        UpdateShark(&shark, playerHitbox, dt, currentWidth, currentHeight, gameplayDifficulty);
                         if (!bossDefeatTransitionPending)
                         {
                             if (IsKeyPressed(KEY_N))
@@ -1951,7 +2002,7 @@ int main(void)
                     if (currentLevel->bossId == 3)
                     {
                         float mmDt = level6IntroActive ? 0.0f : dt;
-                        UpdateMidnightMan(&midnightMan, playerHitbox, mmDt, currentWidth, currentHeight, groundY);
+                        UpdateMidnightMan(&midnightMan, playerHitbox, mmDt, currentWidth, currentHeight, groundY, gameplayDifficulty);
                         if (!bossDefeatTransitionPending)
                         {
                             if (IsKeyPressed(KEY_MINUS))
@@ -2082,6 +2133,7 @@ int main(void)
                         DrawProjectiles(&projectiles);
                         DrawGameplayCursor(player.weapon.attacking);
                     }
+
                 EndDrawing();
             }
 

@@ -2,6 +2,7 @@
 #define MIDNIGHT_MAN_H
 
 #include "graphics/sprites.h"
+#include "gameplay/difficulty.h"
 #include "raylib.h"
 
 #define MM_HAND_COUNT 3
@@ -89,7 +90,7 @@ typedef struct {
 } MidnightMan;
 
 void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float groundY);
-void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight, float groundY);
+void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight, float groundY, GameplayDifficulty difficulty);
 void DrawMidnightMan(const MidnightMan *mm);
 void UnloadMidnightMan(MidnightMan *mm);
 

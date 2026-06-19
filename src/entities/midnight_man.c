@@ -67,6 +67,73 @@
 #define MM_HOLDING_BUILDING_LEFT 1
 #define MM_HOLDING_BUILDING_RIGHT 2
 
+static float GetMMIdleMultiplier(GameplayDifficulty difficulty)
+{
+    switch (difficulty)
+    {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 1.50f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 1.25f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 0.87f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetMMTelegraphMultiplier(GameplayDifficulty difficulty)
+{
+    switch (difficulty)
+    {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 1.50f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 1.25f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 0.90f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetMMAttackDurationMultiplier(GameplayDifficulty difficulty)
+{
+    switch (difficulty)
+    {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 1.25f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 1.10f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 0.90f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetMMStormDurationMultiplier(GameplayDifficulty difficulty)
+{
+    switch (difficulty)
+    {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 0.65f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 0.85f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 1.15f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetMMUmbrellaIntervalMultiplier(GameplayDifficulty difficulty)
+{
+    switch (difficulty)
+    {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 1.40f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 1.18f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 0.87f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetMMPauseMultiplier(GameplayDifficulty difficulty)
+{
+    return difficulty == GAMEPLAY_DIFFICULTY_HELENA
+        ? 0.75f
+        : GetMMAttackDurationMultiplier(difficulty);
+}
+
 static bool IsMMArmStormState(MidnightManState state);
 static bool IsMMSideUmbrellaState(MidnightManState state);
 static int GetMMHoldingBuildingHiddenMask(const MidnightMan *mm, int screenWidth);
@@ -484,7 +551,7 @@ void InitMidnightMan(MidnightMan *mm, int screenWidth, int screenHeight, float g
     mm->handsY = (float)screenHeight;
 }
 
-void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight, float groundY)
+void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, int screenWidth, int screenHeight, float groundY, GameplayDifficulty difficulty)
 {
     if (!mm->active)
     {
@@ -629,7 +696,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
             if (mm->animShadow.frameCount > 0)
             {
-                float progress = mm->timer / MM_SIDE_UMBRELLA_TELEGRAPH_DURATION;
+                float progress = mm->timer / (MM_SIDE_UMBRELLA_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty));
                 if (progress > 1.0f)
                 {
                     progress = 1.0f;
@@ -642,7 +709,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 mm->animShadow.currentFrame = frame;
             }
 
-            if (mm->timer >= MM_SIDE_UMBRELLA_TELEGRAPH_DURATION)
+            if (mm->timer >= MM_SIDE_UMBRELLA_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty))
             {
                 bool blockLeft = mm->sideUmbrellaSide == 0;
                 float blockW = (float)screenWidth * MM_SIDE_UMBRELLA_BLOCK_WIDTH_RATIO;
@@ -662,7 +729,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         case MM_SIDE_UMBRELLA_ENTER:
         {
             mm->timer += deltaTime;
-            float progress = mm->timer / MM_SIDE_UMBRELLA_ENTER_DURATION;
+            float progress = mm->timer / (MM_SIDE_UMBRELLA_ENTER_DURATION * GetMMAttackDurationMultiplier(difficulty));
             if (progress > 1.0f) progress = 1.0f;
 
             bool blockLeft = mm->sideUmbrellaSide == 0;
@@ -678,7 +745,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             mm->handXPositions[1] = Lerpf(armStartX, armTargetX, progress);
             SyncMMSideUmbrellaHitboxes(mm, screenWidth, screenHeight);
 
-            if (mm->timer >= MM_SIDE_UMBRELLA_ENTER_DURATION)
+            if (mm->timer >= MM_SIDE_UMBRELLA_ENTER_DURATION * GetMMAttackDurationMultiplier(difficulty))
             {
                 mm->handXPositions[0] = blockTargetX;
                 mm->handXPositions[1] = armTargetX;
@@ -703,7 +770,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             float spawnY = armRect.y + armRect.height * 0.75f;
 
             mm->umbrellaSpawnTimer += deltaTime;
-            if (mm->umbrellaSpawnTimer >= MM_SIDE_UMBRELLA_INTERVAL)
+            if (mm->umbrellaSpawnTimer >= MM_SIDE_UMBRELLA_INTERVAL * GetMMUmbrellaIntervalMultiplier(difficulty))
             {
                 mm->umbrellaSpawnTimer = 0.0f;
 
@@ -727,7 +794,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
 
             SyncMMSideUmbrellaHitboxes(mm, screenWidth, screenHeight);
 
-            if (mm->timer >= MM_SIDE_UMBRELLA_ACTIVE_DURATION)
+            if (mm->timer >= MM_SIDE_UMBRELLA_ACTIVE_DURATION * GetMMStormDurationMultiplier(difficulty))
             {
                 mm->state = MM_SIDE_UMBRELLA_RETREAT;
                 mm->timer = 0.0f;
@@ -738,7 +805,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         case MM_SIDE_UMBRELLA_RETREAT:
         {
             mm->timer += deltaTime;
-            float progress = mm->timer / MM_SIDE_UMBRELLA_RETREAT_DURATION;
+            float progress = mm->timer / (MM_SIDE_UMBRELLA_RETREAT_DURATION * GetMMAttackDurationMultiplier(difficulty));
             if (progress > 1.0f) progress = 1.0f;
 
             bool blockLeft = mm->sideUmbrellaSide == 0;
@@ -754,7 +821,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             mm->handXPositions[1] = Lerpf(armStartX, armEndX, progress);
             SyncMMSideUmbrellaHitboxes(mm, screenWidth, screenHeight);
 
-            if (mm->timer >= MM_SIDE_UMBRELLA_RETREAT_DURATION)
+            if (mm->timer >= MM_SIDE_UMBRELLA_RETREAT_DURATION * GetMMAttackDurationMultiplier(difficulty))
             {
                 mm->handActive[0] = false;
                 mm->handActive[1] = false;
@@ -772,7 +839,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         case MM_ARM_STORM_ENTER:
         {
             mm->timer += deltaTime;
-            float progress = mm->timer / MM_ARM_STORM_ENTER_DURATION;
+            float progress = mm->timer / (MM_ARM_STORM_ENTER_DURATION * GetMMAttackDurationMultiplier(difficulty));
             if (progress > 1.0f) progress = 1.0f;
 
             float armW = mm->texArm.width > 0 ? (float)mm->texArm.width : 413.0f;
@@ -791,7 +858,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             mm->handHitboxes[1] = GetMMArmStormHitbox(mm, screenHeight, 1);
             mm->handHitboxes[2] = (Rectangle){0};
 
-            if (mm->timer >= MM_ARM_STORM_ENTER_DURATION)
+            if (mm->timer >= MM_ARM_STORM_ENTER_DURATION * GetMMAttackDurationMultiplier(difficulty))
             {
                 mm->handXPositions[0] = destLeft;
                 mm->handXPositions[1] = destRight;
@@ -820,7 +887,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             float handY = mm->handsY + drawH * 0.75f;
 
             mm->umbrellaSpawnTimer += deltaTime;
-            if (mm->umbrellaSpawnTimer >= MM_ARM_STORM_UMBRELLA_INTERVAL)
+            if (mm->umbrellaSpawnTimer >= MM_ARM_STORM_UMBRELLA_INTERVAL * GetMMUmbrellaIntervalMultiplier(difficulty))
             {
                 mm->umbrellaSpawnTimer = 0.0f;
 
@@ -852,7 +919,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             mm->handHitboxes[1] = GetMMArmStormHitbox(mm, screenHeight, 1);
             mm->handHitboxes[2] = (Rectangle){0};
 
-            if (mm->timer >= MM_ARM_STORM_ACTIVE_DURATION)
+            if (mm->timer >= MM_ARM_STORM_ACTIVE_DURATION * GetMMStormDurationMultiplier(difficulty))
             {
                 mm->state = MM_ARM_STORM_RETREAT;
                 mm->timer = 0.0f;
@@ -863,7 +930,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         case MM_ARM_STORM_RETREAT:
         {
             mm->timer += deltaTime;
-            float progress = mm->timer / MM_ARM_STORM_RETREAT_DURATION;
+            float progress = mm->timer / (MM_ARM_STORM_RETREAT_DURATION * GetMMAttackDurationMultiplier(difficulty));
             if (progress > 1.0f) progress = 1.0f;
 
             float armW = mm->texArm.width > 0 ? (float)mm->texArm.width : 413.0f;
@@ -881,7 +948,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             mm->handHitboxes[1] = GetMMArmStormHitbox(mm, screenHeight, 1);
             mm->handHitboxes[2] = (Rectangle){0};
 
-            if (mm->timer >= MM_ARM_STORM_RETREAT_DURATION)
+            if (mm->timer >= MM_ARM_STORM_RETREAT_DURATION * GetMMAttackDurationMultiplier(difficulty))
             {
                 mm->handActive[0] = false;
                 mm->handActive[1] = false;
@@ -913,7 +980,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 mm->handHitboxes[i] = (Rectangle){0};
             }
 
-            if (mm->timer >= MM_IDLE_DURATION)
+            if (mm->timer >= MM_IDLE_DURATION * GetMMIdleMultiplier(difficulty))
             {
                 mm->timer = 0.0f;
                 int nextAttack = GetRandomValue(0, 3);
@@ -1007,7 +1074,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             mm->timer += deltaTime;
             mm->handsY = mm->telegraphY;
             {
-                float progress = mm->timer / MM_TELEGRAPH_DURATION;
+                float progress = mm->timer / (MM_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty));
                 if (progress > 1.0f)
                 {
                     progress = 1.0f;
@@ -1019,7 +1086,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 }
                 mm->animShadow.currentFrame = frame;
             }
-            if (mm->timer >= MM_TELEGRAPH_DURATION)
+            if (mm->timer >= MM_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty))
             {
                 mm->state = MM_GROUND_RISE;
                 mm->timer = 0.0f;
@@ -1030,7 +1097,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         case MM_GROUND_RISE:
         {
             mm->timer += deltaTime;
-            float progress = mm->timer / MM_ATTACK_PHASE_DURATION;
+            float progress = mm->timer / (MM_ATTACK_PHASE_DURATION * GetMMAttackDurationMultiplier(difficulty));
             if (progress > 1.0f)
             {
                 progress = 1.0f;
@@ -1045,7 +1112,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 }
             }
 
-            if (mm->timer >= MM_ATTACK_PHASE_DURATION)
+            if (mm->timer >= MM_ATTACK_PHASE_DURATION * GetMMAttackDurationMultiplier(difficulty))
             {
                 mm->handsY = mm->riseStopY;
                 mm->state = MM_GROUND_RETREAT;
@@ -1057,7 +1124,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         case MM_GROUND_RETREAT:
         {
             mm->timer += deltaTime;
-            float progress = mm->timer / MM_ATTACK_PHASE_DURATION;
+            float progress = mm->timer / (MM_ATTACK_PHASE_DURATION * GetMMAttackDurationMultiplier(difficulty));
             if (progress > 1.0f)
             {
                 progress = 1.0f;
@@ -1072,7 +1139,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
                 }
             }
 
-            if (mm->timer >= MM_ATTACK_PHASE_DURATION)
+            if (mm->timer >= MM_ATTACK_PHASE_DURATION * GetMMAttackDurationMultiplier(difficulty))
             {
                 mm->handsY = (float)screenHeight;
 
@@ -1113,7 +1180,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         mm->timer += deltaTime;
         mm->handsY = mm->telegraphY;
         {
-            float progress = mm->timer / MM_PHASE2_TELEGRAPH_DURATION;
+            float progress = mm->timer / (MM_PHASE2_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty));
             if (progress > 1.0f)
             {
                 progress = 1.0f;
@@ -1125,7 +1192,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             }
             mm->animShadow.currentFrame = frame;
         }
-        if (mm->timer >= MM_PHASE2_TELEGRAPH_DURATION)
+        if (mm->timer >= MM_PHASE2_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty))
         {
             mm->state = MM_GROUND_PHASE2_RISE;
             mm->timer = 0.0f;
@@ -1136,7 +1203,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
     case MM_GROUND_PHASE2_RISE:
     {
         mm->timer += deltaTime;
-        float progress = mm->timer / MM_PHASE2_RISE_DURATION;
+        float progress = mm->timer / (MM_PHASE2_RISE_DURATION * GetMMAttackDurationMultiplier(difficulty));
         if (progress > 1.0f)
         {
             progress = 1.0f;
@@ -1157,7 +1224,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             }
         }
 
-        if (mm->timer >= MM_PHASE2_RISE_DURATION)
+        if (mm->timer >= MM_PHASE2_RISE_DURATION * GetMMAttackDurationMultiplier(difficulty))
         {
             mm->handsY = mm->riseStopY;
             mm->state = MM_GROUND_PHASE2_PAUSE;
@@ -1184,7 +1251,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             }
         }
 
-        if (mm->timer >= MM_PHASE2_PAUSE_DURATION)
+        if (mm->timer >= MM_PHASE2_PAUSE_DURATION * GetMMPauseMultiplier(difficulty))
         {
             mm->state = MM_GROUND_PHASE2_RETREAT;
             mm->timer = 0.0f;
@@ -1195,7 +1262,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
     case MM_GROUND_PHASE2_RETREAT:
     {
         mm->timer += deltaTime;
-        float progress = mm->timer / MM_PHASE2_RETREAT_DURATION;
+        float progress = mm->timer / (MM_PHASE2_RETREAT_DURATION * GetMMAttackDurationMultiplier(difficulty));
         if (progress > 1.0f)
         {
             progress = 1.0f;
@@ -1216,7 +1283,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             }
         }
 
-        if (mm->timer >= MM_PHASE2_RETREAT_DURATION)
+        if (mm->timer >= MM_PHASE2_RETREAT_DURATION * GetMMAttackDurationMultiplier(difficulty))
         {
             mm->handsY = GetMMGroundPhase2FistExitY(mm, screenHeight);
             mm->state = MM_IDLE;
@@ -1229,7 +1296,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         mm->timer += deltaTime;
         mm->handsY = -mm->handDrawHeight;
         {
-            float progress = mm->timer / MM_CEILING_TELEGRAPH_DURATION;
+            float progress = mm->timer / (MM_CEILING_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty));
             if (progress > 1.0f)
             {
                 progress = 1.0f;
@@ -1241,7 +1308,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             }
             mm->animShadow.currentFrame = frame;
         }
-        if (mm->timer >= MM_CEILING_TELEGRAPH_DURATION)
+        if (mm->timer >= MM_CEILING_TELEGRAPH_DURATION * GetMMTelegraphMultiplier(difficulty))
         {
             if (mm->ceilingPhase == 0)
             {
@@ -1259,7 +1326,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
     case MM_CEILING_SLAM:
     {
         mm->timer += deltaTime;
-        float progress = mm->timer / MM_CEILING_SLAM_DURATION;
+        float progress = mm->timer / (MM_CEILING_SLAM_DURATION * GetMMAttackDurationMultiplier(difficulty));
         if (progress > 1.0f)
         {
             progress = 1.0f;
@@ -1282,7 +1349,7 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
             }
         }
 
-        if (mm->timer >= MM_CEILING_SLAM_DURATION)
+        if (mm->timer >= MM_CEILING_SLAM_DURATION * GetMMAttackDurationMultiplier(difficulty))
         {
             mm->handsY = targetY;
             PlayMidnightManShockwaveSound();
@@ -1320,7 +1387,10 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
     case MM_CEILING_RETREAT:
     {
         mm->timer += deltaTime;
-        float progress = mm->timer / (MM_CEILING_PAUSE_DURATION + MM_CEILING_RETREAT_DURATION);
+        float ceilingPauseDuration = MM_CEILING_PAUSE_DURATION * GetMMPauseMultiplier(difficulty);
+        float ceilingRetreatDuration = MM_CEILING_RETREAT_DURATION * GetMMAttackDurationMultiplier(difficulty);
+        float ceilingRetreatTotal = ceilingPauseDuration + ceilingRetreatDuration;
+        float progress = mm->timer / ceilingRetreatTotal;
         if (progress > 1.0f)
         {
             progress = 1.0f;
@@ -1329,13 +1399,13 @@ void UpdateMidnightMan(MidnightMan *mm, Rectangle playerRect, float deltaTime, i
         float targetY = groundY - mm->handDrawWidth + 30.0f;
         float endY = GetMMCeilingFistExitY(mm);
 
-        if (mm->timer < MM_CEILING_PAUSE_DURATION)
+        if (mm->timer < ceilingPauseDuration)
         {
             mm->handsY = targetY;
         }
         else
         {
-            float retreatProgress = (mm->timer - MM_CEILING_PAUSE_DURATION) / MM_CEILING_RETREAT_DURATION;
+            float retreatProgress = (mm->timer - ceilingPauseDuration) / ceilingRetreatDuration;
             if (retreatProgress > 1.0f)
             {
                 retreatProgress = 1.0f;

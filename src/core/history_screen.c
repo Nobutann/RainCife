@@ -127,6 +127,7 @@ GameScreen RunHistoryAnimation(void)
 
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         float dt = GetFrameTime();
         UpdateCustomCursor(dt);
         bool finishedNaturally = false;

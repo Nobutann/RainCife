@@ -60,6 +60,7 @@ GameScreen RunStart()
 
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
@@ -193,6 +194,7 @@ GameScreen RunInfiniteSoon()
 {
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
