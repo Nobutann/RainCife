@@ -86,6 +86,30 @@ static void DrawVolumeFill(Texture2D volumeBar, float value, float baseY, int sc
     );
 }
 
+static GameplayDifficulty GetDifficultyForOption(int option)
+{
+    switch (option)
+    {
+        case 0: return GAMEPLAY_DIFFICULTY_HELENA;
+        case 1: return GAMEPLAY_DIFFICULTY_EASY;
+        case 2: return GAMEPLAY_DIFFICULTY_MEDIUM;
+        case 3: return GAMEPLAY_DIFFICULTY_HARD;
+        default: return GetSelectedGameplayDifficulty();
+    }
+}
+
+static void DrawSelectedDifficultyFill(Rectangle button)
+{
+    Rectangle fill = (Rectangle)
+    {
+        button.x + 3.0f,
+        button.y + 3.0f,
+        button.width - 6.0f,
+        button.height - 6.0f
+    };
+    DrawRectangleRec(fill, (Color){36, 174, 89, 55});
+}
+
 GameScreen RunOptions(Config *config, GameScreen returnScreen)
 {
     bool draggingSom = false;
@@ -110,6 +134,13 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
         Rectangle barSom = ScaleUiRect(213.0f, 94.0f, 200.0f, 22.0f, currentWidth, currentHeight);
         Rectangle barMusica = ScaleUiRect(213.0f, 147.0f, 200.0f, 22.0f, currentWidth, currentHeight);
         Rectangle backButton = ScaleUiRect(7.0f, 8.0f, 24.0f, 30.0f, currentWidth, currentHeight);
+        Rectangle difficultyButtons[4] =
+        {
+            ScaleUiRect(159.0f, 316.0f, 74.0f, 33.0f, currentWidth, currentHeight),
+            ScaleUiRect(239.0f, 316.0f, 74.0f, 33.0f, currentWidth, currentHeight),
+            ScaleUiRect(319.0f, 316.0f, 74.0f, 33.0f, currentWidth, currentHeight),
+            ScaleUiRect(399.0f, 316.0f, 74.0f, 33.0f, currentWidth, currentHeight)
+        };
         Rectangle controlBoxes[4] =
         {
             ScaleUiRect(213.0f, 208.0f, 55.0f, 82.0f, currentWidth, currentHeight),
@@ -139,8 +170,16 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
                 hoveringControl = true;
             }
         }
+        bool hoveringDifficulty = false;
+        for (int i = 0; i < 4; i++)
+        {
+            if (CheckCollisionPointRec(mouse, difficultyButtons[i]))
+            {
+                hoveringDifficulty = true;
+            }
+        }
         bool hoveringSlider = CheckCollisionPointRec(mouse, barSom) || CheckCollisionPointRec(mouse, barMusica);
-        bool hoveringInteractive = hoveringBack || hoveringControl || hoveringSlider;
+        bool hoveringInteractive = hoveringBack || hoveringControl || hoveringSlider || hoveringDifficulty;
 
         if (aceitarClique && hoveringBack && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
@@ -173,6 +212,14 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
             }
         }
 
+        for (int i = 0; i < 4; i++)
+        {
+            if (aceitarClique && CheckCollisionPointRec(mouse, difficultyButtons[i]) && IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            {
+                SetSelectedGameplayDifficulty(GetDifficultyForOption(i));
+            }
+        }
+
         if (controleSelecionado >= 0)
         {
             int teclaPressionada = GetKeyPressed();
@@ -195,6 +242,13 @@ GameScreen RunOptions(Config *config, GameScreen returnScreen)
             ClearBackground((Color){43, 56, 106, 255});
             DrawFullscreenTexture(blueBackground, currentWidth, currentHeight);
             DrawFullscreenTexture(optionsScreen, currentWidth, currentHeight);
+            for (int i = 0; i < 4; i++)
+            {
+                if (GetSelectedGameplayDifficulty() == GetDifficultyForOption(i))
+                {
+                    DrawSelectedDifficultyFill(difficultyButtons[i]);
+                }
+            }
             DrawVolumeFill(volumeBar, config->volume, 99.0f, currentWidth, currentHeight);
             DrawVolumeFill(volumeBar, config->musica, 153.0f, currentWidth, currentHeight);
             DrawFullscreenTexture(hoveringBack ? backHoverTexture : backButtonTexture, currentWidth, currentHeight);

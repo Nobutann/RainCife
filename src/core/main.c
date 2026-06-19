@@ -36,6 +36,17 @@ static Background gameplayBackgroundCache = {0};
 static bool gameplayBackgroundCacheLoaded = false;
 static EnemyAssets gameplayEnemyAssetsCache = {0};
 static bool gameplayEnemyAssetsCacheLoaded = false;
+static GameplayDifficulty selectedGameplayDifficulty = GAMEPLAY_DIFFICULTY_EASY;
+
+GameplayDifficulty GetSelectedGameplayDifficulty(void)
+{
+    return selectedGameplayDifficulty;
+}
+
+void SetSelectedGameplayDifficulty(GameplayDifficulty difficulty)
+{
+    selectedGameplayDifficulty = difficulty;
+}
 
 static float GetInfinitePhaseDuration(float meters)
 {
@@ -964,7 +975,7 @@ int main(void)
             bool infiniteRunRecorded = false;
             bool discardNextGameplayDelta = true;
             Level *infiniteDifficultyLevel = infiniteMode ? currentLevel : NULL;
-            GameplayDifficulty gameplayDifficulty = GAMEPLAY_DIFFICULTY_EASY;
+            GameplayDifficulty gameplayDifficulty = GetSelectedGameplayDifficulty();
 
             while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
@@ -978,18 +989,22 @@ int main(void)
                 if (IsKeyPressed(KEY_F1))
                 {
                     gameplayDifficulty = GAMEPLAY_DIFFICULTY_EASY;
+                    SetSelectedGameplayDifficulty(gameplayDifficulty);
                 }
                 else if (IsKeyPressed(KEY_F2))
                 {
                     gameplayDifficulty = GAMEPLAY_DIFFICULTY_MEDIUM;
+                    SetSelectedGameplayDifficulty(gameplayDifficulty);
                 }
                 else if (IsKeyPressed(KEY_F3))
                 {
                     gameplayDifficulty = GAMEPLAY_DIFFICULTY_HARD;
+                    SetSelectedGameplayDifficulty(gameplayDifficulty);
                 }
                 else if (IsKeyPressed(KEY_F10))
                 {
                     gameplayDifficulty = GAMEPLAY_DIFFICULTY_HELENA;
+                    SetSelectedGameplayDifficulty(gameplayDifficulty);
                 }
 
                 float dt = GetFrameTime();

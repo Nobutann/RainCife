@@ -3,6 +3,7 @@
 
 #include <raylib.h>
 #include "core/config_manager.h"
+#include "gameplay/difficulty.h"
 
 typedef enum
 {
@@ -37,6 +38,8 @@ GameScreen RunInfiniteSoon();
 GameScreen RunOptions(Config *config, GameScreen returnScreen);
 GameScreen RunCredits();
 GameScreen RunGame(Config *config);
+GameplayDifficulty GetSelectedGameplayDifficulty(void);
+void SetSelectedGameplayDifficulty(GameplayDifficulty difficulty);
 
 int GetSelectedStoryLevelId(void);
 int GetMaxUnlockedStoryLevelId(void);
