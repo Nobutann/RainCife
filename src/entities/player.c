@@ -185,7 +185,16 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         }
     }
 
-    if (IsKeyPressed(config->teclaPular) && player->onGround)
+    bool spaceAttacks = config->espacoAtaca != 0;
+    bool configuredJumpEnabled = config->teclaPular != KEY_SPACE || !spaceAttacks;
+    bool jumpPressed =
+        (configuredJumpEnabled && IsKeyPressed(config->teclaPular)) ||
+        (!spaceAttacks && IsKeyPressed(KEY_SPACE));
+    bool jumpHeld =
+        (configuredJumpEnabled && IsKeyDown(config->teclaPular)) ||
+        (!spaceAttacks && IsKeyDown(KEY_SPACE));
+
+    if (jumpPressed && player->onGround)
     {
         player->velocity.y = JUMP_FORCE_MIN;
         player->isJumping = true;
@@ -198,7 +207,7 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         }
     }
 
-    if (player->isJumping && IsKeyDown(config->teclaPular))
+    if (player->isJumping && jumpHeld)
     {
         if (player->jumpHoldTimer < JUMP_HOLD_MAX)
         {
@@ -216,12 +225,14 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
         }
     }
 
-    if (IsKeyReleased(config->teclaPular))
+    if (player->isJumping && !jumpHeld)
     {
         player->isJumping = false;
     }
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) ||
+        IsMouseButtonPressed(MOUSE_BUTTON_RIGHT) ||
+        (spaceAttacks && IsKeyPressed(KEY_SPACE)))
     {
         UseWeapon(player);
     }

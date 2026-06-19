@@ -45,6 +45,7 @@ GameScreen RunCharacterSelect()
 
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();

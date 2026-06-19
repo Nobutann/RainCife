@@ -455,6 +455,7 @@ GameScreen RunLevelSelect()
 
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
@@ -622,6 +623,7 @@ GameScreen RunInfiniteMenu()
 
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();
@@ -794,6 +796,7 @@ GameScreen RunDailyChallenges()
 
     while (!WindowShouldClose() && nextScreen == SCREEN_EXIT)
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         GarantirDesafiosDiarios(&state);
 
@@ -897,6 +900,7 @@ GameScreen RunItems()
 
     while (!WindowShouldClose() && nextScreen == SCREEN_EXIT)
     {
+        AtualizarPreferenciaEspaco();
         UpdateSoundtrack();
         int currentWidth = GetScreenWidth();
         int currentHeight = GetScreenHeight();

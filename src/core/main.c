@@ -793,6 +793,7 @@ static void DrawPhaseTransitionOverlay(int currentWidth, int currentHeight, Rect
 int main(void)
 {
     Config config = CarregarConfig();
+    DefinirConfigAtiva(&config);
 
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(640, 360, "RainCife");
@@ -967,7 +968,9 @@ int main(void)
 
             while (!WindowShouldClose() && (currentScreen == SCREEN_GAME || currentScreen == SCREEN_INFINITE_GAME))
             {
-                if (!deathScreenActive && !phaseTransitionActive && !bossDefeatTransitionPending && !finalScreenActive && (IsKeyPressed(KEY_ESCAPE) || IsKeyPressed(KEY_P)))
+                AtualizarPreferenciaEspaco();
+
+                if (!deathScreenActive && !phaseTransitionActive && !bossDefeatTransitionPending && !finalScreenActive && IsKeyPressed(KEY_ESCAPE))
                 {
                     gamePaused = !gamePaused;
                 }

@@ -105,6 +105,7 @@ GameScreen RunIntro(void)
 
     while (!WindowShouldClose())
     {
+        AtualizarPreferenciaEspaco();
         float dt = GetFrameTime();
         UpdateCustomCursor(dt);
 

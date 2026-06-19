@@ -10,9 +10,12 @@ typedef struct {
     int teclaTras;
     int teclaPular;
     int teclaAgachar;
+    int espacoAtaca;
 } Config;
 
 void SalvarConfig(Config config);
 Config CarregarConfig();
+void DefinirConfigAtiva(Config *config);
+void AtualizarPreferenciaEspaco(void);
 
 #endif
