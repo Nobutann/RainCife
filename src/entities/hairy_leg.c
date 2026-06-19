@@ -26,6 +26,37 @@
 #define HAIRY_LEG_SWEEP_RIGHT_HITBOX_VERTICAL_OFFSET 12.0f
 #define HAIRY_LEG_DEATH_SPRITE_BOTTOM_TRANSPARENT_PIXELS 31.0f
 #define HAIRY_LEG_HIT_FLASH_DURATION 0.12f
+#define HAIRY_LEG_IDLE_ATTACK_DELAY 2.0f
+
+static float GetHairyLegDelayMultiplier(GameplayDifficulty difficulty) {
+    switch (difficulty) {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 1.50f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 1.25f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 0.87f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetHairyLegSpeedMultiplier(GameplayDifficulty difficulty) {
+    switch (difficulty) {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 0.70f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 0.85f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 1.15f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
+
+static float GetHairyLegRecoveryMultiplier(GameplayDifficulty difficulty) {
+    switch (difficulty) {
+        case GAMEPLAY_DIFFICULTY_HELENA: return 1.40f;
+        case GAMEPLAY_DIFFICULTY_EASY: return 1.20f;
+        case GAMEPLAY_DIFFICULTY_HARD: return 0.90f;
+        case GAMEPLAY_DIFFICULTY_MEDIUM:
+        default: return 1.0f;
+    }
+}
 
 static const Rectangle HAIRY_LEG_KICK_FRAME_HITBOXES[HAIRY_LEG_KICK_FRAME_COUNT] = {
     {174.0f, 214.0f, 105.0f, 27.0f},
@@ -204,13 +235,13 @@ static void ResetHairyLegShadowWarning(HairyLeg *leg) {
     leg->sprites.shadow.timer = 0.0f;
 }
 
-static void UpdateHairyLegShadowWarning(HairyLeg *leg) {
+static void UpdateHairyLegShadowWarning(HairyLeg *leg, GameplayDifficulty difficulty) {
     Animation *shadow = &leg->sprites.shadow;
     if (shadow->frameCount <= 0) {
         return;
     }
 
-    float progress = leg->timer / HAIRY_LEG_HANGING_WARNING_TIME;
+    float progress = leg->timer / (HAIRY_LEG_HANGING_WARNING_TIME * GetHairyLegDelayMultiplier(difficulty));
     if (progress < 0.0f) {
         progress = 0.0f;
     }
@@ -439,7 +470,7 @@ bool TryDamageHairyLegFromPlayerAttack(HairyLeg *leg, Player *player, float play
     return true;
 }
 
-void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale) {
+void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float groundY, float scale, GameplayDifficulty difficulty) {
     leg->groundY = groundY;
     if (leg->hitFlashTimer > 0.0f) {
         leg->hitFlashTimer -= deltaTime;
@@ -474,7 +505,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
     switch (leg->state) {
         case HL_IDLE:
             leg->timer += deltaTime;
-            if (leg->timer > 1.0f) {
+            if (leg->timer > HAIRY_LEG_IDLE_ATTACK_DELAY * GetHairyLegDelayMultiplier(difficulty)) {
                 int screenW = GetScreenWidth();
                 float bodyCenterX = GetHairyLegCurrentBodyCenterX(leg, scale);
                 leg->direction = GetHairyLegDirectionTowardPlayer(leg, playerRect);
@@ -553,14 +584,14 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             leg->timer += deltaTime;
             leg->rect.x = playerRect.x;
 
-            if(leg->timer > HAIRY_LEG_HANGING_WARNING_TIME){
+            if(leg->timer > HAIRY_LEG_HANGING_WARNING_TIME * GetHairyLegDelayMultiplier(difficulty)){
                 leg->state = HL_FALLING;
                 leg->sprites.fall.currentFrame = 0;
                 leg->sprites.fall.timer = 0.0f;
                 leg->timer = 0.0f;
                 ResetHairyLegShadowWarning(leg);
             } else {
-                UpdateHairyLegShadowWarning(leg);
+                UpdateHairyLegShadowWarning(leg, difficulty);
             }
 
             break;
@@ -578,8 +609,9 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
                         float legHitboxTipY = leg->rect.y + leg->rect.height;
                         float waveY = legHitboxTipY - waveH + (HAIRY_LEG_SHOCKWAVE_VERTICAL_OFFSET * scale);
 
-                        leg->waveLeft = MakeHairyLegShockwave((Rectangle){leg->rect.x - waveW, waveY, waveW, waveH}, (Vector2){HAIRY_LEG_SHOCKWAVE_SPEED, 0});
-                        leg->waveRight = MakeHairyLegShockwave((Rectangle){leg->rect.x + leg->rect.width, waveY, waveW, waveH}, (Vector2){HAIRY_LEG_SHOCKWAVE_SPEED, 0});
+                        float shockwaveSpeed = HAIRY_LEG_SHOCKWAVE_SPEED * GetHairyLegSpeedMultiplier(difficulty);
+                        leg->waveLeft = MakeHairyLegShockwave((Rectangle){leg->rect.x - waveW, waveY, waveW, waveH}, (Vector2){shockwaveSpeed, 0});
+                        leg->waveRight = MakeHairyLegShockwave((Rectangle){leg->rect.x + leg->rect.width, waveY, waveW, waveH}, (Vector2){shockwaveSpeed, 0});
                         PlayLegShockwaveSound();
 
                         leg->sprites.fall.currentFrame = 1;
@@ -616,10 +648,10 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
             leg->isKickActive = true;
 
             if (leg->timer < 0.5f) {
-                leg->rect.x -= 100 * leg->direction * deltaTime;
+                leg->rect.x -= 100 * GetHairyLegSpeedMultiplier(difficulty) * leg->direction * deltaTime;
             }
             else if (leg->timer < HAIRY_LEG_SWEEP_TIME) {
-                leg->rect.x += 1600 * leg->direction * deltaTime;
+                leg->rect.x += 1600 * GetHairyLegSpeedMultiplier(difficulty) * leg->direction * deltaTime;
             }
             else {
                 leg->state = HL_SWEEP_RECOVERING;
@@ -633,7 +665,7 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
 
         case HL_SWEEP_RECOVERING:
             leg->timer += deltaTime;
-            float sweepRecoverProgress = leg->timer / HAIRY_LEG_SWEEP_RECOVER_TIME;
+            float sweepRecoverProgress = leg->timer / (HAIRY_LEG_SWEEP_RECOVER_TIME * GetHairyLegRecoveryMultiplier(difficulty));
             if (sweepRecoverProgress > 1.0f) {
                 sweepRecoverProgress = 1.0f;
             }
@@ -656,16 +688,19 @@ void UpdateHairyLeg(HairyLeg *leg, Rectangle playerRect, float deltaTime, float 
 
         case HL_KICKING:
             leg->timer += deltaTime;
-            if (leg->timer < 0.4f) {
-                leg->rect.x += 500 * leg->direction * deltaTime;
+            float kickStartupTime = 0.4f * GetHairyLegDelayMultiplier(difficulty);
+            float kickActiveEndTime = kickStartupTime + (0.3f * GetHairyLegRecoveryMultiplier(difficulty));
+            float kickRecoverEndTime = kickActiveEndTime + (0.5f * GetHairyLegRecoveryMultiplier(difficulty));
+            if (leg->timer < kickStartupTime) {
+                leg->rect.x += 500 * GetHairyLegSpeedMultiplier(difficulty) * leg->direction * deltaTime;
                 leg->isKickActive = false;
             }
-            else if (leg->timer < 0.7f) {
+            else if (leg->timer < kickActiveEndTime) {
                 leg->isKickActive = true;
             }
-            else if (leg->timer < 1.2f) {
+            else if (leg->timer < kickRecoverEndTime) {
                 leg->isKickActive = false;
-                leg->rect.x -= 20 * leg->direction * deltaTime;
+                leg->rect.x -= 20 * GetHairyLegSpeedMultiplier(difficulty) * leg->direction * deltaTime;
             }
             else {
                 SetHairyLegStatePreservingBodyCenterX(leg, HL_VULNERABLE, scale);
