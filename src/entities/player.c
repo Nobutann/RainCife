@@ -40,6 +40,7 @@ void InitPlayer(Player *player, Vector2 initialPos, float speed)
     player->sprites.attack = (LayeredAnimation){0};
     EquipWeapon(player, menuWeaponTypes[selectedWeaponIndex]);
     player->weapon.cooldownTimer = player->weapon.cooldown;
+    player->weapon.showCooldown = false;
     player->isJumping = false;
 }
 
@@ -376,6 +377,11 @@ void UpdatePlayer(Player *player, float dt, float groundY, float scale, const Co
     if (player->weapon.cooldownTimer > 0)
     {
         player->weapon.cooldownTimer -= dt;
+        if (player->weapon.cooldownTimer <= 0.0f)
+        {
+            player->weapon.cooldownTimer = 0.0f;
+            player->weapon.showCooldown = false;
+        }
     }
 
     if (player->weapon.type == WEAPON_PISTOL)

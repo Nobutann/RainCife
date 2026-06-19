@@ -123,6 +123,7 @@ void EquipWeapon(Player *player, WeaponType type)
 
     player->weapon.type = type;
     player->weapon.cooldownTimer = 0.0f;
+    player->weapon.showCooldown = false;
     player->weapon.hitConnected = false;
     float swordCooldown = player->isBossFighting ? 0.5f : 0.85f;
 
@@ -181,6 +182,7 @@ void UseWeapon(Player *player)
     }
 
     player->weapon.cooldownTimer = player->weapon.cooldown;
+    player->weapon.showCooldown = true;
     player->weapon.hitConnected = false;
 
     if (player->weapon.type != WEAPON_PISTOL)

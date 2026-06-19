@@ -558,6 +558,59 @@ static void DrawInfiniteMetersCounter(float meters, int currentWidth, int curren
     DrawText(text, boxX + paddingX, boxY + paddingY, fontSize, RAYWHITE);
 }
 
+static void DrawWeaponCooldownAbovePlayer(Player *player, float playerScale, int currentWidth)
+{
+    if (!player->weapon.showCooldown || player->weapon.cooldownTimer <= 0.0f || player->weapon.cooldown <= 0.0f)
+    {
+        return;
+    }
+
+    float progress = player->weapon.cooldownTimer / player->weapon.cooldown;
+    if (progress < 0.0f)
+    {
+        progress = 0.0f;
+    }
+    if (progress > 1.0f)
+    {
+        progress = 1.0f;
+    }
+
+    float readyProgress = 1.0f - progress;
+    float barWidth = 44.0f * playerScale;
+    float barHeight = 5.0f * playerScale;
+    float playerTopY = player->position.y + 18.0f * playerScale;
+    if (player->onGround)
+    {
+        playerTopY += 40.0f * playerScale;
+    }
+    Rectangle background =
+    {
+        player->position.x + 120.0f * playerScale - barWidth * 0.5f,
+        playerTopY,
+        barWidth,
+        barHeight
+    };
+
+    if (background.x < 4.0f)
+    {
+        background.x = 4.0f;
+    }
+    if (background.x + background.width > currentWidth - 4.0f)
+    {
+        background.x = currentWidth - background.width - 4.0f;
+    }
+    if (background.y < 4.0f)
+    {
+        background.y = 4.0f;
+    }
+
+    Rectangle fill = background;
+    fill.width *= readyProgress;
+
+    DrawRectangleRounded(background, 0.7f, 6, Fade(BLACK, 0.45f));
+    DrawRectangleRounded(fill, 0.7f, 6, Fade(SKYBLUE, 0.92f));
+}
+
 static void DrawInfiniteRankingNameOverlay(int currentWidth, int currentHeight, float meters, const char *name)
 {
     DrawRectangle(0, 0, currentWidth, currentHeight, Fade(BLACK, 0.82f));
@@ -2047,6 +2100,7 @@ int main(void)
                     if (!level6BossIntroInProgress)
                     {
                         DrawPlayer(&player, playerScale);
+                        DrawWeaponCooldownAbovePlayer(&player, playerScale, currentWidth);
                     }
 
                     if (!level6BossIntroInProgress && phase == PHASE_BOSS)
