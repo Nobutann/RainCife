@@ -32,7 +32,7 @@ static const PlayerSpriteSet PLAYER_SPRITE_SETS[] =
         "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Attack_hammer_cesar-Sheet.png",
         "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Arm_gun.png",
         "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_gun_body.png",
-        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_body_foward_cesar-Sheet.png",
+        "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_gun_body.png",
         "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_body_gun_backward.png",
         "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Running_body_gun_backward_cesar.png",
         "assets/sprites/Player/Spr_Mouse/Spr_rat/Mouse_Jump_up_gun.png",
@@ -134,6 +134,81 @@ Animation LoadAnimation(const char* path, int frameCount, float frameTime)
     animation.frameCount = frameCount;
     animation.frameWidth = animation.sheet.width / frameCount;
     animation.frameTime = frameTime;
+
+    return animation;
+}
+
+static Animation LoadMouseClothedGunBodyAnimation(const char *shirtPath, const char *gunBodyPath, int frameCount, float frameTime)
+{
+    Animation animation = {0};
+    Image image = LoadImage(gunBodyPath);
+    Image shirt = LoadImage(shirtPath);
+    ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    ImageFormat(&shirt, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+
+    Color *pixels = (Color *)image.data;
+    Color *shirtPixels = LoadImageColors(shirt);
+    int pixelCount = image.width * image.height;
+    int shirtPixelCount = shirt.width * shirt.height;
+
+    for (int i = 0; i < pixelCount && i < shirtPixelCount; i++)
+    {
+        bool isOrange = shirtPixels[i].r == 223 && shirtPixels[i].g == 113 && shirtPixels[i].b == 38 && shirtPixels[i].a > 0;
+        bool isWhite = shirtPixels[i].r == 255 && shirtPixels[i].g == 255 && shirtPixels[i].b == 255 && shirtPixels[i].a > 0;
+
+        if (pixels[i].a > 0 && (isOrange || isWhite))
+        {
+            pixels[i] = shirtPixels[i];
+        }
+    }
+
+    UnloadImageColors(shirtPixels);
+    UnloadImage(shirt);
+
+    animation.sheet = LoadTextureFromImage(image);
+    animation.frameCount = frameCount;
+    animation.frameWidth = animation.sheet.width / frameCount;
+    animation.frameTime = frameTime;
+    UnloadImage(image);
+
+    return animation;
+}
+
+static Animation LoadClothedIdleGunBodyAnimation(const char *idleClothedPath, const char *idleBodyGunPath, float frameTime)
+{
+    Animation animation = {0};
+    Image image = LoadImage(idleBodyGunPath);
+    Image shirt = LoadImage(idleClothedPath);
+    ImageFormat(&image, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+    ImageFormat(&shirt, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
+
+    Color *pixels = (Color *)image.data;
+    Color *shirtPixels = LoadImageColors(shirt);
+
+    for (int y = 0; y < image.height && y < shirt.height; y++)
+    {
+        for (int x = 0; x < image.width && x < shirt.width; x++)
+        {
+            int imageIndex = y * image.width + x;
+            int shirtIndex = y * shirt.width + x;
+            bool isOrange = shirtPixels[shirtIndex].r == 223 && shirtPixels[shirtIndex].g == 113 && shirtPixels[shirtIndex].b == 38 && shirtPixels[shirtIndex].a > 0;
+            bool isWhite = shirtPixels[shirtIndex].r == 255 && shirtPixels[shirtIndex].g == 255 && shirtPixels[shirtIndex].b == 255 && shirtPixels[shirtIndex].a > 0;
+
+            if (pixels[imageIndex].a > 0 && (isOrange || isWhite))
+            {
+                pixels[imageIndex] = shirtPixels[shirtIndex];
+            }
+        }
+    }
+
+    UnloadImageColors(shirtPixels);
+    UnloadImage(shirt);
+
+    animation.sheet = LoadTextureFromImage(image);
+    animation.frameCount = 1;
+    animation.frameWidth = animation.sheet.width;
+    animation.frameTime = frameTime;
+    UnloadImage(image);
 
     return animation;
 }
@@ -261,7 +336,9 @@ void LoadPlayerSprites(PlayerSprites *playerSprites, int characterId, int clothi
 
     playerSprites->idleGun.layerCount = 3;
     playerSprites->idleGun.layers[0] = LoadAnimation(sprites->idleLegsAttack, 1, FRAME_TIME);
-    playerSprites->idleGun.layers[1] = LoadAnimation(sprites->idleBodyGun, 1, FRAME_TIME);
+    playerSprites->idleGun.layers[1] = (characterId == 1 || characterId == 2 || characterId == 3) && clothed
+        ? LoadClothedIdleGunBodyAnimation(sprites->idleClothed, sprites->idleBodyGun, FRAME_TIME)
+        : LoadAnimation(sprites->idleBodyGun, 1, FRAME_TIME);
     playerSprites->idleGun.layers[2] = LoadAnimation(sprites->idleHeadAttack, 1, FRAME_TIME);
     
 }
@@ -284,7 +361,9 @@ void LoadPistolAnimation(PlayerSprites *playerSprites, int characterId, int clot
     UnloadLayeredAnimation(&playerSprites->attack);
     playerSprites->attack.layerCount = 3;
     playerSprites->attack.layers[0] = LoadAnimation(sprites->walkFrontLegs, 8, FRAME_TIME);
-    playerSprites->attack.layers[1] = LoadAnimation(clothed ? sprites->walkFrontBodyGunClothed : sprites->walkFrontBodyGun, 8, FRAME_TIME);
+    playerSprites->attack.layers[1] = (characterId == 1 && clothed)
+        ? LoadMouseClothedGunBodyAnimation(sprites->walkFrontBodyClothed, sprites->walkFrontBodyGun, 8, FRAME_TIME)
+        : LoadAnimation(clothed ? sprites->walkFrontBodyGunClothed : sprites->walkFrontBodyGun, 8, FRAME_TIME);
     playerSprites->attack.layers[2] = LoadAnimation(sprites->headRunning, 8, FRAME_TIME);
 }
 
@@ -308,6 +387,7 @@ void UnloadPlayerSprites(PlayerSprites *playerSprites)
     UnloadLayeredAnimation(&playerSprites->walkBackwardsGun);
     UnloadLayeredAnimation(&playerSprites->jumpUpGun);
     UnloadLayeredAnimation(&playerSprites->jumpDownGun);
+    UnloadLayeredAnimation(&playerSprites->idleGun);
     UnloadTexture(playerSprites->armGun);
 }
 

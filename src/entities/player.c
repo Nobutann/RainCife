@@ -49,6 +49,17 @@ static bool IsHammerAirAttack(const Player *player)
     return !player->onGround && player->weapon.attacking && player->weapon.type == WEAPON_HAMMER;
 }
 
+static bool ShouldDrawPistolArm(const Player *player)
+{
+    if (player->weapon.type != WEAPON_PISTOL || player->sprites.armGun.id <= 0)
+    {
+        return false;
+    }
+
+    return player->currentAnim != &player->sprites.jumpUpGun &&
+           player->currentAnim != &player->sprites.jumpDownGun;
+}
+
 void UpdatePlayerFacingForHorizontalInput(Player *player, float horizontalInput)
 {
     if (horizontalInput > 0.0f)
@@ -674,7 +685,7 @@ void DrawPlayer(Player *player, float scale)
 {
     Vector2 drawPosition = player->position;
 
-    if (player->weapon.type == WEAPON_PISTOL && player->sprites.armGun.id > 0)
+    if (ShouldDrawPistolArm(player))
     {
         Texture2D arm = player->sprites.armGun;
         float armScale = scale;

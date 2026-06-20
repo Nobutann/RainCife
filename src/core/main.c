@@ -280,6 +280,17 @@ static void ResetPlayerForRunningRetry(Player *player, float groundY, float play
         float spriteH = player->sprites.walkFront.layers[0].sheet.height * playerScale;
         player->position.y = groundY - spriteH * 1.1f;
     }
+
+    if (player->weapon.type == WEAPON_PISTOL && player->sprites.attack.layerCount >= 3 && player->sprites.walkFront.layerCount >= 3)
+    {
+        player->sprites.attack.layers[0] = player->sprites.walkFront.layers[0];
+        player->sprites.attack.layers[0].currentFrame = 0;
+        player->sprites.attack.layers[0].timer = 0.0f;
+        player->sprites.attack.layers[2] = player->sprites.walkFront.layers[2];
+        player->sprites.attack.layers[2].currentFrame = 0;
+        player->sprites.attack.layers[2].timer = 0.0f;
+        player->currentAnim = &player->sprites.attack;
+    }
 }
 
 static void RestartCurrentEncounter(
