@@ -154,24 +154,24 @@ int main(void)
     Rectangle unusedPlayer = {0};
     float startY = jumpingLeg.rect.y;
 
-    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.005f, jumpingLeg.groundY, 1.0f);
+    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.005f, jumpingLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(jumpingLeg.sprites.jump.currentFrame == 0);
     assert(jumpingLeg.rect.y == startY);
 
-    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.005f, jumpingLeg.groundY, 1.0f);
+    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.005f, jumpingLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(jumpingLeg.sprites.jump.currentFrame == 1);
     assert(jumpingLeg.rect.y == startY);
 
-    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.01f, jumpingLeg.groundY, 1.0f);
+    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.01f, jumpingLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(jumpingLeg.sprites.jump.currentFrame == 2);
     assert(jumpingLeg.rect.y == startY);
 
-    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.01f, jumpingLeg.groundY, 1.0f);
+    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.01f, jumpingLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(jumpingLeg.sprites.jump.currentFrame == 3);
     assert(jumpingLeg.rect.y < startY);
 
     float airborneY = jumpingLeg.rect.y;
-    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.02f, jumpingLeg.groundY, 1.0f);
+    UpdateHairyLeg(&jumpingLeg, unusedPlayer, 0.02f, jumpingLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(jumpingLeg.sprites.jump.currentFrame == 3);
     assert(jumpingLeg.rect.y < airborneY);
 
@@ -179,7 +179,7 @@ int main(void)
     rightFacingJump.direction = 1;
     rightFacingJump.currentAnim = &rightFacingJump.sprites.idle;
 
-    UpdateHairyLeg(&rightFacingJump, unusedPlayer, 0.03f, rightFacingJump.groundY, 1.0f);
+    UpdateHairyLeg(&rightFacingJump, unusedPlayer, 0.03f, rightFacingJump.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(rightFacingJump.currentAnim == &rightFacingJump.sprites.jump);
     assert(rightFacingJump.sprites.jump.currentFrame == 3);
     assert(rightFacingJump.rect.height == 258.3f);
@@ -195,31 +195,31 @@ int main(void)
     assert(flippedSource.width == -252.0f);
 
     HairyLeg rightFacingFall = MakeFallingLeg();
-    UpdateHairyLeg(&rightFacingFall, unusedPlayer, 0.01f, rightFacingFall.groundY, 1.0f);
+    UpdateHairyLeg(&rightFacingFall, unusedPlayer, 0.01f, rightFacingFall.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(rightFacingFall.state == HL_FALLING);
     assert(rightFacingFall.sprites.fall.currentFrame == 0);
     assert(rightFacingFall.sprites.shadow.currentFrame == 0);
 
     HairyLeg shadowWarning = MakeFallingLeg();
     shadowWarning.timer = 0.0f;
-    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.01f, shadowWarning.groundY, 1.0f);
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.01f, shadowWarning.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(shadowWarning.state == HL_HANGING);
     assert(shadowWarning.sprites.shadow.currentFrame == 0);
 
-    UpdateHairyLeg(&shadowWarning, unusedPlayer, 1.0f, shadowWarning.groundY, 1.0f);
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 1.0f, shadowWarning.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(shadowWarning.state == HL_HANGING);
     assert(shadowWarning.sprites.shadow.currentFrame == 2);
 
-    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.98f, shadowWarning.groundY, 1.0f);
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.98f, shadowWarning.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(shadowWarning.state == HL_HANGING);
     assert(shadowWarning.sprites.shadow.currentFrame == 3);
 
-    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.02f, shadowWarning.groundY, 1.0f);
+    UpdateHairyLeg(&shadowWarning, unusedPlayer, 0.02f, shadowWarning.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(shadowWarning.state == HL_FALLING);
     assert(shadowWarning.sprites.shadow.currentFrame == 0);
 
     rightFacingFall.rect.y = 260.0f;
-    UpdateHairyLeg(&rightFacingFall, unusedPlayer, 0.01f, rightFacingFall.groundY, 1.0f);
+    UpdateHairyLeg(&rightFacingFall, unusedPlayer, 0.01f, rightFacingFall.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(rightFacingFall.sprites.fall.currentFrame == 1);
     assert(fabsf(rightFacingFall.waveLeft.rect.width - 39.6f) < 0.001f);
     assert(fabsf(rightFacingFall.waveLeft.rect.height - 42.75f) < 0.001f);
@@ -227,11 +227,11 @@ int main(void)
     assert(fabsf(rightFacingFall.waveRight.rect.height - 42.75f) < 0.001f);
 
     HairyLeg rightSweepStartup = MakeSweepingLeg(1, 0.1f);
-    UpdateHairyLeg(&rightSweepStartup, unusedPlayer, 0.01f, rightSweepStartup.groundY, 1.0f);
+    UpdateHairyLeg(&rightSweepStartup, unusedPlayer, 0.01f, rightSweepStartup.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(rightSweepStartup.sprites.rasteira.currentFrame == 0);
 
     HairyLeg rightSweepActive = MakeSweepingLeg(1, 0.6f);
-    UpdateHairyLeg(&rightSweepActive, unusedPlayer, 0.01f, rightSweepActive.groundY, 1.0f);
+    UpdateHairyLeg(&rightSweepActive, unusedPlayer, 0.01f, rightSweepActive.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(rightSweepActive.isKickActive);
     assert(rightSweepActive.sprites.rasteira.currentFrame == 4);
 
@@ -276,6 +276,17 @@ int main(void)
     UpdatePlayerFacingForHorizontalInput(&runningBackInputPlayer, -1.0f);
     assert(!runningBackInputPlayer.facingRight);
 
+    Player groundedBossLeftFacingPlayer = MakeAttackingPlayer(true);
+    groundedBossLeftFacingPlayer.isBossFighting = true;
+    groundedBossLeftFacingPlayer.onGround = true;
+    groundedBossLeftFacingPlayer.weapon.attacking = false;
+    groundedBossLeftFacingPlayer.position = (Vector2){100.0f, 50.0f};
+    groundedBossLeftFacingPlayer.sprites.idle.layerCount = 1;
+    groundedBossLeftFacingPlayer.sprites.idle.layers[0].frameWidth = 252;
+    groundedBossLeftFacingPlayer.currentAnim = &groundedBossLeftFacingPlayer.sprites.idle;
+    Vector2 groundedBossLeftFacingDrawPosition = GetPlayerSpriteDrawPosition(&groundedBossLeftFacingPlayer, 2.0f);
+    assert(fabsf(groundedBossLeftFacingDrawPosition.x - groundedBossLeftFacingPlayer.position.x) < 0.001f);
+
     Player airborneBossLeftPlayer = MakeAttackingPlayer(true);
     airborneBossLeftPlayer.isBossFighting = true;
     airborneBossLeftPlayer.onGround = false;
@@ -291,15 +302,15 @@ int main(void)
     airborneBossLeftPlayer.currentAnim = &airborneBossLeftPlayer.sprites.jumpDown;
     airborneBossLeftPlayer.velocity.y = 10.0f;
     Vector2 airborneBossLeftJumpDownDrawPosition = GetPlayerSpriteDrawPosition(&airborneBossLeftPlayer, 2.0f);
-    Rectangle airborneBossLeftJumpDownHitbox = GetPlayerHitbox(&airborneBossLeftPlayer, 2.0f);
+    Player airborneBossRightFallPlayer = airborneBossLeftPlayer;
+    airborneBossRightFallPlayer.facingRight = false;
+    airborneBossRightFallPlayer.currentAnim = &airborneBossRightFallPlayer.sprites.jumpDown;
+    Vector2 airborneBossRightFallDrawPosition = GetPlayerSpriteDrawPosition(&airborneBossRightFallPlayer, 2.0f);
 
     float expectedBossLeftJumpUpX = 100.0f + ((252.0f * 0.525f) - 85.5f) * 2.0f;
-    float expectedBossLeftJumpDownX = 100.0f + 252.0f * 2.0f;
-    float airborneBossLeftJumpDownSpriteLeft = airborneBossLeftJumpDownDrawPosition.x + 42.0f * 2.0f;
-    float airborneBossLeftJumpDownHitboxCenter = airborneBossLeftJumpDownHitbox.x + airborneBossLeftJumpDownHitbox.width * 0.5f;
     assert(fabsf(airborneBossLeftJumpUpDrawPosition.x - expectedBossLeftJumpUpX) < 0.001f);
-    assert(fabsf(airborneBossLeftJumpDownDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
-    assert(airborneBossLeftJumpDownSpriteLeft > airborneBossLeftJumpDownHitboxCenter);
+    assert(fabsf(airborneBossLeftJumpDownDrawPosition.x - airborneBossLeftPlayer.position.x) < 0.001f);
+    assert(fabsf(airborneBossLeftJumpDownDrawPosition.x - airborneBossRightFallDrawPosition.x) < 0.001f);
     assert(fabsf(airborneBossLeftJumpUpDrawPosition.y - 50.0f) < 0.001f);
 
     Player mouseBossLeftPlayer = airborneBossLeftPlayer;
@@ -311,17 +322,14 @@ int main(void)
     mouseBossLeftPlayer.currentAnim = &mouseBossLeftPlayer.sprites.jumpDown;
     mouseBossLeftPlayer.velocity.y = 10.0f;
     Vector2 mouseBossLeftJumpDownDrawPosition = GetPlayerSpriteDrawPosition(&mouseBossLeftPlayer, 2.0f);
-    Rectangle mouseBossLeftJumpDownHitbox = GetPlayerHitbox(&mouseBossLeftPlayer, 2.0f);
 
     float expectedMouseBossLeftJumpUpX = 100.0f + ((252.0f * 0.525f) - 107.5f) * 2.0f;
-    float mouseBossLeftJumpDownSpriteLeft = mouseBossLeftJumpDownDrawPosition.x + 42.0f * 2.0f;
-    float mouseBossLeftJumpDownHitboxCenter = mouseBossLeftJumpDownHitbox.x + mouseBossLeftJumpDownHitbox.width * 0.5f;
     assert(fabsf(mouseBossLeftJumpUpDrawPosition.x - expectedMouseBossLeftJumpUpX) < 0.001f);
-    assert(fabsf(mouseBossLeftJumpDownDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
-    assert(mouseBossLeftJumpDownSpriteLeft > mouseBossLeftJumpDownHitboxCenter);
+    assert(fabsf(mouseBossLeftJumpDownDrawPosition.x - mouseBossLeftPlayer.position.x) < 0.001f);
 
     Player groundedBossLeftPlayer = airborneBossLeftPlayer;
     groundedBossLeftPlayer.onGround = true;
+    groundedBossLeftPlayer.currentAnim = &groundedBossLeftPlayer.sprites.jumpDown;
     Vector2 groundedBossLeftDrawPosition = GetPlayerSpriteDrawPosition(&groundedBossLeftPlayer, 2.0f);
     assert(fabsf(groundedBossLeftDrawPosition.x - 100.0f) < 0.001f);
 
@@ -332,7 +340,7 @@ int main(void)
     bossThreeFallPlayer.currentAnim = &bossThreeFallPlayer.sprites.jumpDown;
     bossThreeFallPlayer.velocity.y = 10.0f;
     Vector2 bossThreeFallDrawPosition = GetPlayerSpriteDrawPosition(&bossThreeFallPlayer, 2.0f);
-    assert(fabsf(bossThreeFallDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
+    assert(fabsf(bossThreeFallDrawPosition.x - bossThreeFallPlayer.position.x) < 0.001f);
 
     Player airborneLeftAttackPlayer = airborneBossLeftPlayer;
     airborneLeftAttackPlayer.currentAnim = &airborneLeftAttackPlayer.sprites.attack;
@@ -345,7 +353,7 @@ int main(void)
     landingLeftFallPlayer.currentAnim = &landingLeftFallPlayer.sprites.jumpDown;
     landingLeftFallPlayer.velocity.y = 0.0f;
     Vector2 landingLeftFallDrawPosition = GetPlayerSpriteDrawPosition(&landingLeftFallPlayer, 2.0f);
-    assert(fabsf(landingLeftFallDrawPosition.x - expectedBossLeftJumpDownX) < 0.001f);
+    assert(fabsf(landingLeftFallDrawPosition.x - landingLeftFallPlayer.position.x) < 0.001f);
 
     HairyLeg damagedLeg = {0};
     damagedLeg.health = 100;
@@ -380,13 +388,13 @@ int main(void)
     assert(deathLeg.sprites.death.currentFrame == 0);
     assert(!deathLeg.isKickActive);
 
-    UpdateHairyLeg(&deathLeg, unusedPlayer, 0.5f, deathLeg.groundY, 1.0f);
+    UpdateHairyLeg(&deathLeg, unusedPlayer, 0.5f, deathLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(deathLeg.state == HL_DEAD);
     assert(deathLeg.currentAnim == &deathLeg.sprites.death);
     assert(deathLeg.timer >= 0.5f);
 
     HairyLeg sweepRecovery = MakeSweepingLeg(1, 1.2f);
-    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.01f, sweepRecovery.groundY, 1.0f);
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.01f, sweepRecovery.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
     assert(sweepRecovery.currentAnim == &sweepRecovery.sprites.recovery);
     assert(sweepRecovery.sprites.recovery.currentFrame == 0);
@@ -394,7 +402,7 @@ int main(void)
     assert(!sweepRecovery.isKickActive);
     assert(GetHairyLegSpriteOffsetX(&sweepRecovery, 1.0f) == -90.0f);
 
-    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.3f, sweepRecovery.groundY, 1.0f);
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.3f, sweepRecovery.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
     assert(sweepRecovery.currentAnim == &sweepRecovery.sprites.recovery);
     assert(sweepRecovery.sprites.recovery.currentFrame == 2);
@@ -402,11 +410,11 @@ int main(void)
     assert(sweepRecovery.rect.height < 120.0f);
     assert(GetHairyLegSpriteOffsetX(&sweepRecovery, 1.0f) == -90.0f);
 
-    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.3f, sweepRecovery.groundY, 1.0f);
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.3f, sweepRecovery.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(sweepRecovery.state == HL_SWEEP_RECOVERING);
     assert(sweepRecovery.rect.height < 206.64f);
 
-    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.4f, sweepRecovery.groundY, 1.0f);
+    UpdateHairyLeg(&sweepRecovery, unusedPlayer, 0.4f, sweepRecovery.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(sweepRecovery.state == HL_VULNERABLE);
     assert(sweepRecovery.rect.height == 206.64f);
 

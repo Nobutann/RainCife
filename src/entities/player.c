@@ -72,6 +72,71 @@ void UpdatePlayerFacingForHorizontalInput(Player *player, float horizontalInput)
     }
 }
 
+Vector2 GetPlayerSpriteDrawPosition(const Player *player, float scale)
+{
+    Vector2 drawPosition = player->position;
+
+    if (!player->facingRight)
+    {
+        if (player->currentAnim == &player->sprites.attack)
+        {
+            return drawPosition;
+        }
+
+        if (player->isBossFighting && player->onGround && player->currentAnim && player->currentAnim->layerCount > 0)
+        {
+            float frameWidth = (float)player->currentAnim->layers[0].frameWidth;
+            float flippedVisualCenterRatio = 1.0f - PLAYER_GROUND_LEFT_VISUAL_CENTER_RATIO;
+            drawPosition.x += (PLAYER_HITBOX_CENTER_RATIO - flippedVisualCenterRatio) * frameWidth * scale;
+        }
+
+        return drawPosition;
+    }
+
+    if (player->currentAnim == &player->sprites.attack)
+    {
+        return drawPosition;
+    }
+
+    bool usingJumpUpPose = player->currentAnim == &player->sprites.jumpUp;
+    bool usingJumpDownPose = player->currentAnim == &player->sprites.jumpDown;
+
+    if (!usingJumpUpPose && !usingJumpDownPose)
+    {
+        return drawPosition;
+    }
+
+    if (player->onGround && usingJumpDownPose && player->velocity.y > 0.0f)
+    {
+        return drawPosition;
+    }
+
+    const Animation *jumpUp = &player->sprites.jumpUp.layers[0];
+    float referenceFrameWidth = (float)jumpUp->frameWidth;
+    if (referenceFrameWidth <= 0.0f && player->currentAnim && player->currentAnim->layerCount > 0)
+    {
+        referenceFrameWidth = (float)player->currentAnim->layers[0].frameWidth;
+    }
+
+    if (referenceFrameWidth <= 0.0f)
+    {
+        return drawPosition;
+    }
+
+    float hitboxCenterX = referenceFrameWidth * PLAYER_HITBOX_CENTER_RATIO;
+    bool usingMouseJumpSprites = player->sprites.jumpUpLegs.layers[0].frameWidth >= MOUSE_JUMP_LEGS_MIN_WIDTH;
+
+    if (!usingJumpUpPose)
+    {
+        return drawPosition;
+    }
+
+    float spriteCenterX = usingMouseJumpSprites ? BOSS_LEFT_MOUSE_JUMP_UP_CENTER_X : BOSS_LEFT_JUMP_UP_CENTER_X;
+    drawPosition.x += (hitboxCenterX - spriteCenterX) * scale;
+
+    return drawPosition;
+}
+
 static void DrawLayeredAnimationLayer(LayeredAnimation *layeredAnimation, int layerIndex, Vector2 position, float scale, bool flipX, Color tint)
 {
     float refFrameWidth = layeredAnimation->referenceFrameWidth > 0.0f
@@ -683,7 +748,7 @@ void PlacePlayerForBossIntro(Player *player, Rectangle bossHitbox, float groundY
 
 void DrawPlayer(Player *player, float scale)
 {
-    Vector2 drawPosition = player->position;
+    Vector2 drawPosition = GetPlayerSpriteDrawPosition(player, scale);
 
     if (ShouldDrawPistolArm(player))
     {

@@ -29,6 +29,10 @@ static float GetSharkDashSpeedMultiplier(GameplayDifficulty difficulty) {
     }
 }
 
+static float GetSharkArcJumpVelocityY(void) {
+    return -1472.0f * GetSharkDashSpeedMultiplier(GAMEPLAY_DIFFICULTY_HARD);
+}
+
 static float GetSharkProjectileSpeedMultiplier(GameplayDifficulty difficulty) {
     switch (difficulty) {
         case GAMEPLAY_DIFFICULTY_HELENA: return 0.75f;
@@ -269,7 +273,7 @@ void UpdateShark(Shark *shark, Rectangle playerRect, float deltaTime, int screen
                 } else {
                     shark->state = SHARK_ARC_ATTACK;
                     shark->velocity.x = -850.0f * GetSharkDashSpeedMultiplier(difficulty);
-                    shark->velocity.y = -1472.0f * GetSharkDashSpeedMultiplier(difficulty);
+                    shark->velocity.y = GetSharkArcJumpVelocityY();
                     shark->arcDrops = 0;
                     shark->animFrame = 0;
                     shark->animTimer = 0.0f;

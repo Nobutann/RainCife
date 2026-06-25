@@ -101,7 +101,7 @@ int main(void)
     falling.currentAnim = &falling.sprites.fall;
 
     Rectangle playerHitbox = {100.0f, 240.0f, 50.0f, 80.0f};
-    UpdateHairyLeg(&falling, playerHitbox, 0.01f, falling.groundY, 1.0f);
+    UpdateHairyLeg(&falling, playerHitbox, 0.01f, falling.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
 
     float legHitboxTipY = falling.rect.y + falling.rect.height;
     assert(fabsf((falling.waveLeft.rect.y + falling.waveLeft.rect.height) - (legHitboxTipY + 14.0f)) < 0.001f);

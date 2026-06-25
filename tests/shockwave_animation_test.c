@@ -137,7 +137,7 @@ int main(void)
     HairyLeg idleAfterRecoveryLeg = MakeIdleLeg(-1, 0.1f);
     HairyLeg rightKickFinishingLeg = MakeKickingLeg(1, HAIRY_LEG_KICK_FRAME_COUNT - 1);
     HairyLeg leftKickFinishingLeg = MakeKickingLeg(-1, HAIRY_LEG_KICK_FRAME_COUNT - 1);
-    HairyLeg leftIdleChoosingNextActionLeg = MakeIdleLeg(-1, 1.01f);
+    HairyLeg leftIdleChoosingNextActionLeg = MakeIdleLeg(-1, 2.01f);
     Rectangle playerOnRight = {400.0f, 300.0f, 40.0f, 80.0f};
     HairyLeg leftKickFrame5 = MakeKickingLeg(-1, 5);
     HairyLeg leftKickFrame6 = MakeKickingLeg(-1, 6);
@@ -203,11 +203,11 @@ int main(void)
     float deathVisibleBottomY = deadLeg.rect.y + GetHairyLegSpriteOffsetY(&deadLeg, 1.0f) + 221.0f;
     assert(fabsf(deathVisibleBottomY - deadLeg.groundY) < 0.001f);
 
-    UpdateHairyLeg(&vulnerableLeg, playerOnRight, 0.1f, vulnerableLeg.groundY, 1.0f);
+    UpdateHairyLeg(&vulnerableLeg, playerOnRight, 0.1f, vulnerableLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(vulnerableLeg.state == HL_VULNERABLE);
     assert(vulnerableLeg.direction == -1);
 
-    UpdateHairyLeg(&idleAfterRecoveryLeg, playerOnRight, 0.1f, idleAfterRecoveryLeg.groundY, 1.0f);
+    UpdateHairyLeg(&idleAfterRecoveryLeg, playerOnRight, 0.1f, idleAfterRecoveryLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(idleAfterRecoveryLeg.state == HL_IDLE);
     assert(idleAfterRecoveryLeg.direction == -1);
 
@@ -220,7 +220,7 @@ int main(void)
     rightKickFinishingLeg.sprites.idle.sheet.width = 700;
     rightKickFinishingLeg.sprites.idle.sheet.height = 252;
     float bodyCenterBeforeKickEnds = CenterX(GetHairyLegBodyFrameHitbox(&rightKickFinishingLeg, 1.0f));
-    UpdateHairyLeg(&rightKickFinishingLeg, playerOnRight, 0.02f, rightKickFinishingLeg.groundY, 1.0f);
+    UpdateHairyLeg(&rightKickFinishingLeg, playerOnRight, 0.02f, rightKickFinishingLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     float bodyCenterAfterKickEnds = CenterX(rightKickFinishingLeg.bodyHitbox);
     assert(rightKickFinishingLeg.state == HL_VULNERABLE);
     assert(rightKickFinishingLeg.direction == 1);
@@ -234,7 +234,7 @@ int main(void)
     leftKickFinishingLeg.sprites.idle.sheet.width = 700;
     leftKickFinishingLeg.sprites.idle.sheet.height = 252;
     float leftBodyCenterBeforeKickEnds = CenterX(GetHairyLegBodyFrameHitbox(&leftKickFinishingLeg, 1.0f));
-    UpdateHairyLeg(&leftKickFinishingLeg, playerOnRight, 0.02f, leftKickFinishingLeg.groundY, 1.0f);
+    UpdateHairyLeg(&leftKickFinishingLeg, playerOnRight, 0.02f, leftKickFinishingLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     float leftBodyCenterAfterKickEnds = CenterX(leftKickFinishingLeg.bodyHitbox);
     assert(leftKickFinishingLeg.state == HL_VULNERABLE);
     assert(leftKickFinishingLeg.direction == -1);
@@ -242,12 +242,12 @@ int main(void)
 
     leftIdleChoosingNextActionLeg.health = 100;
     float bodyCenterBeforeDirectionFlip = CenterX(leftIdleChoosingNextActionLeg.bodyHitbox);
-    UpdateHairyLeg(&leftIdleChoosingNextActionLeg, playerOnRight, 0.01f, leftIdleChoosingNextActionLeg.groundY, 1.0f);
+    UpdateHairyLeg(&leftIdleChoosingNextActionLeg, playerOnRight, 0.01f, leftIdleChoosingNextActionLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     float bodyCenterAfterDirectionFlip = CenterX(leftIdleChoosingNextActionLeg.bodyHitbox);
     assert(leftIdleChoosingNextActionLeg.direction == 1);
     assert(fabsf(bodyCenterAfterDirectionFlip - bodyCenterBeforeDirectionFlip) < 0.001f);
 
-    UpdateHairyLeg(&sweepStartLeg, unusedPlayer, 0.01f, sweepStartLeg.groundY, 1.0f);
+    UpdateHairyLeg(&sweepStartLeg, unusedPlayer, 0.01f, sweepStartLeg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(sweepStartLeg.state == HL_SWEEPING);
     assert(sweepStartLeg.isKickActive);
     assert(sweepStartLeg.sprites.rasteira.currentFrame == 0);
@@ -256,7 +256,7 @@ int main(void)
     assert(fabsf(sweepStartLeg.kickHitbox.width - 98.0f) < 0.001f);
     assert(fabsf(sweepStartLeg.kickHitbox.height - 26.0f) < 0.001f);
 
-    UpdateHairyLeg(&leg, unusedPlayer, 0.01f, leg.groundY, 1.0f);
+    UpdateHairyLeg(&leg, unusedPlayer, 0.01f, leg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
 
     assert(leg.waveLeft.active);
     assert(leg.waveRight.active);
@@ -276,12 +276,12 @@ int main(void)
     assert(fabsf((leg.waveLeft.hitbox.y + leg.waveLeft.hitbox.height) - (leg.waveLeft.rect.y + leg.waveLeft.rect.height - 6.804f)) < 0.001f);
 
     assert(leg.waveLeft.currentFrame == 0);
-    UpdateHairyLeg(&leg, unusedPlayer, 0.08f, leg.groundY, 1.0f);
+    UpdateHairyLeg(&leg, unusedPlayer, 0.08f, leg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     assert(leg.waveLeft.currentFrame == 1);
     assert(leg.waveRight.currentFrame == 1);
 
     for (int i = 0; i < 4; i++) {
-        UpdateHairyLeg(&leg, unusedPlayer, 0.08f, leg.groundY, 1.0f);
+        UpdateHairyLeg(&leg, unusedPlayer, 0.08f, leg.groundY, 1.0f, GAMEPLAY_DIFFICULTY_MEDIUM);
     }
 
     assert(leg.waveLeft.currentFrame == 0);
